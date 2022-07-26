@@ -18,6 +18,11 @@ class TestData(Recipe):
         '''
         self.table_name = table_name
 
+    def identity_key(self) -> tuple[str, str]:
+        return (
+            ('table_name', self.table_name),
+        )
+
     @classmethod
     def extract_from_dependency(cls, to_extract: tuple[Recipe], dependencies:dict[Recipe, tp.Any]) -> dict[Recipe, tp.Any]:
         return {r: dict(TABLES[r.table_name]) for r in to_extract}
@@ -28,6 +33,12 @@ class TestColumn(Recipe):
     def __init__(self, table_name:str, key: int):
         self.table_name = table_name
         self.key = key
+
+    def identity_key(self) -> tuple[str, str]:
+        return (
+            ('table_name', self.table_name),
+            ('key', self.key),
+        )
 
     @classmethod
     def group_by_dependency(cls, recipes: tuple[TestColumn]) -> dict[tuple[Recipe]|None, tuple[Recipe]]:
@@ -55,6 +66,14 @@ def test_group_by_dependency():
     assert result == {(TestData('A'), ): (r1, r3), (TestData('b'), ): (r2, )}
 
 
+def test_hash_eq():
+    r1 = TestColumn('A', 1)
+    r2 = TestColumn('A', 1)
+
+    assert r1 == r2
+    assert hash(r1) == hash(r2)
+
 
 test_group_by_dependency()
+test_hash_eq()
 test_extract_from_dependency()
