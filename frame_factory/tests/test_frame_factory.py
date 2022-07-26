@@ -27,11 +27,8 @@ class TestData(Recipe):
     def identity_key(self) -> tuple[str, str]:
         return (("table_name", self.table_name),)
 
-    @classmethod
-    def extract_from_dependency(
-        cls, to_extract: tuple[Recipe], dependencies: dict[Recipe, tp.Any]
-    ) -> dict[Recipe, tp.Any]:
-        return {r: dict(TABLES[r.table_name]) for r in to_extract}
+    def extract_from_dependency(self, dependencies: dict[Recipe, tp.Any]) -> dict[Recipe, tp.Any]:
+        return dict(TABLES[self.table_name])
 
 
 class TestColumn(Recipe):
@@ -48,6 +45,9 @@ class TestColumn(Recipe):
     def get_dependency_recipes(self) -> tuple[Recipe]:
         """This depends on a table"""
         return (TestData(self.table_name),)
+
+    def extract_from_dependency(self, dependencies: dict[Recipe, tp.Any]) -> dict[Recipe, tp.Any]:
+        return
 
 
 def test_build_graph_no_cycles() -> None:

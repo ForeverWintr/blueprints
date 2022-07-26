@@ -34,4 +34,12 @@ class FrameFactory:
     def build_recipe(self, recipe: Recipe) -> tp.Any:
         """Construct the given recipe, and return whatever it returns."""
         graph = self._build_graph(recipe)
+
+        instantiated = {}
+        for recipe in nx.topological_sort(graph):
+
+            # The topological_sort guarantees that the dependencies of this recipe were seen first.
+            dependencies = {d: instantiated[d] for d in graph.predecessors(recipe)}
+            data = recipe.extract_from_dependency(dependencies)
+            instantiated[recipe] = data
         asdf
