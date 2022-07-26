@@ -2,8 +2,11 @@ from __future__ import annotations
 import typing as tp
 from collections import defaultdict
 
+import pytest
+
 from frame_factory.recipes import Recipe
 from frame_factory.factory import FrameFactory
+from frame_factory import exceptions
 
 
 #  Pretend these are tables
@@ -42,16 +45,34 @@ class TestColumn(Recipe):
             ("key", self.key),
         )
 
-    @classmethod
-    def group_by_dependency(
-        cls, recipes: tuple[TestColumn]
-    ) -> dict[tuple[Recipe] | None, tuple[Recipe]]:
+    def get_dependency_recipes(self) -> tuple[Recipe]:
         """This depends on a table"""
-        result = defaultdict(list)
-        for r in recipes:
-            table = TestData(r.table_name)
-            result[(table,)].append(r)
-        return {k: tuple(recipes) for k, recipes in result.items()}
+        return (TestData(self.table_name),)
+
+
+def test_build_graph_no_cycles() -> None:
+    # Make sure that the build graph fails if a recipe tries to introduce cycles.
+    class Bad(Recipe):
+        def __init__(self, name: str, target: str):
+            self.name = name
+            self.target = target
+
+        def identity_key(self) -> tuple[tuple, ...]:
+            return (
+                ("name", self.name),
+                ("target", self.target),
+            )
+
+        def get_dependency_recipes(self) -> tuple[Bad]:
+            return (Bad(self.target, self.name),)
+
+        def __repr__(self):
+            return f"{(type(self).__name__)}({self.name}, {self.target})"
+
+    with pytest.raises(exceptions.ConfigurationError) as e:
+        FrameFactory()._build_graph(Bad("a", "b"))
+
+        assert e.match("The given recipe produced dependency cycles")
 
 
 def test_build_recipe() -> None:
@@ -70,7 +91,7 @@ def test_group_by_dependency():
     r2 = TestColumn("b", 1)
     r3 = TestColumn("A", 2)
 
-    result = TestColumn.group_by_dependency((r1, r2, r3))
+    result = TestColumn.get_dependency_recipes((r1, r2, r3))
 
     assert result == {(TestData("A"),): (r1, r3), (TestData("b"),): (r2,)}
 
@@ -81,9 +102,3 @@ def test_hash_eq():
 
     assert r1 == r2
     assert hash(r1) == hash(r2)
-
-
-test_build_recipe()
-test_group_by_dependency()
-test_hash_eq()
-test_extract_from_dependency()
