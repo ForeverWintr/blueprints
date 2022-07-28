@@ -46,7 +46,7 @@ class TestColumn(Recipe):
         """This depends on a table"""
         return (TestData(self.table_name),)
 
-    def extract_from_dependency(self, dependencies: dict[Recipe, tp.Any]) -> dict[Recipe, tp.Any]:
+    def extract_from_dependency(self, dependencies: tuple) -> tp.Any:
         return
 
 
