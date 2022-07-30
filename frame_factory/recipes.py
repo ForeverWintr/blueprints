@@ -7,10 +7,6 @@ import dataclasses
 class Recipe(ABC):
     """Base class for recipes"""
 
-    # @abstractmethod
-    # def identity_key(self) -> tuple:
-    # """Return a key from this recipe's parameters. This is used for hashing and equality, and it should be possible to re-create the recipe using Recipe(**dict(r.identity_key()))"""
-
     def get_dependency_recipes(self) -> tuple[Recipe, ...]:
         """Return a tuple of recipes that this recipe depends on"""
         return ()
@@ -25,11 +21,3 @@ class Recipe(ABC):
     def __init_subclass__(cls, **kwargs) -> None:
         r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)
         assert r is cls
-
-    # def __hash__(self):
-    # return hash(self.identity_key())
-
-    # def __eq__(self, other: tp.Any) -> bool:
-    # if not isinstance(other, Recipe):
-    # return NotImplemented
-    # return self.identity_key() == other.identity_key()
