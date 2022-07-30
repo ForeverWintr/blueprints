@@ -33,7 +33,7 @@ class FrameFactory:
             )
         return g
 
-    def build_recipe(self, recipe: Recipe) -> tp.Any:
+    def data_from_recipe(self, recipe: Recipe) -> tp.Any:
         """Construct the given recipe, and return whatever it returns."""
         graph = self._build_graph([recipe])
 
