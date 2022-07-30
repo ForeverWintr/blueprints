@@ -13,9 +13,8 @@ from frame_factory.tests.conftest import TestData, TestColumn, TABLES
 def test_build_graph_no_cycles() -> None:
     # Make sure that the build graph fails if a recipe tries to introduce cycles.
     class Bad(Recipe):
-        def __init__(self, name: str, target: str):
-            self.name = name
-            self.target = target
+        name: str
+        target: str
 
         def identity_key(self) -> tuple[tuple, ...]:
             return (
@@ -24,13 +23,16 @@ def test_build_graph_no_cycles() -> None:
             )
 
         def get_dependency_recipes(self) -> tuple[Bad]:
-            return (Bad(self.target, self.name),)
+            return (Bad(name=self.target, target=self.name),)
+
+        def extract_from_dependency(self, *args) -> tp.Any:
+            pass
 
         def __repr__(self):
             return f"{(type(self).__name__)}({self.name}, {self.target})"
 
     with pytest.raises(exceptions.ConfigurationError) as e:
-        FrameFactory()._build_graph([Bad("a", "b")])
+        FrameFactory()._build_graph([Bad(name="a", target="b")])
 
         assert e.match("The given recipe produced dependency cycles")
 
