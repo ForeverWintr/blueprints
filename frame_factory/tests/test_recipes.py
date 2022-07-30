@@ -15,3 +15,16 @@ def test_hash_eq():
 
     assert r1 == r2
     assert hash(r1) == hash(r2)
+
+
+def to_do():
+    # Should I use dataclasses?
+    #  Benefits:
+    #    Immuntablility
+    #    Hash, EQ
+
+    #  Drawbacks:
+    #    Constructor only
+
+    #  If you want this to be open source, dataclasses may be expected; Provide a good API.
+    assert 0
