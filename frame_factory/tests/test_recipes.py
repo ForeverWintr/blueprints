@@ -1,8 +1,14 @@
+import dataclasses
+import pytest
+
 from frame_factory.tests.conftest import TestData, TestColumn, TABLES
 
 
 def test_immutable():
-    assert 0
+    t = TestColumn(table_name="tname", key=5)
+
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        t.name = "sdaf"
 
 
 def test_repr():
