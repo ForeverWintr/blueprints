@@ -6,7 +6,12 @@ def test_immutable():
 
 
 def test_repr():
-    assert 0
+    t = TestColumn(table_name="tname", key=5)
+    assert repr(t) == "TestColumn(\n    table_name='tname',\n    key=5,\n)"
+
+    # Default values aren't displayed
+    t = TestColumn(table_name="tname")
+    assert repr(t) == "TestColumn(\n    table_name='tname',\n)"
 
 
 def test_hash_eq():

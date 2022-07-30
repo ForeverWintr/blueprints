@@ -28,7 +28,7 @@ class TestData(Recipe):
 
 class TestColumn(Recipe):
     table_name: str
-    key: int
+    key: int = 1
 
     # def __init__(self, table_name: str, key: int):
     # self.table_name = table_name
