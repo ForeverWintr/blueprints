@@ -86,14 +86,15 @@ def test_extract_from_dependency():
     assert recipe.extract_from_dependency() == TABLES["A"]
 
 
-def test_group_by_dependency():
+def test_build_graph():
     r1 = TestColumn("A", 1)
     r2 = TestColumn("b", 1)
     r3 = TestColumn("A", 2)
 
-    result = TestColumn.get_dependency_recipes((r1, r2, r3))
+    g = FrameFactory()._build_graph((r1, r2, r3))
 
-    assert result == {(TestData("A"),): (r1, r3), (TestData("b"),): (r2,)}
+    assert set(g[TestData("A")]) == {r1, r3}
+    assert set(g[TestData("b")]) == {r2}
 
 
 def test_hash_eq():

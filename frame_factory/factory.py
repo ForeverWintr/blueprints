@@ -1,5 +1,7 @@
 import typing as tp
 
+import typing as tp
+
 import networkx as nx
 
 from frame_factory.recipes import Recipe
@@ -7,11 +9,11 @@ from frame_factory import exceptions
 
 
 class FrameFactory:
-    def _build_graph(self, recipe: Recipe) -> nx.DiGraph:
+    def _build_graph(self, recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
         """Create a dependency graph from the given recipe. The dependeny graph is a directed
         graph, where edges point from dependencies to the recipes that depend on them."""
         g = nx.DiGraph()
-        to_process = [recipe]
+        to_process = list(recipes)
         processed = set()
         while to_process:
             r = to_process.pop()
@@ -33,7 +35,7 @@ class FrameFactory:
 
     def build_recipe(self, recipe: Recipe) -> tp.Any:
         """Construct the given recipe, and return whatever it returns."""
-        graph = self._build_graph(recipe)
+        graph = self._build_graph([recipe])
 
         instantiated = {}
         for intermediate_recipe in nx.topological_sort(graph):
