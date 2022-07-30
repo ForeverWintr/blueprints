@@ -23,13 +23,5 @@ def test_hash_eq():
 
 
 def to_do():
-    # Should I use dataclasses?
-    #  Benefits:
-    #    Immuntablility
-    #    Hash, EQ
-
-    #  Drawbacks:
-    #    Constructor only
-
-    #  If you want this to be open source, dataclasses may be expected; Provide a good API.
+    # Should I use dataclasses? - yes
     assert 0
