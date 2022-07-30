@@ -70,7 +70,7 @@ def test_build_graph_no_cycles() -> None:
             return f"{(type(self).__name__)}({self.name}, {self.target})"
 
     with pytest.raises(exceptions.ConfigurationError) as e:
-        FrameFactory()._build_graph(Bad("a", "b"))
+        FrameFactory()._build_graph([Bad("a", "b")])
 
         assert e.match("The given recipe produced dependency cycles")
 
