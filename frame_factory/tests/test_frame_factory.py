@@ -27,7 +27,7 @@ class TestData(Recipe):
     def identity_key(self) -> tuple[str, str]:
         return (("table_name", self.table_name),)
 
-    def extract_from_dependency(self, dependencies: dict[Recipe, tp.Any]) -> dict[Recipe, tp.Any]:
+    def extract_from_dependency(self) -> dict[Recipe, tp.Any]:
         return dict(TABLES[self.table_name])
 
 
@@ -46,8 +46,8 @@ class TestColumn(Recipe):
         """This depends on a table"""
         return (TestData(self.table_name),)
 
-    def extract_from_dependency(self, dependencies: tuple) -> tp.Any:
-        return
+    def extract_from_dependency(self, table) -> tp.Any:
+        return table[self.key]
 
 
 def test_build_graph_no_cycles() -> None:
@@ -78,12 +78,12 @@ def test_build_graph_no_cycles() -> None:
 def test_build_recipe() -> None:
     factory = FrameFactory()
     result = factory.build_recipe(TestColumn("A", 1))
-    assert 0
+    assert result == TABLES["A"][1]
 
 
 def test_extract_from_dependency():
     recipe = TestData("A")
-    assert recipe.extract_from_dependency((recipe,), dependencies={}) == {recipe: {1: 1, 2: 2}}
+    assert recipe.extract_from_dependency() == TABLES["A"]
 
 
 def test_group_by_dependency():

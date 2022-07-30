@@ -36,10 +36,11 @@ class FrameFactory:
         graph = self._build_graph(recipe)
 
         instantiated = {}
-        for recipe in nx.topological_sort(graph):
+        for intermediate_recipe in nx.topological_sort(graph):
 
-            # The topological_sort guarantees that the dependencies of this recipe were seen first.
-            dependencies = {d: instantiated[d] for d in graph.predecessors(recipe)}
-            data = recipe.extract_from_dependency(dependencies)
-            instantiated[recipe] = data
-        asdf
+            # The topological_sort guarantees that the dependencies of this intermediate_recipe
+            # were seen first.
+            dependencies = {d: instantiated[d] for d in graph.predecessors(intermediate_recipe)}
+            data = intermediate_recipe.extract_from_dependency(*dependencies.values())
+            instantiated[intermediate_recipe] = data
+        return instantiated[recipe]
