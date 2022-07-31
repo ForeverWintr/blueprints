@@ -39,7 +39,7 @@ def test_build_graph_no_cycles() -> None:
 
 def test_build_recipe() -> None:
     factory = FrameFactory()
-    result = factory.data_from_recipe(TestColumn(table_name="A", key=1))
+    result = factory.process_recipe(TestColumn(table_name="A", key=1))
     assert result == TABLES["A"][1]
 
 

@@ -33,7 +33,7 @@ class FrameFactory:
             )
         return g
 
-    def _build_recipes(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
+    def _process_graph(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
         """Return a dictionary mapping recipe for data for all recipes in `recipe_graph`"""
         instantiated = {}
         for intermediate_recipe in nx.topological_sort(recipe_graph):
@@ -47,14 +47,14 @@ class FrameFactory:
             instantiated[intermediate_recipe] = data
         return instantiated
 
-    def build_recipes(self, recipes: tp.Iterable[Recipe]) -> dict[Recipe, tp.Any]:
+    def process_recipes(self, recipes: tp.Iterable[Recipe]) -> dict[Recipe, tp.Any]:
         """Process the given recipes, returning a dictionary mapping each recipe to the data it
         specifies."""
         recipes = tuple(recipes)
         graph = self._build_graph(recipes)
-        all_data = self._build_recipes(graph)
+        all_data = self._process_graph(graph)
         return {r: all_data[r] for r in recipes}
 
-    def data_from_recipe(self, recipe: Recipe) -> tp.Any:
+    def process_recipe(self, recipe: Recipe) -> tp.Any:
         """Construct the given recipe, and return whatever it returns."""
-        return self.build_recipes([recipe])[recipe]
+        return self.process_recipes([recipe])[recipe]
