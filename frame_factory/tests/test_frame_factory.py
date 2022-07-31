@@ -5,7 +5,7 @@ from collections import defaultdict
 import pytest
 
 from frame_factory.recipes import Recipe
-from frame_factory.factory import FrameFactory
+from frame_factory.factory import FrameFactory, FrameFactoryMP
 from frame_factory import exceptions
 from frame_factory.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
 
@@ -63,8 +63,8 @@ def test_multiprocess_graph():
     r1 = TestColumn(table_name="A", key=1)
     r2 = TestColumn(table_name="b", key=1)
     r3 = TestColumn(table_name="A", key=2)
-    ff = FrameFactory()
-    g = ff._build_graph((r1, r2, r3))
+    ff = FrameFactoryMP()
+    r = ff.process_recipes((r1, r2, r3))
 
     assert 0
 
@@ -83,3 +83,18 @@ def test_dependency_order():
     )
 
     assert FrameFactory().process_recipe(r) == (1, 1, 4, 2, 1)
+
+
+def test_mp_timeout():
+
+    assert 0
+
+
+def test_mp_error():
+
+    assert 0
+
+
+def test_get_buildable_recipes():
+
+    assert 0
