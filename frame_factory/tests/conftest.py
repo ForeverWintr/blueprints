@@ -27,3 +27,14 @@ class TestColumn(Recipe):
 
     def extract_from_dependency(self, table) -> tp.Any:
         return table[self.key]
+
+
+class MultiColumn(Recipe):
+    columns: tuple[TestColumn, ...]
+
+    def get_dependency_recipes(self) -> tuple[Recipe]:
+        """This depends on a table"""
+        return self.columns
+
+    def extract_from_dependency(self, *columns) -> tp.Any:
+        return columns

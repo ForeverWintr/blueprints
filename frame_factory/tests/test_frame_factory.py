@@ -7,7 +7,7 @@ import pytest
 from frame_factory.recipes import Recipe
 from frame_factory.factory import FrameFactory
 from frame_factory import exceptions
-from frame_factory.tests.conftest import TestData, TestColumn, TABLES
+from frame_factory.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
 
 
 def test_build_graph_no_cycles() -> None:
@@ -50,10 +50,36 @@ def test_extract_from_dependency():
 
 def test_build_graph():
     r1 = TestColumn(table_name="A", key=1)
-    r2 = TestColumn(table_name="b", key=1)
+    r2 = TestColumn(table_name="b", key=4)
     r3 = TestColumn(table_name="A", key=2)
 
     g = FrameFactory()._build_graph((r1, r2, r3))
 
     assert set(g[TestData(table_name="A")]) == {r1, r3}
     assert set(g[TestData(table_name="b")]) == {r2}
+
+
+def test_multiprocess_graph():
+    r1 = TestColumn(table_name="A", key=1)
+    r2 = TestColumn(table_name="b", key=1)
+    r3 = TestColumn(table_name="A", key=2)
+    ff = FrameFactory()
+    g = ff._build_graph((r1, r2, r3))
+
+    assert 0
+
+
+def test_dependency_order():
+    # Dependency order should be guaranteed.
+
+    r = MultiColumn(
+        columns=(
+            TestColumn(table_name="A", key=1),
+            TestColumn(table_name="A", key=1),
+            TestColumn(table_name="b", key=4),
+            TestColumn(table_name="A", key=2),
+            TestColumn(table_name="A", key=1),
+        )
+    )
+
+    assert FrameFactory().process_recipe(r) == (1, 1, 4, 2, 1)

@@ -33,6 +33,9 @@ class FrameFactory:
             )
         return g
 
+    def _multiprocess_graph(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
+        asdf
+
     def _process_graph(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
         """Return a dictionary mapping recipe for data for all recipes in `recipe_graph`"""
         instantiated = {}
@@ -40,10 +43,8 @@ class FrameFactory:
 
             # The topological_sort guarantees that the dependencies of this intermediate_recipe
             # were seen first.
-            dependencies = {
-                d: instantiated[d] for d in recipe_graph.predecessors(intermediate_recipe)
-            }
-            data = intermediate_recipe.extract_from_dependency(*dependencies.values())
+            dependencies = [instantiated[d] for d in intermediate_recipe.get_dependency_recipes()]
+            data = intermediate_recipe.extract_from_dependency(*dependencies)
             instantiated[intermediate_recipe] = data
         return instantiated
 
