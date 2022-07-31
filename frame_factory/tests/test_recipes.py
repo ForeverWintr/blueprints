@@ -30,4 +30,9 @@ def test_hash_eq():
 
 def to_do():
     # Should I use dataclasses? - yes
+    # Multiprocessing
+    # Frames
+    # CI
+    # Real recipe
+    # Caching
     assert 0
