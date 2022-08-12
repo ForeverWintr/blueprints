@@ -5,7 +5,7 @@ from collections import defaultdict
 import pytest
 
 from assembler.recipes import Recipe
-from assembler.factory import FrameFactory, FrameFactoryMP
+from assembler.factory import Factory, FrameFactoryMP
 from assembler import exceptions
 from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
 
@@ -32,13 +32,13 @@ def test_build_graph_no_cycles() -> None:
             return f"{(type(self).__name__)}({self.name}, {self.target})"
 
     with pytest.raises(exceptions.ConfigurationError) as e:
-        FrameFactory()._build_graph([Bad(name="a", target="b")])
+        Factory()._build_graph([Bad(name="a", target="b")])
 
         assert e.match("The given recipe produced dependency cycles")
 
 
 def test_build_recipe() -> None:
-    factory = FrameFactory()
+    factory = Factory()
     result = factory.process_recipe(TestColumn(table_name="A", key=1))
     assert result == TABLES["A"][1]
 
@@ -53,7 +53,7 @@ def test_build_graph():
     r2 = TestColumn(table_name="b", key=4)
     r3 = TestColumn(table_name="A", key=2)
 
-    g = FrameFactory()._build_graph((r1, r2, r3))
+    g = Factory()._build_graph((r1, r2, r3))
 
     assert set(g[TestData(table_name="A")]) == {r1, r3}
     assert set(g[TestData(table_name="b")]) == {r2}
@@ -84,7 +84,7 @@ def test_dependency_order():
         )
     )
 
-    assert FrameFactory().process_recipe(r) == (1, 1, 4, 2, 1)
+    assert Factory().process_recipe(r) == (1, 1, 4, 2, 1)
 
 
 def test_mp_timeout():

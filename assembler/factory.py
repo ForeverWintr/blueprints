@@ -9,7 +9,7 @@ from assembler import exceptions
 from assembler import util
 
 
-class FrameFactory:
+class Factory:
     def _build_graph(self, recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
         """Create a dependency graph from the given recipe. The dependeny graph is a directed
         graph, where edges point from dependencies to the recipes that depend on them."""
@@ -59,7 +59,7 @@ class FrameFactory:
         return self.process_recipes([recipe])[recipe]
 
 
-class FrameFactoryMP(FrameFactory):
+class FrameFactoryMP(Factory):
     def __init__(self, max_workers=None, timeout=60 * 5):
         self.max_workers = max_workers
         if max_workers is None:
