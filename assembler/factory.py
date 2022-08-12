@@ -102,6 +102,7 @@ class FrameFactoryMP(FrameFactory):
 
                 # At least one recipe has completed. Add the results.
                 for task in completed:
+                    # If task failed, an exception is raised here.
                     recipe, data = task.result()
                     instantiated[recipe] = data
 
