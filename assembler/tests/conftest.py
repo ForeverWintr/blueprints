@@ -1,7 +1,7 @@
 from __future__ import annotations
 import typing as tp
 
-from frame_factory.recipes import Recipe
+from assembler.recipes import Recipe
 
 #  Pretend these are tables
 TABLES = {

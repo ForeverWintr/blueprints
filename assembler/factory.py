@@ -4,9 +4,9 @@ import os
 
 import networkx as nx
 
-from frame_factory.recipes import Recipe
-from frame_factory import exceptions
-from frame_factory import util
+from assembler.recipes import Recipe
+from assembler import exceptions
+from assembler import util
 
 
 class FrameFactory:
@@ -106,7 +106,8 @@ class FrameFactoryMP(FrameFactory):
 
             if len(instantiated) == len(recipe_graph):
                 # Done
-                break
+                # break
+                raise NotImplementedError("WIP") #TODO REMOVE
 
             # Check to see what else is now buildable.
             buildable = self._get_buildable_recipes(instantiated, recipe_graph)

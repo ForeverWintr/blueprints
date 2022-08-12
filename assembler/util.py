@@ -1,6 +1,6 @@
 import typing as tp
 
-from frame_factory.recipes import Recipe
+from assembler.recipes import Recipe
 
 
 def process_recipe(recipe: Recipe, dependencies: tuple[tp.Any, ...]) -> tp.Any:

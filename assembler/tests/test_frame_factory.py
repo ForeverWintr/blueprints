@@ -4,10 +4,10 @@ from collections import defaultdict
 
 import pytest
 
-from frame_factory.recipes import Recipe
-from frame_factory.factory import FrameFactory, FrameFactoryMP
-from frame_factory import exceptions
-from frame_factory.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
+from assembler.recipes import Recipe
+from assembler.factory import FrameFactory, FrameFactoryMP
+from assembler import exceptions
+from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
 
 
 def test_build_graph_no_cycles() -> None:

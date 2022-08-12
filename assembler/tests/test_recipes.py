@@ -1,7 +1,7 @@
 import dataclasses
 import pytest
 
-from frame_factory.tests.conftest import TestData, TestColumn, TABLES
+from assembler.tests.conftest import TestData, TestColumn, TABLES
 
 
 def test_immutable():
