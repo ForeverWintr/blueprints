@@ -4,7 +4,7 @@
 # Wing project file                                              #
 ##################################################################
 [project attributes]
-proj.directory-list = [{'dirloc': loc('frame_factory'),
+proj.directory-list = [{'dirloc': loc('assembler'),
                         'excludes': (),
                         'filter': '*',
                         'include_hidden': False,
