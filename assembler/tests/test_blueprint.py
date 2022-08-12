@@ -5,6 +5,7 @@ import pytest
 from assembler.recipes import Recipe
 from assembler.factory import Factory, FrameFactoryMP
 from assembler.blueprint import Blueprint
+from assembler.constants import NodeAttrs
 from assembler import exceptions
 from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
 
@@ -16,8 +17,14 @@ def test_from_recipes():
 
     b = Blueprint.from_recipes((r1, r2, r3))
 
-    assert set(b._dependency_graph[TestData(table_name="A")]) == {r1, r3}
+    dep = TestData(table_name="A")
+    nodes = b._dependency_graph.nodes(data=True)
+
+    assert set(b._dependency_graph[dep]) == {r1, r3}
+    assert nodes[dep] == {NodeAttrs.output: False}
+
     assert set(b._dependency_graph[TestData(table_name="b")]) == {r2}
+    assert nodes[r1] == {NodeAttrs.output: True}
 
 
 def test_from_recipes_no_cycles() -> None:

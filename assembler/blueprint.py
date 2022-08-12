@@ -6,6 +6,7 @@ import networkx as nx
 from assembler.recipes import Recipe
 from assembler import exceptions
 from assembler import util
+from assembler.constants import NodeAttrs
 
 
 class Blueprint:
@@ -22,11 +23,12 @@ class Blueprint:
     def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> Blueprint:
         """Create a blueprint from the given recipe."""
         g = nx.DiGraph()
-        to_process = list(recipes)
+        outputs = set(recipes)
+        to_process = list(outputs)
         processed = set()
         while to_process:
             r = to_process.pop()
-            g.add_node(r)
+            g.add_node(r, **{NodeAttrs.output: r in outputs})
             for d in r.get_dependency_recipes():
                 g.add_edge(d, r)
 
