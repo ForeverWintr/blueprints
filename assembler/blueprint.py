@@ -6,7 +6,7 @@ import networkx as nx
 from assembler.recipes import Recipe
 from assembler import exceptions
 from assembler import util
-from assembler.constants import NodeAttrs
+from assembler.constants import NodeAttrs, BuildStatus
 
 
 class Blueprint:
@@ -28,7 +28,13 @@ class Blueprint:
         processed = set()
         while to_process:
             r = to_process.pop()
-            g.add_node(r, **{NodeAttrs.output: r in outputs})
+            g.add_node(
+                r,
+                **{
+                    NodeAttrs.output: r in outputs,
+                    NodeAttrs.build_status: BuildStatus.NOT_STARTED,
+                },
+            )
             for d in r.get_dependency_recipes():
                 g.add_edge(d, r)
 
