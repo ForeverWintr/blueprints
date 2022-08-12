@@ -2,16 +2,20 @@ from __future__ import annotations
 import typing as tp
 
 import networkx as nx
+import numpy as np
 
 from assembler.recipes import Recipe
 from assembler import exceptions
 from assembler import util
 from assembler.constants import NodeAttrs, BuildStatus
 
+if tp.TYPE_CHECKING:
+    from matplotlib import pyplot as plt
+
 
 def get_blueprint_layout(
-    g: nx.DiGraph, vertical_increment: int = 2, horizontal_increment: int = 1
-) -> dict[Recipe, tuple[int, int]]:
+    g: nx.DiGraph, vertical_increment: float = 0.2, horizontal_increment: float = 0.1
+) -> dict[Recipe, tuple[float, float]]:
     bottom_layer = {n for n, d in g.out_degree() if d == 0}
     x = 0
     positions = {}
@@ -21,11 +25,11 @@ def get_blueprint_layout(
         y = 0
         for node in bottom_layer:
             positions[node] = (y, x)
-            y += vertical_increment
+            y += horizontal_increment
             for p in g.predecessors(node):
                 next_layer.add(p)
         bottom_layer = next_layer
-        x += horizontal_increment
+        x += vertical_increment
     return positions
 
 
@@ -78,4 +82,17 @@ class Blueprint:
     def draw(self, ax: plt.Axes) -> None:
         """Draw the blueprint on the given matplotlib ax object"""
         positions = get_blueprint_layout(self._dependency_graph)
-        nx.draw(self._dependency_graph, pos=positions, ax=ax)
+
+        nodes = sorted(self._dependency_graph.nodes, key=str)
+        labels = {n: str(n) for n in nodes}
+
+        nx.draw_networkx(
+            self._dependency_graph,
+            pos=positions,
+            ax=ax,
+            nodelist=nodes,
+            labels=labels,
+        )
+
+        # Preserve relative edge length
+        ax.set_aspect("equal")
