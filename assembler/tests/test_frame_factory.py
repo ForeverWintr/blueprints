@@ -61,12 +61,14 @@ def test_build_graph():
 
 def test_multiprocess_graph():
     r1 = TestColumn(table_name="A", key=1)
-    r2 = TestColumn(table_name="b", key=1)
+    r2 = TestColumn(table_name="b", key=3)
     r3 = TestColumn(table_name="A", key=2)
     ff = FrameFactoryMP()
     r = ff.process_recipes((r1, r2, r3))
 
-    assert 0
+    assert r[r1] == 1
+    assert r[r2] == 3
+    assert r[r3] == 2
 
 
 def test_dependency_order():

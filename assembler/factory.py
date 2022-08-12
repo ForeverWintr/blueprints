@@ -89,27 +89,27 @@ class FrameFactoryMP(FrameFactory):
         instantiated = {}
 
         with ProcessPoolExecutor(max_workers=min(self.max_workers, len(recipe_graph))) as executor:
-            building |= {
-                executor.submit(
-                    util.process_recipe,
-                    r,
-                    [instantiated[d] for d in r.get_dependency_recipes()],
-                )
-                for r in buildable
-            }
-            completed, building = wait(building, timeout=self.timeout, return_when=FIRST_COMPLETED)
+            while True:
+                building |= {
+                    executor.submit(
+                        util.process_recipe,
+                        r,
+                        [instantiated[d] for d in r.get_dependency_recipes()],
+                    )
+                    for r in buildable
+                }
+                completed, building = wait(building, timeout=self.timeout, return_when=FIRST_COMPLETED)
 
-            # At least one recipe has completed. Add the results.
-            for task in completed:
-                recipe, data = task.result()
-                instantiated[recipe] = data
+                # At least one recipe has completed. Add the results.
+                for task in completed:
+                    recipe, data = task.result()
+                    instantiated[recipe] = data
 
-            if len(instantiated) == len(recipe_graph):
-                # Done
-                # break
-                raise NotImplementedError("WIP") #TODO REMOVE
+                if len(instantiated) == len(recipe_graph):
+                    # Done
+                    break
 
-            # Check to see what else is now buildable.
-            buildable = self._get_buildable_recipes(instantiated, recipe_graph)
+                # Check to see what else is now buildable.
+                buildable = self._get_buildable_recipes(instantiated, recipe_graph)
 
-            asdf
+        return instantiated
