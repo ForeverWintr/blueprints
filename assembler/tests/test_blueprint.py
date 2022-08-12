@@ -107,5 +107,5 @@ def test_visualize():
     ax = fig.subplots()
 
     b.draw(ax)
-    fig.savefig("/tmp/tmp.png")
+    fig.savefig("/tmp/tmp.png", bbox_inches="tight")
     raise NotImplementedError("WIP")  # TODO REMOVE

@@ -13,3 +13,11 @@ class BuildStatus(Enum):
     BUILDING = auto()
     BUILT = auto()
     ERROR = auto()
+
+
+BUILD_STATUS_TO_COLOR = {
+    BuildStatus.NOT_STARTED: "#eaecee",
+    BuildStatus.BUILDING: "#f4d03f",
+    BuildStatus.BUILT: "#2ecc71",
+    BuildStatus.ERROR: "#e74c3c",
+}

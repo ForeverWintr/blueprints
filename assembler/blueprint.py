@@ -7,7 +7,7 @@ import numpy as np
 from assembler.recipes import Recipe
 from assembler import exceptions
 from assembler import util
-from assembler.constants import NodeAttrs, BuildStatus
+from assembler.constants import NodeAttrs, BuildStatus, BUILD_STATUS_TO_COLOR
 
 if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt
@@ -23,7 +23,7 @@ def get_blueprint_layout(
     while bottom_layer:
         next_layer = set()
         y = 0
-        for node in bottom_layer:
+        for node in sorted(bottom_layer, key=str):
             positions[node] = (y, x)
             y += horizontal_increment
             for p in g.predecessors(node):
@@ -83,8 +83,12 @@ class Blueprint:
         """Draw the blueprint on the given matplotlib ax object"""
         positions = get_blueprint_layout(self._dependency_graph)
 
-        nodes = sorted(self._dependency_graph.nodes, key=str)
+        node_data = self._dependency_graph.nodes(data=True)
+        nodes = sorted(self._dependency_graph, key=str)
         labels = {n: str(n) for n in nodes}
+        colors = [
+            BUILD_STATUS_TO_COLOR[node_data[n][NodeAttrs.build_status]] for n in nodes
+        ]
 
         nx.draw_networkx(
             self._dependency_graph,
@@ -92,6 +96,7 @@ class Blueprint:
             ax=ax,
             nodelist=nodes,
             labels=labels,
+            node_color=colors,
         )
 
         # Preserve relative edge length
