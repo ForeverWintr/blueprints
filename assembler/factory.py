@@ -7,33 +7,10 @@ import networkx as nx
 from assembler.recipes import Recipe
 from assembler import exceptions
 from assembler import util
+from assembler.blueprint import Blueprint
 
 
 class Factory:
-    def _build_graph(self, recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
-        """Create a dependency graph from the given recipe. The dependeny graph is a directed
-        graph, where edges point from dependencies to the recipes that depend on them."""
-        g = nx.DiGraph()
-        to_process = list(recipes)
-        processed = set()
-        while to_process:
-            r = to_process.pop()
-            g.add_node(r)
-            for d in r.get_dependency_recipes():
-                g.add_edge(d, r)
-
-                if d not in processed:
-                    to_process.append(d)
-
-            processed.add(r)
-
-        if nx.dag.has_cycle(g):
-            cycles = nx.find_cycle(g)
-            raise exceptions.ConfigurationError(
-                f"The given recipe produced dependency cycles: {cycles}"
-            )
-        return g
-
     def _process_graph(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
         """Return a dictionary mapping recipe for data for all recipes in `recipe_graph`"""
         instantiated = {}
@@ -41,7 +18,9 @@ class Factory:
 
             # The topological_sort guarantees that the dependencies of this intermediate_recipe
             # were seen first.
-            dependencies = [instantiated[d] for d in intermediate_recipe.get_dependency_recipes()]
+            dependencies = [
+                instantiated[d] for d in intermediate_recipe.get_dependency_recipes()
+            ]
             data = intermediate_recipe.extract_from_dependency(*dependencies)
             instantiated[intermediate_recipe] = data
         return instantiated
@@ -50,8 +29,8 @@ class Factory:
         """Process the given recipes, returning a dictionary mapping each recipe to the data it
         specifies."""
         recipes = tuple(recipes)
-        graph = self._build_graph(recipes)
-        all_data = self._process_graph(graph)
+        blueprint = Blueprint.from_recipes(recipes)
+        all_data = self._process_graph(blueprint._dependency_graph)
         return {r: all_data[r] for r in recipes}
 
     def process_recipe(self, recipe: Recipe) -> tp.Any:
@@ -88,7 +67,9 @@ class FrameFactoryMP(Factory):
         building = set()
         instantiated = {}
 
-        with ProcessPoolExecutor(max_workers=min(self.max_workers, len(recipe_graph))) as executor:
+        with ProcessPoolExecutor(
+            max_workers=min(self.max_workers, len(recipe_graph))
+        ) as executor:
             while True:
                 building |= {
                     executor.submit(
@@ -98,7 +79,9 @@ class FrameFactoryMP(Factory):
                     )
                     for r in buildable
                 }
-                completed, building = wait(building, timeout=self.timeout, return_when=FIRST_COMPLETED)
+                completed, building = wait(
+                    building, timeout=self.timeout, return_when=FIRST_COMPLETED
+                )
 
                 # At least one recipe has completed. Add the results.
                 for task in completed:

@@ -108,4 +108,3 @@ def test_visualize():
 
     b.draw(ax)
     fig.savefig("/tmp/tmp.png", bbox_inches="tight")
-    raise NotImplementedError("WIP")  # TODO REMOVE
