@@ -89,7 +89,7 @@ def test_get_blueprint_layout():
 
     g = make_dependency_graph([b, c])
     layout = get_blueprint_layout(g)
-    assert layout == {b: (0, 0), c: (1, 0), a: (0, 1), d: (1, 1)}
+    assert layout == {b: (0, 0), c: (0.1, 0), a: (0, 0.2), d: (0.1, 0.2)}
 
 
 def test_visualize():
