@@ -17,12 +17,12 @@ def get_blueprint_layout(
     g: nx.DiGraph, vertical_increment: float = 0.2, horizontal_increment: float = 0.1
 ) -> dict[Recipe, tuple[float, float]]:
     bottom_layer = {n for n, d in g.out_degree() if d == 0}
-    x = 0
+    x = 0.0
     positions = {}
 
     while bottom_layer:
         next_layer = set()
-        y = 0
+        y = 0.0
         for node in sorted(bottom_layer, key=str):
             positions[node] = (y, x)
             y += horizontal_increment
@@ -78,6 +78,9 @@ class Blueprint:
         """Create a blueprint from the given recipe."""
         g = make_dependency_graph(recipes)
         return cls(g)
+
+    def _set_state(self, node, state: BuildStatus) -> None:
+        raise NotImplementedError("WIP")  # TODO REMOVE
 
     def draw(self, ax: plt.Axes) -> None:
         """Draw the blueprint on the given matplotlib ax object"""

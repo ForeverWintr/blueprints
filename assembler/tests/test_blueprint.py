@@ -3,13 +3,21 @@ import typing as tp
 
 import pytest
 
-
 from assembler.recipes import Recipe
 from assembler.factory import Factory, FrameFactoryMP
 from assembler.blueprint import Blueprint, get_blueprint_layout, make_dependency_graph
 from assembler.constants import NodeAttrs, BuildStatus
 from assembler import exceptions
 from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
+
+
+@pytest.fixture
+def basic_blueprint() -> Blueprint:
+    a = Node(name="a", dependencies=())
+    d = Node(name="d", dependencies=())
+    b = Node(name="b", dependencies=(a,))
+    c = Node(name="c", dependencies=(a, d))
+    return Blueprint.from_recipes([b, c])
 
 
 class Node(Recipe):
@@ -31,7 +39,7 @@ class Node(Recipe):
         return self.name
 
 
-def test_from_recipes():
+def test_from_recipes() -> None:
     r1 = TestColumn(table_name="A", key=1)
     r2 = TestColumn(table_name="b", key=4)
     r3 = TestColumn(table_name="A", key=2)
@@ -81,7 +89,7 @@ def test_from_recipes_no_cycles() -> None:
         assert e.match("The given recipe produced dependency cycles")
 
 
-def test_get_blueprint_layout():
+def test_get_blueprint_layout() -> None:
     a = Node(name="a", dependencies=())
     d = Node(name="d", dependencies=())
     b = Node(name="b", dependencies=(a,))
@@ -92,7 +100,13 @@ def test_get_blueprint_layout():
     assert layout == {b: (0, 0), c: (0.1, 0), a: (0, 0.2), d: (0.1, 0.2)}
 
 
-def test_visualize():
+def test_set_state(basic_blueprint: Blueprint) -> None:
+
+    basic_blueprint._set_state
+    assert 0
+
+
+def test_visualize() -> None:
     # Slow import.
     from matplotlib import pyplot as plt
 
