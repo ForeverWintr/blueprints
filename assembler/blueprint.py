@@ -82,7 +82,7 @@ class Blueprint:
     def build_state(self, recipe: Recipe) -> BuildStatus:
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status]
 
-    def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
+    def set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
         self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state
 
     def draw(self, ax: plt.Axes) -> None:

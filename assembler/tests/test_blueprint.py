@@ -104,7 +104,7 @@ def test_set_build_state(basic_blueprint: Blueprint) -> None:
     node = next(iter(basic_blueprint._dependency_graph))
 
     assert basic_blueprint.build_state(node) is BuildStatus.NOT_STARTED
-    basic_blueprint._set_build_state(node, BuildStatus.BUILDING)
+    basic_blueprint.set_build_state(node, BuildStatus.BUILDING)
     assert basic_blueprint.build_state(node) is BuildStatus.BUILDING
 
 
