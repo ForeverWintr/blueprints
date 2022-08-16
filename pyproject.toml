@@ -1,2 +1,8 @@
 [tool.mypy]
 disable_error_code = "call-arg"
+
+[[tool.mypy.overrides]]
+module = [
+    "networkx",
+]
+ignore_missing_imports = true
