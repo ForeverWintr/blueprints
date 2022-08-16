@@ -100,10 +100,12 @@ def test_get_blueprint_layout() -> None:
     assert layout == {b: (0, 0), c: (0.1, 0), a: (0, 0.2), d: (0.1, 0.2)}
 
 
-def test_set_state(basic_blueprint: Blueprint) -> None:
+def test_set_build_state(basic_blueprint: Blueprint) -> None:
+    node = next(iter(basic_blueprint._dependency_graph))
 
-    basic_blueprint._set_state
-    assert 0
+    assert basic_blueprint.build_state(node) is BuildStatus.NOT_STARTED
+    basic_blueprint._set_build_state(node, BuildStatus.BUILDING)
+    assert basic_blueprint.build_state(node) is BuildStatus.BUILDING
 
 
 def test_visualize() -> None:
