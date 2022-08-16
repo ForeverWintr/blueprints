@@ -24,6 +24,9 @@ class Factory:
             instantiated[intermediate_recipe] = data
         return instantiated
 
+    def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
+        raise NotImplementedError("WIP")  # TODO REMOVE
+
     def process_recipes(self, recipes: tp.Iterable[Recipe]) -> dict[Recipe, tp.Any]:
         """Process the given recipes, returning a dictionary mapping each recipe to the data it
         specifies."""

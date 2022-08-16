@@ -56,3 +56,7 @@ def test_mp_error():
 def test_get_buildable_recipes():
 
     assert 0
+
+
+def test_allow_missing():
+    assert 0
