@@ -23,6 +23,12 @@ class Factory:
         return instantiated
 
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
+        instantiated: dict[Recipe, tp.Any] = {}
+
+        buildable = blueprint.buildable_recipes()
+        for b in buildable:
+            deps = ?
+
         raise NotImplementedError("WIP")  # TODO REMOVE
 
     def process_recipes(self, recipes: tp.Iterable[Recipe]) -> dict[Recipe, tp.Any]:
@@ -35,7 +41,7 @@ class Factory:
 
     def process_recipe(self, recipe: Recipe) -> tp.Any:
         """Construct the given recipe, and return whatever it returns."""
-        return self.process_recipes([recipe])[recipe]
+        return self.process_recipes((recipe,))[recipe]
 
 
 class FrameFactoryMP(Factory):

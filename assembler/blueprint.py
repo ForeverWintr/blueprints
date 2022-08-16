@@ -103,9 +103,9 @@ class Blueprint:
                     # This successor is now buildable.
                     self._buildable.add(successor)
 
-    def buildable_recipes(self) -> tuple[Recipe, ...]:
+    def buildable_recipes(self) -> frozenset[Recipe]:
         """Return recipes can be built (i.e., all of their dependencies were already built)"""
-        return tuple(self._buildable)
+        return frozenset(self._buildable)
 
     def draw(self, ax: plt.Axes) -> None:
         """Draw the blueprint on the given matplotlib ax object"""
