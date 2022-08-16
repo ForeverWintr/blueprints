@@ -4,11 +4,10 @@ import typing as tp
 import pytest
 
 from assembler.recipes import Recipe
-from assembler.factory import Factory, FrameFactoryMP
 from assembler.blueprint import Blueprint, get_blueprint_layout, make_dependency_graph
 from assembler.constants import NodeAttrs, BuildStatus
 from assembler import exceptions
-from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
+from assembler.tests.conftest import TestData, TestColumn
 
 
 @pytest.fixture
@@ -117,10 +116,10 @@ def test_visualize() -> None:
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
 
-    b = Blueprint.from_recipes([b, c])
+    bp = Blueprint.from_recipes([b, c])
 
     fig = plt.Figure()
     ax = fig.subplots()
 
-    b.draw(ax)
+    bp.draw(ax)
     fig.savefig("/tmp/tmp.png", bbox_inches="tight")

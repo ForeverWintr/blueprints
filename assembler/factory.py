@@ -5,7 +5,6 @@ import os
 import networkx as nx
 
 from assembler.recipes import Recipe
-from assembler import exceptions
 from assembler import util
 from assembler.blueprint import Blueprint
 
@@ -13,7 +12,7 @@ from assembler.blueprint import Blueprint
 class Factory:
     def _process_graph(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
         """Return a dictionary mapping recipe for data for all recipes in `recipe_graph`"""
-        instantiated = {}
+        instantiated: dict[Recipe, tp.Any] = {}
         for intermediate_recipe in nx.topological_sort(recipe_graph):
 
             # The topological_sort guarantees that the dependencies of this intermediate_recipe
@@ -65,7 +64,7 @@ class FrameFactoryMP(Factory):
         # Initially, recipes with no ancestors are buildable.
         buildable = next(nx.topological_generations(recipe_graph))
         building = set()
-        instantiated = {}
+        instantiated: dict[Recipe, tp.Any] = {}
 
         with ProcessPoolExecutor(
             max_workers=min(self.max_workers, len(recipe_graph))
@@ -75,7 +74,7 @@ class FrameFactoryMP(Factory):
                     executor.submit(
                         util.process_recipe,
                         r,
-                        [instantiated[d] for d in r.get_dependency_recipes()],
+                        tuple(instantiated[d] for d in r.get_dependency_recipes()),
                     )
                     for r in buildable
                 }

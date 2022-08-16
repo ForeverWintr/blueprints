@@ -2,11 +2,9 @@ from __future__ import annotations
 import typing as tp
 
 import networkx as nx
-import numpy as np
 
 from assembler.recipes import Recipe
 from assembler import exceptions
-from assembler import util
 from assembler.constants import NodeAttrs, BuildStatus, BUILD_STATUS_TO_COLOR
 
 if tp.TYPE_CHECKING:

@@ -13,7 +13,7 @@ TABLES = {
 class TestData(Recipe):
     table_name: str
 
-    def extract_from_dependency(self) -> dict[Recipe, tp.Any]:
+    def extract_from_dependency(self) -> dict[int, int]:
         return dict(TABLES[self.table_name])
 
 
@@ -32,7 +32,7 @@ class TestColumn(Recipe):
 class MultiColumn(Recipe):
     columns: tuple[TestColumn, ...]
 
-    def get_dependency_recipes(self) -> tuple[Recipe]:
+    def get_dependency_recipes(self) -> tuple[TestColumn, ...]:
         """This depends on a table"""
         return self.columns
 

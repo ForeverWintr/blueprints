@@ -12,26 +12,33 @@ class Recipe(ABC):
         return ()
 
     @abstractmethod
-    def extract_from_dependency(self, *args) -> tp.Any:
+    def extract_from_dependency(self, *args: tp.Any) -> tp.Any:
         """Given positional dependencies, extract the data that this recipe describes. args will be
         the results of instantiating the recipes returned by `get_dependency_recipes` above"""
 
     ### Below this line, methods are internal and not intended to be overriden.
 
     def __init_subclass__(cls, **kwargs) -> None:
-        r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)
+        r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)  # type: ignore
         assert r is cls
 
-    def _is_not_default(self, attribute: str, fields: tp.Dict[str, dataclasses.Field]) -> bool:
+    def _is_not_default(
+        self, attribute: str, fields: tp.Dict[str, dataclasses.Field]
+    ) -> bool:
         """
         Return true if the specified attribute is not its default
         """
-        return attribute in fields and getattr(self, attribute) is not fields[attribute].default
+        return (
+            attribute in fields
+            and getattr(self, attribute) is not fields[attribute].default
+        )
 
     def pformat(self, indent="", indent_increase="    "):
         """Generate a multiline representation of this recipe, for easier visual inspection."""
         fields = {f.name: f for f in dataclasses.fields(self)}
-        non_default = ((k, v) for k, v in fields.items() if self._is_not_default(k, fields))
+        non_default = (
+            (k, v) for k, v in fields.items() if self._is_not_default(k, fields)
+        )
         to_display = {k: getattr(self, k) for k, _ in non_default}
 
         lines = [f"{indent}{self.__class__.__name__}("]
@@ -43,7 +50,7 @@ class Recipe(ABC):
                 lines.append(f"{next_indent}{name}=(")
                 inner = next_indent + indent_increase
                 for sub in value:
-                    if isinstance(sub, ColumnRecipe):
+                    if isinstance(sub, Recipe):
                         lines.append(
                             f"{sub.pformat(indent=inner, indent_increase=indent_increase)},"
                         )

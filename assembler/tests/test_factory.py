@@ -1,12 +1,6 @@
 from __future__ import annotations
-import typing as tp
-from collections import defaultdict
 
-import pytest
-
-from assembler.recipes import Recipe
 from assembler.factory import Factory, FrameFactoryMP
-from assembler import exceptions
 from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
 
 
