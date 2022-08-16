@@ -4,5 +4,6 @@ disable_error_code = "call-arg"
 [[tool.mypy.overrides]]
 module = [
     "networkx",
+    "matplotlib",
 ]
 ignore_missing_imports = true
