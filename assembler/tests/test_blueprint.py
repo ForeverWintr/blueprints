@@ -12,8 +12,8 @@ from assembler.tests.conftest import TestData, TestColumn
 
 @pytest.fixture
 def basic_blueprint() -> Blueprint:
-    a = Node(name="a", dependencies=())
-    d = Node(name="d", dependencies=())
+    a = Node(name="a")
+    d = Node(name="d")
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
     return Blueprint.from_recipes([b, c])
@@ -23,7 +23,7 @@ class Node(Recipe):
     """A simple recipe used for making graphs"""
 
     name: str
-    dependencies: tuple[Node]
+    dependencies: tuple[Node] = ()
 
     def get_dependency_recipes(self) -> tuple[Node]:
         return self.dependencies
@@ -31,10 +31,10 @@ class Node(Recipe):
     def extract_from_dependency(self, *args) -> tp.Any:
         pass
 
-    def __repr__(self):
-        return f"{(type(self).__name__)}({self.name!r}, {self.dependencies})"
+    # def __repr__(self):
+    # return f"{(type(self).__name__)}({self.name!r}, {self.dependencies})"
 
-    def __str__(self):
+    def __repr__(self):
         return self.name
 
 
@@ -89,8 +89,8 @@ def test_from_recipes_no_cycles() -> None:
 
 
 def test_get_blueprint_layout() -> None:
-    a = Node(name="a", dependencies=())
-    d = Node(name="d", dependencies=())
+    a = Node(name="a")
+    d = Node(name="d")
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
 
@@ -103,16 +103,47 @@ def test_set_build_state(basic_blueprint: Blueprint) -> None:
     node = next(iter(basic_blueprint._dependency_graph))
 
     assert basic_blueprint.build_state(node) is BuildStatus.NOT_STARTED
-    basic_blueprint.set_build_state(node, BuildStatus.BUILDING)
+    basic_blueprint._set_build_state(node, BuildStatus.BUILDING)
     assert basic_blueprint.build_state(node) is BuildStatus.BUILDING
 
 
+def test_mark_built(basic_blueprint: Blueprint) -> None:
+    name_to_state = {
+        r.name: basic_blueprint.build_state(r) for r in basic_blueprint._dependency_graph
+    }
+    assert set(name_to_state.values()) == {BuildStatus.NOT_STARTED}
+
+    basic_blueprint.mark_built(Node(name="a"))
+    name_to_state = {
+        r.name: basic_blueprint.build_state(r) for r in basic_blueprint._dependency_graph
+    }
+    assert name_to_state == {
+        "b": BuildStatus.NOT_STARTED,
+        "a": BuildStatus.BUILT,
+        "c": BuildStatus.NOT_STARTED,
+        "d": BuildStatus.NOT_STARTED,
+    }
+
+
+def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
+    #  If you use a _to_do copy, you have to iterate over it each time.
+    #  If you keep a set of buildable recipes and update it each time one is finished, you only need to check neighbors.
+    bldbl = basic_blueprint.buildable_recipes()
+    assert {n.name for n in bldbl} == {"a", "d"}
+
+    basic_blueprint.mark_built(Node(name="a"))
+
+    bldbl2 = basic_blueprint.buildable_recipes()
+    assert {n.name for n in bldbl2} == {"d", "b"}
+
+
+@pytest.mark.skip
 def test_visualize() -> None:
     # Slow import.
     from matplotlib import pyplot as plt
 
-    a = Node(name="a", dependencies=())
-    d = Node(name="d", dependencies=())
+    a = Node(name="a")
+    d = Node(name="d")
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
 

@@ -71,6 +71,12 @@ class Blueprint:
         """
         self._dependency_graph = dependency_graph
 
+        # Recipes that are currently buildable.
+        self._buildable = {v for v, d in dependency_graph.in_degree() if d == 0}
+
+        # Map of current number of unbuilt dependencies per recipe
+        self._dependency_count = {v: d for v, d in dependency_graph.in_degree() if d > 0}
+
     @classmethod
     def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> Blueprint:
         """Create a blueprint from the given recipe."""
@@ -80,8 +86,26 @@ class Blueprint:
     def build_state(self, recipe: Recipe) -> BuildStatus:
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status]
 
-    def set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
+    def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
         self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state
+
+    def mark_built(self, recipe: Recipe) -> None:
+        """Update the blueprint to reflect that the given node was built successfully"""
+        self._set_build_state(recipe, BuildStatus.BUILT)
+        self._buildable.remove(recipe)
+
+        # What new recipes are now buildable?
+        for successor in self._dependency_graph.successors(recipe):
+            if self.build_state(successor) is BuildStatus.NOT_STARTED:
+
+                self._dependency_count[successor] -= 1
+                if self._dependency_count[successor] == 0:
+                    # This successor is now buildable.
+                    self._buildable.add(successor)
+
+    def buildable_recipes(self) -> tuple[Recipe, ...]:
+        """Return recipes can be built (i.e., all of their dependencies were already built)"""
+        return tuple(self._buildable)
 
     def draw(self, ax: plt.Axes) -> None:
         """Draw the blueprint on the given matplotlib ax object"""
@@ -90,9 +114,7 @@ class Blueprint:
         node_data = self._dependency_graph.nodes(data=True)
         nodes = sorted(self._dependency_graph, key=str)
         labels = {n: str(n) for n in nodes}
-        colors = [
-            BUILD_STATUS_TO_COLOR[node_data[n][NodeAttrs.build_status]] for n in nodes
-        ]
+        colors = [BUILD_STATUS_TO_COLOR[node_data[n][NodeAttrs.build_status]] for n in nodes]
 
         nx.draw_networkx(
             self._dependency_graph,

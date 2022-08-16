@@ -17,9 +17,7 @@ class Factory:
 
             # The topological_sort guarantees that the dependencies of this intermediate_recipe
             # were seen first.
-            dependencies = [
-                instantiated[d] for d in intermediate_recipe.get_dependency_recipes()
-            ]
+            dependencies = [instantiated[d] for d in intermediate_recipe.get_dependency_recipes()]
             data = intermediate_recipe.extract_from_dependency(*dependencies)
             instantiated[intermediate_recipe] = data
         return instantiated
@@ -32,7 +30,7 @@ class Factory:
         specifies."""
         recipes = tuple(recipes)
         blueprint = Blueprint.from_recipes(recipes)
-        all_data = self._process_graph(blueprint._dependency_graph)
+        all_data = self.process_blueprint(blueprint)
         return {r: all_data[r] for r in recipes}
 
     def process_recipe(self, recipe: Recipe) -> tp.Any:
@@ -69,9 +67,7 @@ class FrameFactoryMP(Factory):
         building = set()
         instantiated: dict[Recipe, tp.Any] = {}
 
-        with ProcessPoolExecutor(
-            max_workers=min(self.max_workers, len(recipe_graph))
-        ) as executor:
+        with ProcessPoolExecutor(max_workers=min(self.max_workers, len(recipe_graph))) as executor:
             while True:
                 building |= {
                     executor.submit(
