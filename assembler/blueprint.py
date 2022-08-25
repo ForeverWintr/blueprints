@@ -34,7 +34,7 @@ def get_blueprint_layout(
 def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
     g = nx.DiGraph()
     outputs = set(recipes)
-    to_process = list(outputs)
+    to_process: list[Recipe] = list(outputs)
     processed = set()
     while to_process:
         r = to_process.pop()
@@ -43,6 +43,7 @@ def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
             **{
                 NodeAttrs.output: r in outputs,
                 NodeAttrs.build_status: BuildStatus.NOT_STARTED,
+                # NodeAttrs.call: ,
             },
         )
         for d in r.get_dependency_recipes():
