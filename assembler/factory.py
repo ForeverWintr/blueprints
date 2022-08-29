@@ -1,6 +1,7 @@
 import typing as tp
-from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED
+from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, Future
 import os
+import multiprocessing
 
 import networkx as nx
 
@@ -43,46 +44,39 @@ class Factory:
 
 
 class FactoryMP(Factory):
-    def __init__(self, max_workers=None, timeout=60 * 5):
-        self.max_workers = max_workers
+    def __init__(self, max_workers=None, timeout=60 * 5, mp_context=None):
+        """Basic multiprocessing of recipes using concurrent futures."""
         if max_workers is None:
-            self.max_workers = os.cpu_count()
+            max_workers = os.cpu_count()
+        self.max_workers = max_workers
+
+        if mp_context is None:
+            mp_context = multiprocessing.get_context("spawn")
+        self.mp_context = mp_context
+
         self.timeout = timeout
 
-    @staticmethod
-    def _get_buildable_recipes(
-        instantiated: dict[Recipe, tp.Any], recipe_graph: nx.DiGraph
-    ) -> list[Recipe]:
-        """Based on what is currently built, return recipes for which all dependencies are
-        built."""
-        buildable = []
-        for built in instantiated:
-            for successor in recipe_graph.successors(built):
-                if successor not in instantiated and all(
-                    dep in instantiated for dep in recipe_graph.predecessors(successor)
-                ):
-                    buildable.append(successor)
-        return buildable
-
-    def _process_graph(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
-
-        # Initially, recipes with no ancestors are buildable.
-        buildable = next(nx.topological_generations(recipe_graph))
-        building = set()
+    def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
+        building: set[Future] = set()
 
         with ProcessPoolExecutor(
-            max_workers=min(self.max_workers, len(recipe_graph))
+            max_workers=min(self.max_workers, len(blueprint)),
+            mp_context=self.mp_context,
         ) as executor:
-            while True:
-                building |= {
-                    executor.submit(
-                        util.process_recipe,
-                        r,
-                        tuple(instantiated[d] for d in r.get_dependencies()),
+            while len(instantiated) < len(blueprint):
+                buildable = blueprint.buildable_recipes()
+                if not buildable:
+                    raise exceptions.AssemblerError(
+                        "Blueprint is not built but returned no buildable recipes."
                     )
-                    for r in buildable
-                }
+
+                for b in buildable:
+                    call = blueprint.get_call(b)
+                    args, kwargs = call.get_args_kwargs(instantiated)
+                    future = executor.submit(util.process_recipe, b, *args, **kwargs)
+                    building.add(future)
+
                 completed, building = wait(
                     building, timeout=self.timeout, return_when=FIRST_COMPLETED
                 )
@@ -91,13 +85,7 @@ class FactoryMP(Factory):
                 for task in completed:
                     # If task failed, an exception is raised here.
                     recipe, data = task.result()
+                    blueprint.mark_built(recipe)
                     instantiated[recipe] = data
-
-                if len(instantiated) == len(recipe_graph):
-                    # Done
-                    break
-
-                # Check to see what else is now buildable.
-                buildable = self._get_buildable_recipes(instantiated, recipe_graph)
 
         return instantiated
