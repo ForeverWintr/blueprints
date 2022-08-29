@@ -2,7 +2,6 @@ from __future__ import annotations
 import typing as tp
 
 import networkx as nx
-from functools import cached_property
 
 from assembler.recipes import Recipe, Call
 from assembler import exceptions

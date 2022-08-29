@@ -58,7 +58,7 @@ class FactoryMP(Factory):
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
         running_futures: set[Future] = set()
-        building: set[recipe] = set()
+        building: set[Recipe] = set()
 
         with ProcessPoolExecutor(
             max_workers=min(self.max_workers, len(blueprint)),

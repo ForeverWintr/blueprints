@@ -27,9 +27,9 @@ class Node(Recipe):
     """A simple recipe used for making graphs"""
 
     name: str
-    dependencies: tuple[Node] = ()
+    dependencies: tuple[Node, ...] = ()
 
-    def get_dependencies(self) -> tuple[Node]:
+    def get_dependencies(self) -> Call:
         return Call(*self.dependencies)
 
     def extract_from_dependencies(self, *args) -> tp.Any:
@@ -75,7 +75,7 @@ def test_from_recipes_no_cycles() -> None:
         name: str
         target: str
 
-        def get_dependencies(self) -> tuple[Bad]:
+        def get_dependencies(self) -> Call:
             return Call(Bad(name=self.target, target=self.name))
 
         def extract_from_dependencies(self, *args) -> tp.Any:
@@ -132,12 +132,12 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
 def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
     #  If you use a _to_do copy, you have to iterate over it each time.
     #  If you keep a set of buildable recipes and update it each time one is finished, you only need to check neighbors.
-    bldbl = basic_blueprint.buildable_recipes()
+    bldbl = tp.cast(frozenset[Node], basic_blueprint.buildable_recipes())
     assert {n.name for n in bldbl} == {"a", "d"}
 
     basic_blueprint.mark_built(Node(name="a"))
 
-    bldbl2 = basic_blueprint.buildable_recipes()
+    bldbl2 = tp.cast(frozenset[Node], basic_blueprint.buildable_recipes())
     assert {n.name for n in bldbl2} == {"d", "b"}
 
 
