@@ -65,7 +65,7 @@ def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
 
 
 class Blueprint:
-    def __init__(self, dependency_graph: nx.DiGraph):
+    def __init__(self, dependency_graph: nx.DiGraph, outputs: frozenset[Recipe]):
         """A Blueprint describes how to construct recipes and their depenencies.
 
         Args:
@@ -73,6 +73,7 @@ class Blueprint:
             the recipes that depend on them.
         """
         self._dependency_graph = dependency_graph
+        self.outputs = outputs
 
         # Recipes that are currently buildable.
         self._buildable = {v for v, d in dependency_graph.in_degree() if d == 0}
@@ -85,12 +86,9 @@ class Blueprint:
     @classmethod
     def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> Blueprint:
         """Create a blueprint from the given recipe."""
+        outputs = frozenset(recipes)
         g = make_dependency_graph(recipes)
-        return cls(g)
-
-    @cached_property
-    def outputs(self) -> tp.Tuple[Recipe]:
-        asdf
+        return cls(g, outputs=outputs)
 
     def get_build_state(self, recipe: Recipe) -> BuildStatus:
         """Return the build state of the given recipe"""

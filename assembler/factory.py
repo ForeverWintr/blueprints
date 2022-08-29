@@ -10,20 +10,6 @@ from assembler.blueprint import Blueprint
 
 
 class Factory:
-    def _process_graph(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
-        """Return a dictionary mapping recipe for data for all recipes in `recipe_graph`"""
-        instantiated: dict[Recipe, tp.Any] = {}
-        for intermediate_recipe in nx.topological_sort(recipe_graph):
-
-            # The topological_sort guarantees that the dependencies of this intermediate_recipe
-            # were seen first.
-            dependencies = [
-                instantiated[d] for d in intermediate_recipe.get_dependencies()
-            ]
-            data = intermediate_recipe.extract_from_dependencies(*dependencies)
-            instantiated[intermediate_recipe] = data
-        return instantiated
-
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
 
@@ -36,7 +22,7 @@ class Factory:
                 instantiated[b] = result
                 blueprint.mark_built(b)
 
-        raise NotImplementedError("WIP")  # TODO REMOVE
+        return {r: instantiated[r] for r in blueprint.outputs}
 
     def process_recipes(self, recipes: tp.Iterable[Recipe]) -> dict[Recipe, tp.Any]:
         """Process the given recipes, returning a dictionary mapping each recipe to the data it
