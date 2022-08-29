@@ -11,6 +11,20 @@ if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt
 
 
+class Call:
+    """Container for holding args and kwargs. Returned from recipes' get_dependency, and used to
+    form the call to recipes' extract_from_dependency
+    """
+
+    def __init__(self, *args: Recipe, **kwargs: Recipe):
+        self.args = args
+        self.kwargs = kwargs
+
+    def recipes(self) -> tp.Iterator[Recipe]:
+        yield from self.args
+        yield from self.kwargs.values()
+
+
 def get_blueprint_layout(
     g: nx.DiGraph, vertical_increment: float = 0.2, horizontal_increment: float = 0.1
 ) -> dict[Recipe, tuple[float, float]]:
@@ -76,7 +90,9 @@ class Blueprint:
         self._buildable = {v for v, d in dependency_graph.in_degree() if d == 0}
 
         # Map of current number of unbuilt dependencies per recipe
-        self._dependency_count = {v: d for v, d in dependency_graph.in_degree() if d > 0}
+        self._dependency_count = {
+            v: d for v, d in dependency_graph.in_degree() if d > 0
+        }
 
     @classmethod
     def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> Blueprint:
@@ -115,7 +131,9 @@ class Blueprint:
         node_data = self._dependency_graph.nodes(data=True)
         nodes = sorted(self._dependency_graph, key=str)
         labels = {n: str(n) for n in nodes}
-        colors = [BUILD_STATUS_TO_COLOR[node_data[n][NodeAttrs.build_status]] for n in nodes]
+        colors = [
+            BUILD_STATUS_TO_COLOR[node_data[n][NodeAttrs.build_status]] for n in nodes
+        ]
 
         nx.draw_networkx(
             self._dependency_graph,

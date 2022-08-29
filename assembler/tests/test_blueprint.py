@@ -4,7 +4,12 @@ import typing as tp
 import pytest
 
 from assembler.recipes import Recipe
-from assembler.blueprint import Blueprint, get_blueprint_layout, make_dependency_graph
+from assembler.blueprint import (
+    Blueprint,
+    get_blueprint_layout,
+    make_dependency_graph,
+    Call,
+)
 from assembler.constants import NodeAttrs, BuildStatus
 from assembler import exceptions
 from assembler.tests.conftest import TestData, TestColumn
@@ -109,13 +114,15 @@ def test_set_build_state(basic_blueprint: Blueprint) -> None:
 
 def test_mark_built(basic_blueprint: Blueprint) -> None:
     name_to_state = {
-        r.name: basic_blueprint.build_state(r) for r in basic_blueprint._dependency_graph
+        r.name: basic_blueprint.build_state(r)
+        for r in basic_blueprint._dependency_graph
     }
     assert set(name_to_state.values()) == {BuildStatus.NOT_STARTED}
 
     basic_blueprint.mark_built(Node(name="a"))
     name_to_state = {
-        r.name: basic_blueprint.build_state(r) for r in basic_blueprint._dependency_graph
+        r.name: basic_blueprint.build_state(r)
+        for r in basic_blueprint._dependency_graph
     }
     assert name_to_state == {
         "b": BuildStatus.NOT_STARTED,
@@ -135,6 +142,11 @@ def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
 
     bldbl2 = basic_blueprint.buildable_recipes()
     assert {n.name for n in bldbl2} == {"d", "b"}
+
+
+def test_call():
+    c = Call(1, 2, 3, foo=5)
+    assert tuple(c.recipes) == (1, 2, 3, 5)
 
 
 @pytest.mark.skip

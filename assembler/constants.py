@@ -19,14 +19,6 @@ class BuildStatus(Enum):
     ERROR = auto()
 
 
-@dataclasses.dataclass(frozen=True, slots=True)
-class Call:
-    """Container for holding args and kwargs"""
-
-    args: tuple[tp.Any] = ()
-    kwargs: dict[str, tp.Any] = dataclasses.field(default_factory=dict)
-
-
 BUILD_STATUS_TO_COLOR = {
     BuildStatus.NOT_STARTED: "#eaecee",
     BuildStatus.BUILDING: "#f4d03f",
