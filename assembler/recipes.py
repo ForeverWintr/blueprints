@@ -16,6 +16,8 @@ class Call:
     def get_args_kwargs(
         self, recipe_to_dependency: dict[Recipe, tp.Any]
     ) -> tuple[tuple[tp.Any, ...], dict[str : tp.Any]]:
+        """Replace this Call's recipes with instantiated dependencies from the
+        `recipe_to_dependency` dictionary, and return args and kwargs."""
         new_args = tuple(recipe_to_dependency[r] for r in self.args)
         new_kwargs = {k: recipe_to_dependency[v] for k, v in self.kwargs.items()}
         return new_args, new_kwargs

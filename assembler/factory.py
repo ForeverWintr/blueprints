@@ -22,8 +22,7 @@ class Factory:
                     "Blueprint is not built but returned no buildable recipes."
                 )
             for b in buildable:
-                call = blueprint.get_call(b)
-                args, kwargs = call.get_args_kwargs(instantiated)
+                args, kwargs = blueprint.get_args_kwargs(b, instantiated)
                 result = b.extract_from_dependencies(*args, **kwargs)
                 instantiated[b] = result
                 blueprint.mark_built(b)
@@ -58,27 +57,30 @@ class FactoryMP(Factory):
 
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
-        building: set[Future] = set()
+        running_futures: set[Future] = set()
+        building: set[recipe] = set()
 
         with ProcessPoolExecutor(
             max_workers=min(self.max_workers, len(blueprint)),
             mp_context=self.mp_context,
         ) as executor:
             while len(instantiated) < len(blueprint):
+
                 buildable = blueprint.buildable_recipes()
                 if not buildable:
                     raise exceptions.AssemblerError(
                         "Blueprint is not built but returned no buildable recipes."
                     )
 
-                for b in buildable:
-                    call = blueprint.get_call(b)
-                    args, kwargs = call.get_args_kwargs(instantiated)
+                # Remove recipes that are currently in progress from buildable.
+                for b in buildable - building:
+                    args, kwargs = blueprint.get_args_kwargs(b, instantiated)
                     future = executor.submit(util.process_recipe, b, *args, **kwargs)
-                    building.add(future)
+                    running_futures.add(future)
+                    building.add(b)
 
-                completed, building = wait(
-                    building, timeout=self.timeout, return_when=FIRST_COMPLETED
+                completed, running_futures = wait(
+                    running_futures, timeout=self.timeout, return_when=FIRST_COMPLETED
                 )
 
                 # At least one recipe has completed. Add the results.
@@ -87,5 +89,6 @@ class FactoryMP(Factory):
                     recipe, data = task.result()
                     blueprint.mark_built(recipe)
                     instantiated[recipe] = data
+                    building.remove(recipe)
 
         return instantiated

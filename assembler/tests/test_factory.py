@@ -55,6 +55,7 @@ def test_dependency_order(factory_constructor):
         )
     )
 
+    # Buildable includes recipes that are currently building
     assert factory_constructor().process_recipe(r) == (1, 1, 4, 2, 1)
 
 
