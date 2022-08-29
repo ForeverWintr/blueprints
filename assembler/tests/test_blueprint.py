@@ -107,21 +107,21 @@ def test_get_blueprint_layout() -> None:
 def test_set_build_state(basic_blueprint: Blueprint) -> None:
     node = next(iter(basic_blueprint._dependency_graph))
 
-    assert basic_blueprint.build_state(node) is BuildStatus.NOT_STARTED
+    assert basic_blueprint.get_build_state(node) is BuildStatus.NOT_STARTED
     basic_blueprint._set_build_state(node, BuildStatus.BUILDING)
-    assert basic_blueprint.build_state(node) is BuildStatus.BUILDING
+    assert basic_blueprint.get_build_state(node) is BuildStatus.BUILDING
 
 
 def test_mark_built(basic_blueprint: Blueprint) -> None:
     name_to_state = {
-        r.name: basic_blueprint.build_state(r)
+        r.name: basic_blueprint.get_build_state(r)
         for r in basic_blueprint._dependency_graph
     }
     assert set(name_to_state.values()) == {BuildStatus.NOT_STARTED}
 
     basic_blueprint.mark_built(Node(name="a"))
     name_to_state = {
-        r.name: basic_blueprint.build_state(r)
+        r.name: basic_blueprint.get_build_state(r)
         for r in basic_blueprint._dependency_graph
     }
     assert name_to_state == {
