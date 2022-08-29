@@ -94,9 +94,16 @@ class Blueprint:
         """Return the build state of the given recipe"""
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status]
 
-    def get_call(self, recipe: Recipe) -> Call:
+    def _get_call(self, recipe: Recipe) -> Call:
         """Return the `Call` object associated with the given recipe"""
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.call]
+
+    def get_args_kwargs(
+        self, recipe: Recipe, recipe_to_dependency: dict[Recipe, tp.Any]
+    ) -> tuple[tuple[tp.Any, ...], dict[str, tp.Any]]:
+        """Return args and kwargs that can be star expanded into the given recipe's
+        extract_from_dependencies method."""
+        return self._get_call(recipe).get_args_kwargs(recipe_to_dependency)
 
     def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
         self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state
