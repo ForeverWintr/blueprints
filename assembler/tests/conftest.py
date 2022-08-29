@@ -36,7 +36,7 @@ class MultiColumn(Recipe):
 
     def get_dependencies(self) -> tuple[TestColumn, ...]:
         """This depends on a table"""
-        return Call(self.columns)
+        return Call(*self.columns)
 
     def extract_from_dependencies(self, *columns) -> tp.Any:
         return columns

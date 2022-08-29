@@ -37,7 +37,7 @@ class Factory:
         return self.process_recipes((recipe,))[recipe]
 
 
-class FrameFactoryMP(Factory):
+class FactoryMP(Factory):
     def __init__(self, max_workers=None, timeout=60 * 5):
         self.max_workers = max_workers
         if max_workers is None:

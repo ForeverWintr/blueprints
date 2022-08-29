@@ -1,20 +1,26 @@
 from __future__ import annotations
 
-from assembler.factory import Factory, FrameFactoryMP
+import pytest
+
+from assembler.factory import Factory, FactoryMP
 from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
 
+FACTORY_TYPES = (Factory, FactoryMP)
 
-def test_process_recipe() -> None:
-    factory = Factory()
+
+@pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
+def test_process_recipe(factory_constructor) -> None:
+    factory = factory_constructor()
     result = factory.process_recipe(TestColumn(table_name="A", key=1))
     assert result == TABLES["A"][1]
 
 
-def test_multiprocess_graph():
+@pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
+def test_process_recipes(factory_constructor):
     r1 = TestColumn(table_name="A", key=1)
     r2 = TestColumn(table_name="b", key=3)
     r3 = TestColumn(table_name="A", key=2)
-    ff = FrameFactoryMP()
+    ff = factory_constructor()
     r = ff.process_recipes((r1, r2, r3))
 
     assert r[r1] == 1
