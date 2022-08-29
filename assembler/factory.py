@@ -27,12 +27,14 @@ class Factory:
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
 
-        buildable = blueprint.buildable_recipes()
-        for b in buildable:
-            call = blueprint.get_call(b)
-            args, kwargs = call.get_args_kwargs(instantiated)
-            result = b.extract_from_dependencies(*args, **kwargs)
-            blueprint.mark_built(b)
+        while len(instantiated) < len(blueprint):
+            buildable = blueprint.buildable_recipes()
+            for b in buildable:
+                call = blueprint.get_call(b)
+                args, kwargs = call.get_args_kwargs(instantiated)
+                result = b.extract_from_dependencies(*args, **kwargs)
+                instantiated[b] = result
+                blueprint.mark_built(b)
 
         raise NotImplementedError("WIP")  # TODO REMOVE
 

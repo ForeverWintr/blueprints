@@ -2,6 +2,7 @@ from __future__ import annotations
 import typing as tp
 
 import networkx as nx
+from functools import cached_property
 
 from assembler.recipes import Recipe, Call
 from assembler import exceptions
@@ -87,6 +88,10 @@ class Blueprint:
         g = make_dependency_graph(recipes)
         return cls(g)
 
+    @cached_property
+    def outputs(self) -> tp.Tuple[Recipe]:
+        asdf
+
     def get_build_state(self, recipe: Recipe) -> BuildStatus:
         """Return the build state of the given recipe"""
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status]
@@ -138,3 +143,6 @@ class Blueprint:
 
         # Preserve relative edge length
         ax.set_aspect("equal")
+
+    def __len__(self):
+        return len(self._dependency_graph)

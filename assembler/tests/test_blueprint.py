@@ -156,6 +156,11 @@ def test_call():
     assert kwargs == {"foo": "5"}
 
 
+def test_outputs(basic_blueprint):
+    r = basic_blueprint.outputs()
+    assert 0
+
+
 @pytest.mark.skip
 def test_visualize() -> None:
     # Slow import.
