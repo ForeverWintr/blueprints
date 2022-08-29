@@ -3,12 +3,11 @@ import typing as tp
 
 import pytest
 
-from assembler.recipes import Recipe
+from assembler.recipes import Recipe, Call
 from assembler.blueprint import (
     Blueprint,
     get_blueprint_layout,
     make_dependency_graph,
-    Call,
 )
 from assembler.constants import NodeAttrs, BuildStatus
 from assembler import exceptions
@@ -31,15 +30,15 @@ class Node(Recipe):
     dependencies: tuple[Node] = ()
 
     def get_dependencies(self) -> tuple[Node]:
-        return self.dependencies
+        return Call(*self.dependencies)
 
     def extract_from_dependencies(self, *args) -> tp.Any:
         pass
 
-    # def __repr__(self):
-    # return f"{(type(self).__name__)}({self.name!r}, {self.dependencies})"
-
     def __repr__(self):
+        return f"{(type(self).__name__)}({self.name!r})"
+
+    def __str__(self):
         return self.name
 
 
@@ -54,12 +53,16 @@ def test_from_recipes() -> None:
     nodes = b._dependency_graph.nodes(data=True)
 
     assert set(b._dependency_graph[dep]) == {r1, r3}
-    assert nodes[dep] == {
+    node = nodes[dep]
+    node.pop(NodeAttrs.call)
+    assert node == {
         NodeAttrs.output: False,
         NodeAttrs.build_status: BuildStatus.NOT_STARTED,
     }
 
     assert set(b._dependency_graph[TestData(table_name="b")]) == {r2}
+    node = nodes[r1]
+    node.pop(NodeAttrs.call)
     assert nodes[r1] == {
         NodeAttrs.output: True,
         NodeAttrs.build_status: BuildStatus.NOT_STARTED,
@@ -72,14 +75,8 @@ def test_from_recipes_no_cycles() -> None:
         name: str
         target: str
 
-        def identity_key(self) -> tuple[tuple, ...]:
-            return (
-                ("name", self.name),
-                ("target", self.target),
-            )
-
         def get_dependencies(self) -> tuple[Bad]:
-            return (Bad(name=self.target, target=self.name),)
+            return Call(Bad(name=self.target, target=self.name))
 
         def extract_from_dependencies(self, *args) -> tp.Any:
             pass
@@ -157,8 +154,7 @@ def test_call():
 
 
 def test_outputs(basic_blueprint):
-    r = basic_blueprint.outputs()
-    assert 0
+    assert {n.name for n in basic_blueprint.outputs} == {"b", "c"}
 
 
 @pytest.mark.skip
