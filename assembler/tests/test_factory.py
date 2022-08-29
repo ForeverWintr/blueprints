@@ -4,15 +4,10 @@ from assembler.factory import Factory, FrameFactoryMP
 from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
 
 
-def test_build_recipe() -> None:
+def test_process_recipe() -> None:
     factory = Factory()
     result = factory.process_recipe(TestColumn(table_name="A", key=1))
     assert result == TABLES["A"][1]
-
-
-def test_extract_from_dependency():
-    recipe = TestData(table_name="A")
-    assert recipe.extract_from_dependency() == TABLES["A"]
 
 
 def test_multiprocess_graph():

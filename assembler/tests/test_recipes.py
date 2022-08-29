@@ -28,6 +28,11 @@ def test_hash_eq():
     assert hash(r1) == hash(r2)
 
 
+def test_extract_from_dependencies():
+    recipe = TestData(table_name="A")
+    assert recipe.extract_from_dependencies() == TABLES["A"]
+
+
 def to_do():
     # Should I use dataclasses? - yes
     # Multiprocessing

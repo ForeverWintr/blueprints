@@ -4,17 +4,38 @@ from abc import ABC, abstractmethod
 import dataclasses
 
 
+class Call:
+    """Container for holding args and kwargs. Returned from recipes' get_dependency, and used to
+    form the call to recipes' extract_from_dependencies
+    """
+
+    def __init__(self, *args: Recipe, **kwargs: Recipe):
+        self.args = args
+        self.kwargs = kwargs
+
+    def get_args_kwargs(
+        self, recipe_to_dependency: dict[Recipe, tp.Any]
+    ) -> tuple[tuple[tp.Any, ...], dict[str : tp.Any]]:
+        new_args = tuple(recipe_to_dependency[r] for r in self.args)
+        new_kwargs = {k: recipe_to_dependency[v] for k, v in self.kwargs.items()}
+        return new_args, new_kwargs
+
+    def recipes(self) -> tp.Iterator[Recipe]:
+        yield from self.args
+        yield from self.kwargs.values()
+
+
 class Recipe(ABC):
     """Base class for recipes"""
 
-    def get_dependency_recipes(self) -> tuple[Recipe, ...]:
-        """Return a tuple of recipes that this recipe depends on"""
-        return ()
+    def get_dependencies(self) -> Call:
+        """Return a Call specifiying recipes that this recipe depends on."""
+        return Call()
 
     @abstractmethod
-    def extract_from_dependency(self, *args: tp.Any) -> tp.Any:
+    def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:
         """Given positional dependencies, extract the data that this recipe describes. args will be
-        the results of instantiating the recipes returned by `get_dependency_recipes` above"""
+        the results of instantiating the recipes returned by `get_dependencies` above"""
 
     ### Below this line, methods are internal and not intended to be overriden.
 

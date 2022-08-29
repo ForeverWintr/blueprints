@@ -17,8 +17,10 @@ class Factory:
 
             # The topological_sort guarantees that the dependencies of this intermediate_recipe
             # were seen first.
-            dependencies = [instantiated[d] for d in intermediate_recipe.get_dependency_recipes()]
-            data = intermediate_recipe.extract_from_dependency(*dependencies)
+            dependencies = [
+                instantiated[d] for d in intermediate_recipe.get_dependencies()
+            ]
+            data = intermediate_recipe.extract_from_dependencies(*dependencies)
             instantiated[intermediate_recipe] = data
         return instantiated
 
@@ -27,7 +29,10 @@ class Factory:
 
         buildable = blueprint.buildable_recipes()
         for b in buildable:
-            deps = ?
+            call = blueprint.get_call(b)
+            args, kwargs = call.get_args_kwargs(instantiated)
+            result = b.extract_from_dependencies(*args, **kwargs)
+            blueprint.mark_built(b)
 
         raise NotImplementedError("WIP")  # TODO REMOVE
 
@@ -73,13 +78,15 @@ class FrameFactoryMP(Factory):
         building = set()
         instantiated: dict[Recipe, tp.Any] = {}
 
-        with ProcessPoolExecutor(max_workers=min(self.max_workers, len(recipe_graph))) as executor:
+        with ProcessPoolExecutor(
+            max_workers=min(self.max_workers, len(recipe_graph))
+        ) as executor:
             while True:
                 building |= {
                     executor.submit(
                         util.process_recipe,
                         r,
-                        tuple(instantiated[d] for d in r.get_dependency_recipes()),
+                        tuple(instantiated[d] for d in r.get_dependencies()),
                     )
                     for r in buildable
                 }

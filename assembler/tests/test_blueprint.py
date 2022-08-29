@@ -30,10 +30,10 @@ class Node(Recipe):
     name: str
     dependencies: tuple[Node] = ()
 
-    def get_dependency_recipes(self) -> tuple[Node]:
+    def get_dependencies(self) -> tuple[Node]:
         return self.dependencies
 
-    def extract_from_dependency(self, *args) -> tp.Any:
+    def extract_from_dependencies(self, *args) -> tp.Any:
         pass
 
     # def __repr__(self):
@@ -78,10 +78,10 @@ def test_from_recipes_no_cycles() -> None:
                 ("target", self.target),
             )
 
-        def get_dependency_recipes(self) -> tuple[Bad]:
+        def get_dependencies(self) -> tuple[Bad]:
             return (Bad(name=self.target, target=self.name),)
 
-        def extract_from_dependency(self, *args) -> tp.Any:
+        def extract_from_dependencies(self, *args) -> tp.Any:
             pass
 
         def __repr__(self):
@@ -145,8 +145,15 @@ def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
 
 
 def test_call():
+
+    # Here I'm pretending integers are recipes.
     c = Call(1, 2, 3, foo=5)
-    assert tuple(c.recipes) == (1, 2, 3, 5)
+    assert tuple(c.recipes()) == (1, 2, 3, 5)
+
+    recipe_to_dependency = {x: str(x) for x in (1, 2, 3, 5)}
+    args, kwargs = c.get_args_kwargs(recipe_to_dependency)
+    assert args == ("1", "2", "3")
+    assert kwargs == {"foo": "5"}
 
 
 @pytest.mark.skip

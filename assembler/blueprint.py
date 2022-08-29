@@ -3,26 +3,12 @@ import typing as tp
 
 import networkx as nx
 
-from assembler.recipes import Recipe
+from assembler.recipes import Recipe, Call
 from assembler import exceptions
 from assembler.constants import NodeAttrs, BuildStatus, BUILD_STATUS_TO_COLOR
 
 if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt
-
-
-class Call:
-    """Container for holding args and kwargs. Returned from recipes' get_dependency, and used to
-    form the call to recipes' extract_from_dependency
-    """
-
-    def __init__(self, *args: Recipe, **kwargs: Recipe):
-        self.args = args
-        self.kwargs = kwargs
-
-    def recipes(self) -> tp.Iterator[Recipe]:
-        yield from self.args
-        yield from self.kwargs.values()
 
 
 def get_blueprint_layout(
@@ -52,15 +38,16 @@ def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
     processed = set()
     while to_process:
         r = to_process.pop()
+        depends_on = r.get_dependencies()
         g.add_node(
             r,
             **{
                 NodeAttrs.output: r in outputs,
                 NodeAttrs.build_status: BuildStatus.NOT_STARTED,
-                # NodeAttrs.call: ,
+                NodeAttrs.call: depends_on,
             },
         )
-        for d in r.get_dependency_recipes():
+        for d in depends_on.recipes():
             g.add_edge(d, r)
 
             if d not in processed:
@@ -102,6 +89,10 @@ class Blueprint:
 
     def build_state(self, recipe: Recipe) -> BuildStatus:
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status]
+
+    def get_call(self, recipe: Recipe) -> Call:
+        """Return the `Call` object associated with the given recipe"""
+        return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.call]
 
     def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
         self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state
