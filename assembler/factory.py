@@ -7,6 +7,7 @@ import networkx as nx
 from assembler.recipes import Recipe
 from assembler import util
 from assembler.blueprint import Blueprint
+from assembler import exceptions
 
 
 class Factory:
@@ -15,6 +16,10 @@ class Factory:
 
         while len(instantiated) < len(blueprint):
             buildable = blueprint.buildable_recipes()
+            if not buildable:
+                raise exceptions.AssemblerError(
+                    "Blueprint is not built but returned no buildable recipes."
+                )
             for b in buildable:
                 call = blueprint.get_call(b)
                 args, kwargs = call.get_args_kwargs(instantiated)

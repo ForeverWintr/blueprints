@@ -4,6 +4,8 @@ import pytest
 
 from assembler.factory import Factory, FactoryMP
 from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn
+from assembler.blueprint import Blueprint
+from assembler import exceptions
 
 FACTORY_TYPES = (Factory, FactoryMP)
 
@@ -28,8 +30,20 @@ def test_process_recipes(factory_constructor):
     assert r[r3] == 2
 
 
-def test_dependency_order():
-    # Dependency order should be guaranteed.
+@pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
+def test_empty_buildable_error(factory_constructor):
+    # A malformed blueprint that has no buildable recipes.
+    b = Blueprint.from_recipes((TestColumn(table_name="A", key=1),))
+    b._buildable = frozenset()
+
+    f = factory_constructor()
+    with pytest.raises(exceptions.AssemblerError):
+        f.process_blueprint(b)
+
+
+@pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
+def test_dependency_order(factory_constructor):
+    # Dependency order is guaranteed.
 
     r = MultiColumn(
         columns=(
@@ -41,7 +55,7 @@ def test_dependency_order():
         )
     )
 
-    assert Factory().process_recipe(r) == (1, 1, 4, 2, 1)
+    assert factory_constructor().process_recipe(r) == (1, 1, 4, 2, 1)
 
 
 def test_mp_timeout():
