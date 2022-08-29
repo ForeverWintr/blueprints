@@ -1,0 +1,14 @@
+[tool.mypy]
+disable_error_code = [
+    "call-arg",
+    "override",
+]
+exclude = ["setup.py"]
+
+[[tool.mypy.overrides]]
+module = [
+    "networkx",
+    "matplotlib",
+    "setuptools",
+]
+ignore_missing_imports = true

@@ -1,6 +1,6 @@
-class FrameFactoryError(Exception):
+class AssemblerError(Exception):
     """Base class for frame factory errors"""
 
 
-class ConfigurationError(FrameFactoryError):
+class ConfigurationError(AssemblerError):
     """The specified configuration is invalid"""

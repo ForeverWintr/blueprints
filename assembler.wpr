@@ -9,6 +9,12 @@ proj.directory-list = [{'dirloc': loc('assembler'),
                         'filter': '*',
                         'include_hidden': False,
                         'recursive': True,
+                        'watch_for_changes': True},
+                       {'dirloc': loc('.'),
+                        'excludes': (),
+                        'filter': '*',
+                        'include_hidden': False,
+                        'recursive': True,
                         'watch_for_changes': True}]
 proj.file-type = 'shared'
 testing.auto-test-file-specs = (('glob',

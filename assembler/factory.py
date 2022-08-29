@@ -1,116 +1,94 @@
 import typing as tp
-from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED
+from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, Future
 import os
+import multiprocessing
 
 import networkx as nx
 
 from assembler.recipes import Recipe
-from assembler import exceptions
 from assembler import util
+from assembler.blueprint import Blueprint
+from assembler import exceptions
 
 
 class Factory:
-    def _build_graph(self, recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
-        """Create a dependency graph from the given recipe. The dependeny graph is a directed
-        graph, where edges point from dependencies to the recipes that depend on them."""
-        g = nx.DiGraph()
-        to_process = list(recipes)
-        processed = set()
-        while to_process:
-            r = to_process.pop()
-            g.add_node(r)
-            for d in r.get_dependency_recipes():
-                g.add_edge(d, r)
+    def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
+        instantiated: dict[Recipe, tp.Any] = {}
 
-                if d not in processed:
-                    to_process.append(d)
+        while len(instantiated) < len(blueprint):
+            buildable = blueprint.buildable_recipes()
+            if not buildable:
+                raise exceptions.AssemblerError(
+                    "Blueprint is not built but returned no buildable recipes."
+                )
+            for b in buildable:
+                args, kwargs = blueprint.get_args_kwargs(b, instantiated)
+                result = b.extract_from_dependencies(*args, **kwargs)
+                instantiated[b] = result
+                blueprint.mark_built(b)
 
-            processed.add(r)
-
-        if nx.dag.has_cycle(g):
-            cycles = nx.find_cycle(g)
-            raise exceptions.ConfigurationError(
-                f"The given recipe produced dependency cycles: {cycles}"
-            )
-        return g
-
-    def _process_graph(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
-        """Return a dictionary mapping recipe for data for all recipes in `recipe_graph`"""
-        instantiated = {}
-        for intermediate_recipe in nx.topological_sort(recipe_graph):
-
-            # The topological_sort guarantees that the dependencies of this intermediate_recipe
-            # were seen first.
-            dependencies = [instantiated[d] for d in intermediate_recipe.get_dependency_recipes()]
-            data = intermediate_recipe.extract_from_dependency(*dependencies)
-            instantiated[intermediate_recipe] = data
-        return instantiated
+        return {r: instantiated[r] for r in blueprint.outputs}
 
     def process_recipes(self, recipes: tp.Iterable[Recipe]) -> dict[Recipe, tp.Any]:
         """Process the given recipes, returning a dictionary mapping each recipe to the data it
         specifies."""
         recipes = tuple(recipes)
-        graph = self._build_graph(recipes)
-        all_data = self._process_graph(graph)
+        blueprint = Blueprint.from_recipes(recipes)
+        all_data = self.process_blueprint(blueprint)
         return {r: all_data[r] for r in recipes}
 
     def process_recipe(self, recipe: Recipe) -> tp.Any:
         """Construct the given recipe, and return whatever it returns."""
-        return self.process_recipes([recipe])[recipe]
+        return self.process_recipes((recipe,))[recipe]
 
 
-class FrameFactoryMP(Factory):
-    def __init__(self, max_workers=None, timeout=60 * 5):
-        self.max_workers = max_workers
+class FactoryMP(Factory):
+    def __init__(self, max_workers=None, timeout=60 * 5, mp_context=None):
+        """Basic multiprocessing of recipes using concurrent futures."""
         if max_workers is None:
-            self.max_workers = os.cpu_count()
+            max_workers = os.cpu_count()
+        self.max_workers = max_workers
+
+        if mp_context is None:
+            mp_context = multiprocessing.get_context("spawn")
+        self.mp_context = mp_context
+
         self.timeout = timeout
 
-    @staticmethod
-    def _get_buildable_recipes(
-        instantiated: dict[Recipe, tp.Any], recipe_graph: nx.DiGraph
-    ) -> list[Recipe]:
-        """Based on what is currently built, return recipes for which all dependencies are
-        built."""
-        buildable = []
-        for built in instantiated:
-            for successor in recipe_graph.successors(built):
-                if successor not in instantiated and all(
-                    dep in instantiated for dep in recipe_graph.predecessors(successor)
-                ):
-                    buildable.append(successor)
-        return buildable
+    def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
+        instantiated: dict[Recipe, tp.Any] = {}
+        running_futures: set[Future] = set()
+        building: set[Recipe] = set()
 
-    def _process_graph(self, recipe_graph: nx.DiGraph) -> dict[Recipe, tp.Any]:
+        with ProcessPoolExecutor(
+            max_workers=min(self.max_workers, len(blueprint)),
+            mp_context=self.mp_context,
+        ) as executor:
+            while len(instantiated) < len(blueprint):
 
-        # Initially, recipes with no ancestors are buildable.
-        buildable = next(nx.topological_generations(recipe_graph))
-        building = set()
-        instantiated = {}
-
-        with ProcessPoolExecutor(max_workers=min(self.max_workers, len(recipe_graph))) as executor:
-            while True:
-                building |= {
-                    executor.submit(
-                        util.process_recipe,
-                        r,
-                        [instantiated[d] for d in r.get_dependency_recipes()],
+                buildable = blueprint.buildable_recipes()
+                if not buildable:
+                    raise exceptions.AssemblerError(
+                        "Blueprint is not built but returned no buildable recipes."
                     )
-                    for r in buildable
-                }
-                completed, building = wait(building, timeout=self.timeout, return_when=FIRST_COMPLETED)
+
+                # Remove recipes that are currently in progress from buildable.
+                for b in buildable - building:
+                    args, kwargs = blueprint.get_args_kwargs(b, instantiated)
+                    future = executor.submit(util.process_recipe, b, *args, **kwargs)
+                    running_futures.add(future)
+                    building.add(b)
+
+                completed, running_futures = wait(
+                    running_futures, timeout=self.timeout, return_when=FIRST_COMPLETED
+                )
 
                 # At least one recipe has completed. Add the results.
                 for task in completed:
                     # If task failed, an exception is raised here.
                     recipe, data = task.result()
+                    blueprint.mark_built(recipe)
                     instantiated[recipe] = data
-
-                if len(instantiated) == len(recipe_graph):
-                    # Done
-                    break
-
-                # Check to see what else is now buildable.
-                buildable = self._get_buildable_recipes(instantiated, recipe_graph)
+                    building.remove(recipe)
 
         return instantiated
