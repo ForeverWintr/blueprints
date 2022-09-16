@@ -31,7 +31,7 @@ jobs:
       id: get-python-versions-action
       with:
         min-version: 3.9
-        include-prereleases: false
+        include-prereleases: true
 
   test:
     needs: [lint, get-python-versions]
