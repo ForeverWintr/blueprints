@@ -109,3 +109,6 @@ ENV/
 
 # macOS
 .DS_Store
+
+# Poetry based on this recommendation: https://stackoverflow.com/a/61076546/1286571
+poetry.lock
