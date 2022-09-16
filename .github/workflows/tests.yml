@@ -56,7 +56,7 @@ jobs:
       run: poetry install --no-interaction
 
     - name: Run tests
-      run: poetry run pytest
+      run: poetry run pytest --cov=<project-dir> --cov-report=xml
 
     # - name: Install dependencies
     #   run: |
