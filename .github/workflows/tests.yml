@@ -51,7 +51,7 @@ jobs:
       with:
         virtualenvs-create: true
         virtualenvs-in-project: true
-        # installer-parallel: true
+        # installer-parallel: true # May have caused an issue on macos
 
     #----------------------------------------------
     #       load cached venv if cache exists
