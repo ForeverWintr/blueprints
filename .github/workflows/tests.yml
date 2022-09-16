@@ -22,7 +22,7 @@ jobs:
         include-prereleases: true
 
   test:
-
+    needs: [get-python-versions]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
