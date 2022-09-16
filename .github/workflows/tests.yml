@@ -10,6 +10,13 @@ on:
 
 jobs:
 
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: psf/black@stable
+
+  # https://github.com/marketplace/actions/latest-python-versions
   get-python-versions:
     runs-on: ubuntu-latest
     outputs:
@@ -22,7 +29,7 @@ jobs:
         include-prereleases: true
 
   test:
-    needs: [get-python-versions]
+    needs: [lint, get-python-versions]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
