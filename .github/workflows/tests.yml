@@ -22,7 +22,7 @@ jobs:
     outputs:
       python-matrix: ${{ steps.get-python-versions-action.outputs.latest-python-versions }}
     steps:
-    - uses: snok/latest-python-versions@v1
+    - uses: snok/latest-python-versions@v1.1.0
       id: get-python-versions-action
       with:
         min-version: 3.9
