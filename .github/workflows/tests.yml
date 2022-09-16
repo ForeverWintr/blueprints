@@ -30,7 +30,7 @@ jobs:
     - uses: snok/latest-python-versions@v1.1.0
       id: get-python-versions-action
       with:
-        min-version: 3.10
+        min-version: 3.9
         include-prereleases: false
 
   test:
@@ -40,7 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ${{ fromJson(needs.get-python-versions.outputs.python-matrix) }}
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+        os: ["ubuntu-latest", "macos-latest"] #, "windows-latest"] # At time of writing windows fails to find python versions.
 
     steps:
     - uses: actions/checkout@v3
