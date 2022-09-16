@@ -37,7 +37,7 @@ jobs:
       uses: actions/setup-python@v4.2.0
       with:
         python-version: ${{ matrix.python-version }}
-        cache: 'poetry' # Needs poetry lockfile.
+        # cache: 'poetry' # Needs poetry lockfile.
 
     - name: Install poetry
       uses: snok/install-poetry@v1.3.1
