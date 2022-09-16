@@ -87,25 +87,3 @@ jobs:
     #     token: ${{ secrets.CODECOV_TOKEN }}  # Only required for private repositories
     #     file: ./coverage.xml
     #     fail_ci_if_error: true
-
-    # - name: Install dependencies
-    #   run: |
-    #     python -m pip install --upgrade pip
-    #     python -m pip install flake8
-    #     pip install tox tox-gh-actions
-    #     pip install -r requirements-dev.txt
-    # - name: Lint with flake8
-    #   run: |
-    #     # stop the build if there are Python syntax errors or undefined names
-    #     flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-    #     # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-    #     flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    # - name: Run tox with tox-gh-actions
-    #   run: tox -e py
-
-    # - name: Upload coverage
-    #   uses: codecov/codecov-action@v2
-    #   with:
-    #     files: ./coverage.xml # optional
-    #     fail_ci_if_error: true # optional (default = false)
-    #     verbose: true # optional (default = false)
