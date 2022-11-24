@@ -59,20 +59,24 @@ def test_dependency_order(factory_constructor):
     assert factory_constructor().process_recipe(r) == (1, 1, 4, 2, 1)
 
 
+@pytest.mark.skip
 def test_mp_timeout():
 
     assert 0
 
 
+@pytest.mark.skip
 def test_mp_error():
 
     assert 0
 
 
+@pytest.mark.skip
 def test_get_buildable_recipes():
 
     assert 0
 
 
+@pytest.mark.skip
 def test_allow_missing():
     assert 0
