@@ -1,7 +1,7 @@
 from __future__ import annotations
 import typing as tp
 
-from assembler.recipes import Recipe, Call
+from assembler.recipes.base import Recipe, Call
 
 #  Pretend these are tables
 TABLES = {

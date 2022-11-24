@@ -3,7 +3,7 @@ import typing as tp
 
 import pytest
 
-from assembler.recipes import Recipe, Call
+from assembler.recipes.base import Recipe, Call
 from assembler.blueprint import (
     Blueprint,
     get_blueprint_layout,

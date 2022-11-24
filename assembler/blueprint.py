@@ -3,7 +3,7 @@ import typing as tp
 
 import networkx as nx
 
-from assembler.recipes import Recipe, Call
+from assembler.recipes.base import Recipe, Call
 from assembler import exceptions
 from assembler.constants import NodeAttrs, BuildStatus, BUILD_STATUS_TO_COLOR
 

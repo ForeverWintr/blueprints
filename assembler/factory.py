@@ -5,7 +5,7 @@ import multiprocessing
 
 import networkx as nx
 
-from assembler.recipes import Recipe
+from assembler.recipes.base import Recipe
 from assembler import util
 from assembler.blueprint import Blueprint
 from assembler import exceptions

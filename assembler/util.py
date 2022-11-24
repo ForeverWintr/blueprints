@@ -1,6 +1,6 @@
 import typing as tp
 
-from assembler.recipes import Recipe
+from assembler.recipes.base import Recipe
 
 
 def process_recipe(recipe: Recipe, *args, **kwargs) -> tuple[Recipe, tp.Any]:
