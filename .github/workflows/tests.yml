@@ -27,7 +27,7 @@ jobs:
     outputs:
       python-matrix: ${{ steps.get-python-versions-action.outputs.latest-python-versions }}
     steps:
-    - uses: snok/latest-python-versions@v1.1.0
+    - uses: snok/latest-python-versions@v1.1.2
       id: get-python-versions-action
       with:
         min-version: 3.9
@@ -52,7 +52,7 @@ jobs:
         # cache: 'poetry' # Needs poetry lockfile.
 
     - name: Install poetry
-      uses: snok/install-poetry@v1.3.1
+      uses: snok/install-poetry@v1.3.3
       with:
         virtualenvs-create: true
         virtualenvs-in-project: true
