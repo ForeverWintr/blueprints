@@ -11,6 +11,7 @@ from assembler.recipes.base import Recipe, Call
 # Just pass from_tsv args?
 # Series from function? No because I want a frame recipe.
 # Series from frame? Frame recipe and column/index? Seems a lot of work to create a frame recipe.
+# Maybe that's fine given how early this is.
 class SeriesFromFile(Recipe):
     """A recipe for a series from a file"""
 
