@@ -24,6 +24,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.10"
 networkx = "^2.8.6"
+static-frame = "^0.9.22"
 
 [tool.poetry.group.dev.dependencies]
 black = "^22.8.0"

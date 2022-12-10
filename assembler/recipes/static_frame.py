@@ -22,6 +22,7 @@ class SeriesFromFile(Recipe):
     frame_extract_kwargs: hmm
 
     def get_dependencies(self) -> Call:
+        '''Depends on seriesfromfile'''
         asdf
 
     def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:
