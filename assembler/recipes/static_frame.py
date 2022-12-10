@@ -14,6 +14,8 @@ class _FromDelimited(Recipe):
     index_column: str | None = None
     frame_extract_function: tp.Callable[..., sf.Frame] = sf.Frame.from_tsv
     frame_extract_kwargs: frozendict = frozendict()
+    allow_missing: bool = False
+    missing_data_exceptions: tp.Type[BaseException] = FileNotFoundError
 
 
 # From Delimited?
