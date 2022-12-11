@@ -56,7 +56,7 @@ def test_allow_missing(missing_configurations):
     # file exists and not
     # column exists and not
 
-    # TODO make this a parameter
+    # TODO make this parametrize
     for factory, fp, col in missing_configurations:
         asdf
 

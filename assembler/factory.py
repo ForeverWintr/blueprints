@@ -3,7 +3,6 @@ from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, Futur
 import os
 import multiprocessing
 
-import networkx as nx
 
 from assembler.recipes.base import Recipe
 from assembler import util
@@ -12,6 +11,14 @@ from assembler import exceptions
 
 
 class Factory:
+    def __init__(self, allow_missing: bool = True):
+        """A factory controls the construction of recipes.
+        Args:
+        allow_missing: If False, individual recipes' allow_missing settings are ignored, and any missing data errors are raised. If both the factory and recipe have allow_missing set to true, missing data sentinels are returned instead.
+
+        """
+        self.allow_missing = allow_missing
+
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
 
@@ -21,11 +28,16 @@ class Factory:
                 raise exceptions.AssemblerError(
                     "Blueprint is not built but returned no buildable recipes."
                 )
-            for b in buildable:
-                args, kwargs = blueprint.get_args_kwargs(b, instantiated)
-                result = b.extract_from_dependencies(*args, **kwargs)
-                instantiated[b] = result
-                blueprint.mark_built(b)
+            for recipe in buildable:
+                args, kwargs = blueprint.get_args_kwargs(recipe, instantiated)
+                _, result = util.process_recipe(
+                    recipe,
+                    allow_missing_override=self.allow_missing,
+                    args=args,
+                    kwargs=kwargs,
+                )
+                instantiated[recipe] = result
+                blueprint.mark_built(recipe)
 
         return {r: instantiated[r] for r in blueprint.outputs}
 
@@ -43,8 +55,10 @@ class Factory:
 
 
 class FactoryMP(Factory):
-    def __init__(self, max_workers=None, timeout=60 * 5, mp_context=None):
+    def __init__(self, allow_missing=True, max_workers=None, timeout=60 * 5, mp_context=None):
         """Basic multiprocessing of recipes using concurrent futures."""
+        super().__init__(allow_missing=allow_missing)
+
         if max_workers is None:
             max_workers = os.cpu_count()
         self.max_workers = max_workers
@@ -75,7 +89,13 @@ class FactoryMP(Factory):
                 # Remove recipes that are currently in progress from buildable.
                 for b in buildable - building:
                     args, kwargs = blueprint.get_args_kwargs(b, instantiated)
-                    future = executor.submit(util.process_recipe, b, *args, **kwargs)
+                    future = executor.submit(
+                        util.process_recipe,
+                        recipe=b,
+                        allow_missing_override=self.allow_missing,
+                        args=args,
+                        kwargs=kwargs,
+                    )
                     running_futures.add(future)
                     building.add(b)
 

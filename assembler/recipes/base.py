@@ -30,6 +30,9 @@ class Call:
 class Recipe(ABC):
     """Base class for recipes"""
 
+    allow_missing: bool = False
+    missing_data_errors: tp.Type[Exception] | tp.Tuple[tp.Type[Exception], ...]
+
     def get_dependencies(self) -> Call:
         """Return a Call specifiying recipes that this recipe depends on."""
         return Call()
