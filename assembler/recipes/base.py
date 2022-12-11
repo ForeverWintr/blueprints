@@ -27,7 +27,7 @@ import dataclasses
 # yield from self.kwargs.values()
 
 
-class DependenciesNeeded:
+class DependencyRequest:
     def __init__(self, *args: Recipe, **kwargs: Recipe):
         """Returned from recipes' get_dependencies method. Used to indicate which other
         recipes a recipe depends on."""
@@ -42,7 +42,7 @@ class DependenciesNeeded:
 class DependenciesFilled:
     def __init__(self, args: tp.Tuple[tp.Any, ...], kwargs: tp.Dict[str, tp.Any]):
         """Passed to recipes' extract_from_dependencies method. Has the same signature
-        as the `DependenciesNeeded` produced by the recipe, but with recipes replaced by
+        as the `DependencyRequest` produced by the recipe, but with recipes replaced by
         the data they describe."""
         self.args = args
         self.kwargs = kwargs
@@ -50,7 +50,7 @@ class DependenciesFilled:
     @classmethod
     def from_dependency_spec(
         cls,
-        dependency_spec: DependenciesNeeded,
+        dependency_spec: DependencyRequest,
         recipe_to_dependency: dict[Recipe, tp.Any],
     ) -> DependenciesFilled:
         new_args = tuple(recipe_to_dependency[r] for r in dependency_spec.args)
@@ -66,9 +66,9 @@ class Recipe(ABC):
     allow_missing: bool = False
     missing_data_exceptions: tp.Type[Exception] | tp.Tuple[tp.Type[Exception], ...]
 
-    def get_dependencies(self) -> DependenciesNeeded:
+    def get_dependencies(self) -> DependencyRequest:
         """Return a Call specifiying recipes that this recipe depends on."""
-        return DependenciesNeeded()
+        return DependencyRequest()
 
     @abstractmethod
     def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:

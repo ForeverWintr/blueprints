@@ -1,7 +1,7 @@
 from __future__ import annotations
 import typing as tp
 
-from assembler.recipes.base import Recipe, DependenciesNeeded
+from assembler.recipes.base import Recipe, DependencyRequest
 
 #  Pretend these are tables
 TABLES = {
@@ -21,9 +21,9 @@ class TestColumn(Recipe):
     table_name: str
     key: int = 1
 
-    def get_dependencies(self) -> DependenciesNeeded:
+    def get_dependencies(self) -> DependencyRequest:
         """This depends on a table"""
-        return DependenciesNeeded(
+        return DependencyRequest(
             TestData(table_name=self.table_name),
         )
 
@@ -34,9 +34,9 @@ class TestColumn(Recipe):
 class MultiColumn(Recipe):
     columns: tuple[TestColumn, ...]
 
-    def get_dependencies(self) -> DependenciesNeeded:
+    def get_dependencies(self) -> DependencyRequest:
         """This depends on a table"""
-        return DependenciesNeeded(*self.columns)
+        return DependencyRequest(*self.columns)
 
     def extract_from_dependencies(self, *columns) -> tp.Any:
         return columns
@@ -50,10 +50,10 @@ class Raiser(Recipe):
     raise_in: str = "extract_from_dependencies"
     missing_data_fill_value = "fill_value"
 
-    def get_dependencies(self) -> DependenciesNeeded:
+    def get_dependencies(self) -> DependencyRequest:
         if self.raise_in == "get_dependencies":
             raise self.missing_data_exceptions()
-        return DependenciesNeeded()
+        return DependencyRequest()
 
     def extract_from_dependencies(self, *columns) -> tp.Any:
         if self.raise_in == "extract_from_dependencies":
