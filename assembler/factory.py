@@ -29,7 +29,8 @@ class Factory:
                     "Blueprint is not built but returned no buildable recipes."
                 )
             for recipe in buildable:
-                dependencies = blueprint.fill_dependencies(recipe, instantiated)
+                request = blueprint.get_dependency_request(recipe)
+                dependencies = util.Dependencies(recipe, instantiated)
                 _, result = util.process_recipe(
                     recipe,
                     allow_missing_override=self.allow_missing,

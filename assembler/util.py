@@ -1,6 +1,6 @@
 import typing as tp
 
-from assembler.recipes.base import Recipe, DependenciesFilled
+from assembler.recipes.base import Recipe, Dependencies
 
 
 class MissingPlaceholder(tp.NamedTuple):
@@ -9,7 +9,7 @@ class MissingPlaceholder(tp.NamedTuple):
 
 
 def process_recipe(
-    recipe: Recipe, allow_missing_override: bool, dependencies: DependenciesFilled
+    recipe: Recipe, allow_missing_override: bool, dependencies: Dependencies
 ) -> tuple[Recipe, tp.Any]:
     """Called in a child process, this utility function returns both the recipe and the result of
     its `extract_from_dependencies` method."""

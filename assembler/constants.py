@@ -9,7 +9,7 @@ class NodeAttrs:
 
     output = "output"
     build_status = "build_status"
-    call = "call"
+    dependency_request = "dependency_request"
 
 
 class BuildStatus(Enum):

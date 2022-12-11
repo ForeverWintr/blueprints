@@ -39,7 +39,7 @@ class DependencyRequest:
         yield from self.kwargs.values()
 
 
-class DependenciesFilled:
+class Dependencies:
     def __init__(self, args: tp.Tuple[tp.Any, ...], kwargs: tp.Dict[str, tp.Any]):
         """Passed to recipes' extract_from_dependencies method. Has the same signature
         as the `DependencyRequest` produced by the recipe, but with recipes replaced by
@@ -52,7 +52,7 @@ class DependenciesFilled:
         cls,
         dependency_spec: DependencyRequest,
         recipe_to_dependency: dict[Recipe, tp.Any],
-    ) -> DependenciesFilled:
+    ) -> Dependencies:
         new_args = tuple(recipe_to_dependency[r] for r in dependency_spec.args)
         new_kwargs = {
             k: recipe_to_dependency[v] for k, v in dependency_spec.kwargs.items()

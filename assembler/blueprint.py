@@ -3,7 +3,7 @@ import typing as tp
 
 import networkx as nx
 
-from assembler.recipes.base import Recipe, DependencyRequest, DependenciesFilled
+from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
 from assembler import exceptions
 from assembler.constants import NodeAttrs, BuildStatus, BUILD_STATUS_TO_COLOR
 
@@ -44,7 +44,7 @@ def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
             **{
                 NodeAttrs.output: r in outputs,
                 NodeAttrs.build_status: BuildStatus.NOT_STARTED,
-                NodeAttrs.call: depends_on,
+                NodeAttrs.dependency_request: depends_on,
             },
         )
         for d in depends_on.recipes():
@@ -93,17 +93,19 @@ class Blueprint:
         """Return the build state of the given recipe"""
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status]
 
-    def _get_call(self, recipe: Recipe) -> DependencyRequest:
-        """Return the `Call` object associated with the given recipe"""
-        return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.call]
+    def get_dependency_request(self, recipe: Recipe) -> DependencyRequest:
+        """Return the `DependencyRequest` object associated with the given recipe"""
+        return self._dependency_graph.nodes(data=True)[recipe][
+            NodeAttrs.dependency_request
+        ]
 
     def fill_dependencies(
         self, recipe: Recipe, recipe_to_dependency: dict[Recipe, tp.Any]
-    ) -> DependenciesFilled:
+    ) -> Dependencies:
         """Return an object containing the dependencies for the provided recipe. To be
         sent to the given recipe's extract_from_dependencies method."""
-        spec = self._get_call(recipe)
-        return DependenciesFilled.from_dependency_spec(spec, recipe_to_dependency)
+        spec = self.get_dependency_request(recipe)
+        return Dependencies.from_dependency_spec(spec, recipe_to_dependency)
 
     def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
         self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state
