@@ -3,7 +3,7 @@ import typing as tp
 
 import pytest
 
-from assembler.recipes.base import Recipe, DependencyRequest
+from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
 from assembler.blueprint import (
     Blueprint,
     get_blueprint_layout,
