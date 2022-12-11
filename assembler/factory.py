@@ -29,12 +29,11 @@ class Factory:
                     "Blueprint is not built but returned no buildable recipes."
                 )
             for recipe in buildable:
-                args, kwargs = blueprint.get_args_kwargs(recipe, instantiated)
+                dependencies = blueprint._get_call(recipe, instantiated)
                 _, result = util.process_recipe(
                     recipe,
                     allow_missing_override=self.allow_missing,
-                    args=args,
-                    kwargs=kwargs,
+                    dependencies=
                 )
                 instantiated[recipe] = result
                 blueprint.mark_built(recipe)

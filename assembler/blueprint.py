@@ -3,7 +3,7 @@ import typing as tp
 
 import networkx as nx
 
-from assembler.recipes.base import Recipe, Call
+from assembler.recipes.base import Recipe, Dependencies
 from assembler import exceptions
 from assembler.constants import NodeAttrs, BuildStatus, BUILD_STATUS_TO_COLOR
 
@@ -93,7 +93,7 @@ class Blueprint:
         """Return the build state of the given recipe"""
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status]
 
-    def _get_call(self, recipe: Recipe) -> Call:
+    def _get_call(self, recipe: Recipe) -> Dependencies:
         """Return the `Call` object associated with the given recipe"""
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.call]
 
@@ -102,7 +102,7 @@ class Blueprint:
     ) -> tuple[tuple[tp.Any, ...], dict[str, tp.Any]]:
         """Return args and kwargs that can be star expanded into the given recipe's
         extract_from_dependencies method."""
-        return self._get_call(recipe).get_args_kwargs(recipe_to_dependency)
+        return self._get_call(recipe).fill_dependencies(recipe_to_dependency)
 
     def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
         self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state

@@ -3,7 +3,7 @@ import typing as tp
 
 import pytest
 
-from assembler.recipes.base import Recipe, Call
+from assembler.recipes.base import Recipe, Dependencies
 from assembler.blueprint import (
     Blueprint,
     get_blueprint_layout,
@@ -29,8 +29,8 @@ class Node(Recipe):
     name: str
     dependencies: tuple[Node, ...] = ()
 
-    def get_dependencies(self) -> Call:
-        return Call(*self.dependencies)
+    def get_dependencies(self) -> Dependencies:
+        return Dependencies(*self.dependencies)
 
     def extract_from_dependencies(self, *args) -> tp.Any:
         pass
@@ -75,8 +75,8 @@ def test_from_recipes_no_cycles() -> None:
         name: str
         target: str
 
-        def get_dependencies(self) -> Call:
-            return Call(Bad(name=self.target, target=self.name))
+        def get_dependencies(self) -> Dependencies:
+            return Dependencies(Bad(name=self.target, target=self.name))
 
         def extract_from_dependencies(self, *args) -> tp.Any:
             pass
@@ -144,11 +144,11 @@ def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
 def test_call():
 
     # Here I'm pretending integers are recipes.
-    c = Call(1, 2, 3, foo=5)
+    c = Dependencies(1, 2, 3, foo=5)
     assert tuple(c.recipes()) == (1, 2, 3, 5)
 
     recipe_to_dependency = {x: str(x) for x in (1, 2, 3, 5)}
-    args, kwargs = c.get_args_kwargs(recipe_to_dependency)
+    args, kwargs = c.fill_dependencies(recipe_to_dependency)
     assert args == ("1", "2", "3")
     assert kwargs == {"foo": "5"}
 
