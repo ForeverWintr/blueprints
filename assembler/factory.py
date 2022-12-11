@@ -29,11 +29,11 @@ class Factory:
                     "Blueprint is not built but returned no buildable recipes."
                 )
             for recipe in buildable:
-                dependencies = blueprint._get_call(recipe, instantiated)
+                dependencies = blueprint.fill_dependencies(recipe, instantiated)
                 _, result = util.process_recipe(
                     recipe,
                     allow_missing_override=self.allow_missing,
-                    dependencies=
+                    dependencies=dependencies,
                 )
                 instantiated[recipe] = result
                 blueprint.mark_built(recipe)
@@ -54,7 +54,9 @@ class Factory:
 
 
 class FactoryMP(Factory):
-    def __init__(self, allow_missing=True, max_workers=None, timeout=60 * 5, mp_context=None):
+    def __init__(
+        self, allow_missing=True, max_workers=None, timeout=60 * 5, mp_context=None
+    ):
         """Basic multiprocessing of recipes using concurrent futures."""
         super().__init__(allow_missing=allow_missing)
 
@@ -87,7 +89,7 @@ class FactoryMP(Factory):
 
                 # Remove recipes that are currently in progress from buildable.
                 for b in buildable - building:
-                    args, kwargs = blueprint.get_args_kwargs(b, instantiated)
+                    args, kwargs = blueprint.fill_dependencies(b, instantiated)
                     future = executor.submit(
                         util.process_recipe,
                         recipe=b,

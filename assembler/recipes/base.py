@@ -34,14 +34,9 @@ class DependenciesNeeded:
         self.args = args
         self.kwargs = kwargs
 
-    def fill_dependencies(
-        self, recipe_to_dependency: dict[Recipe, tp.Any]
-    ) -> DependenciesNeeded:
-        """Replace this Call's recipes with instantiated dependencies from the
-        `recipe_to_dependency` dictionary, and return args and kwargs."""
-        new_args = tuple(recipe_to_dependency[r] for r in self.args)
-        new_kwargs = {k: recipe_to_dependency[v] for k, v in self.kwargs.items()}
-        return DependenciesFilled(new_args, new_kwargs)
+    def recipes(self) -> tp.Iterator[Recipe]:
+        yield from self.args
+        yield from self.kwargs.values()
 
 
 class DependenciesFilled:
@@ -51,6 +46,18 @@ class DependenciesFilled:
         the data they describe."""
         self.args = args
         self.kwargs = kwargs
+
+    @classmethod
+    def from_dependency_spec(
+        cls,
+        dependency_spec: DependenciesNeeded,
+        recipe_to_dependency: dict[Recipe, tp.Any],
+    ) -> DependenciesFilled:
+        new_args = tuple(recipe_to_dependency[r] for r in dependency_spec.args)
+        new_kwargs = {
+            k: recipe_to_dependency[v] for k, v in dependency_spec.kwargs.items()
+        }
+        return cls(new_args, new_kwargs)
 
 
 class Recipe(ABC):
