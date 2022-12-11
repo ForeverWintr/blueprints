@@ -36,10 +36,15 @@ def test_extract_from_dependencies():
 @pytest.mark.skip
 def test_to_do():
     # Should I use dataclasses? - yes
-    # Multiprocessing
     # Frames
-    # CI
-    # Real recipe
+    # What happens to downstream recipes when something is missing?
+
+    #  Hard to check when exception is happening. Should downstream be skipped even if
+    #  they don't allow missing? No. Could just pass missing to such a recipe, but that
+    #  complicates recipe a lot, because any dependency could be missing. Allow missing
+    #  means skipped. Otherwise fail? Failure can report reason, responsible recipe.
+
     # Caching
+    # Don't use args and kwargs in dependencyrequest. Make it more like a dict
 
     assert 0
