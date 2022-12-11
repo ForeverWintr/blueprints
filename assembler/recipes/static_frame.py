@@ -39,7 +39,7 @@ class SeriesFromDelimited(_FromDelimited):
         )
         return Call(frame_recipe)
 
-    def extract_from_dependencies(self, frame: sf.Frame) -> tp.Any:
+    def extract_from_dependencies(self, dependencies: Call) -> tp.Any:
         return frame[self.column_name]
 
 
