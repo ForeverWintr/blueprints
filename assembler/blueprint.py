@@ -3,7 +3,7 @@ import typing as tp
 
 import networkx as nx
 
-from assembler.recipes.base import Recipe, Dependencies
+from assembler.recipes.base import Recipe, DependenciesNeeded
 from assembler import exceptions
 from assembler.constants import NodeAttrs, BuildStatus, BUILD_STATUS_TO_COLOR
 
@@ -93,7 +93,7 @@ class Blueprint:
         """Return the build state of the given recipe"""
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status]
 
-    def _get_call(self, recipe: Recipe) -> Dependencies:
+    def _get_call(self, recipe: Recipe) -> DependenciesNeeded:
         """Return the `Call` object associated with the given recipe"""
         return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.call]
 

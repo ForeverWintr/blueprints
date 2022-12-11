@@ -4,27 +4,53 @@ from abc import ABC, abstractmethod
 import dataclasses
 
 
-class Dependencies:
-    """Container for holding args and kwargs. Returned from recipes' get_dependency, and
-    passed to recipes' extract_from_dependencies once its recipes are built.
-    """
+# class DependenciesNeeded:
+# """Container for holding args and kwargs. Returned from recipes' get_dependency, and
+# passed to recipes' extract_from_dependencies once its recipes are built.
+# """
 
-    def __init__(self, *args: Recipe | tp.Any, **kwargs: Recipe | tp.Any):
+# def __init__(self, *args: Recipe | tp.Any, **kwargs: Recipe | tp.Any):
+# self.args = args
+# self.kwargs = kwargs
+
+# def fill_dependencies(
+# self, recipe_to_dependency: dict[Recipe, tp.Any]
+# ) -> DependenciesNeeded:
+# """Replace this Call's recipes with instantiated dependencies from the
+# `recipe_to_dependency` dictionary, and return args and kwargs."""
+# new_args = tuple(recipe_to_dependency[r] for r in self.args)
+# new_kwargs = {k: recipe_to_dependency[v] for k, v in self.kwargs.items()}
+# return type(self)(*new_args, **new_kwargs)
+
+# def recipes(self) -> tp.Iterator[Recipe]:
+# yield from self.args
+# yield from self.kwargs.values()
+
+
+class DependenciesNeeded:
+    def __init__(self, *args: Recipe, **kwargs: Recipe):
+        """Returned from recipes' get_dependencies method. Used to indicate which other
+        recipes a recipe depends on."""
         self.args = args
         self.kwargs = kwargs
 
     def fill_dependencies(
         self, recipe_to_dependency: dict[Recipe, tp.Any]
-    ) -> Dependencies:
+    ) -> DependenciesNeeded:
         """Replace this Call's recipes with instantiated dependencies from the
         `recipe_to_dependency` dictionary, and return args and kwargs."""
         new_args = tuple(recipe_to_dependency[r] for r in self.args)
         new_kwargs = {k: recipe_to_dependency[v] for k, v in self.kwargs.items()}
-        return type(self)(*new_args, **new_kwargs)
+        return DependenciesFilled(new_args, new_kwargs)
 
-    def recipes(self) -> tp.Iterator[Recipe]:
-        yield from self.args
-        yield from self.kwargs.values()
+
+class DependenciesFilled:
+    def __init__(self, args: tp.Tuple[tp.Any, ...], kwargs: tp.Dict[str, tp.Any]):
+        """Passed to recipes' extract_from_dependencies method. Has the same signature
+        as the `DependenciesNeeded` produced by the recipe, but with recipes replaced by
+        the data they describe."""
+        self.args = args
+        self.kwargs = kwargs
 
 
 class Recipe(ABC):
@@ -33,9 +59,9 @@ class Recipe(ABC):
     allow_missing: bool = False
     missing_data_exceptions: tp.Type[Exception] | tp.Tuple[tp.Type[Exception], ...]
 
-    def get_dependencies(self) -> Dependencies:
+    def get_dependencies(self) -> DependenciesNeeded:
         """Return a Call specifiying recipes that this recipe depends on."""
-        return Dependencies()
+        return DependenciesNeeded()
 
     @abstractmethod
     def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:
