@@ -4,29 +4,6 @@ from abc import ABC, abstractmethod
 import dataclasses
 
 
-# class DependenciesNeeded:
-# """Container for holding args and kwargs. Returned from recipes' get_dependency, and
-# passed to recipes' extract_from_dependencies once its recipes are built.
-# """
-
-# def __init__(self, *args: Recipe | tp.Any, **kwargs: Recipe | tp.Any):
-# self.args = args
-# self.kwargs = kwargs
-
-# def fill_dependencies(
-# self, recipe_to_dependency: dict[Recipe, tp.Any]
-# ) -> DependenciesNeeded:
-# """Replace this Call's recipes with instantiated dependencies from the
-# `recipe_to_dependency` dictionary, and return args and kwargs."""
-# new_args = tuple(recipe_to_dependency[r] for r in self.args)
-# new_kwargs = {k: recipe_to_dependency[v] for k, v in self.kwargs.items()}
-# return type(self)(*new_args, **new_kwargs)
-
-# def recipes(self) -> tp.Iterator[Recipe]:
-# yield from self.args
-# yield from self.kwargs.values()
-
-
 class Parameters(tp.NamedTuple):
     factory_allow_missing: bool
 
@@ -79,7 +56,7 @@ class Recipe(ABC):
     missing_data_exceptions: tp.Type[Exception] | tp.Tuple[tp.Type[Exception], ...] = ()
 
     def get_dependencies(self) -> DependencyRequest:
-        """Return a Call specifiying recipes that this recipe depends on."""
+        """Return a DependencyRequest specifiying recipes that this recipe depends on."""
         return DependencyRequest()
 
     @abstractmethod

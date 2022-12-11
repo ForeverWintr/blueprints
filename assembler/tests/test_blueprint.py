@@ -54,7 +54,7 @@ def test_from_recipes() -> None:
 
     assert set(b._dependency_graph[dep]) == {r1, r3}
     node = nodes[dep]
-    node.pop(NodeAttrs.call)
+    node.pop(NodeAttrs.dependency_request)
     assert node == {
         NodeAttrs.output: False,
         NodeAttrs.build_status: BuildStatus.NOT_STARTED,
@@ -62,7 +62,7 @@ def test_from_recipes() -> None:
 
     assert set(b._dependency_graph[TestData(table_name="b")]) == {r2}
     node = nodes[r1]
-    node.pop(NodeAttrs.call)
+    node.pop(NodeAttrs.dependency_request)
     assert nodes[r1] == {
         NodeAttrs.output: True,
         NodeAttrs.build_status: BuildStatus.NOT_STARTED,
@@ -141,7 +141,7 @@ def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
     assert {n.name for n in bldbl2} == {"d", "b"}
 
 
-def test_call():
+def test_dependency_request():
 
     # Here I'm pretending integers are recipes.
     c = DependencyRequest(1, 2, 3, foo=5)
