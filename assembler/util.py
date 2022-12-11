@@ -16,7 +16,7 @@ def process_recipe(
 
     try:
         result = recipe.extract_from_dependencies(*args, **kwargs)
-    except recipe.missing_data_errors as e:
+    except recipe.missing_data_exceptions as e:
         if not allow_missing_override or not recipe.allow_missing:
             raise
         else:

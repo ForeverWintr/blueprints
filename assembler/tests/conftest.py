@@ -46,16 +46,16 @@ class Raiser(Recipe):
     """Recipe that raises an error, to test allow_missing"""
 
     allow_missing = True
-    missing_data_errors: tp.Type[Exception] = RuntimeError
+    missing_data_exceptions: tp.Type[Exception] = RuntimeError
     raise_in: str = "extract_from_dependencies"
     missing_data_fill_value = "fill_value"
 
     def get_dependencies(self) -> Call:
         if self.raise_in == "get_dependencies":
-            raise self.missing_data_errors()
+            raise self.missing_data_exceptions()
         return Call()
 
     def extract_from_dependencies(self, *columns) -> tp.Any:
         if self.raise_in == "extract_from_dependencies":
-            raise self.missing_data_errors()
+            raise self.missing_data_exceptions()
         return columns

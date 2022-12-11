@@ -47,7 +47,7 @@ def missing_configurations(
     factories = (Factory(), Factory(allow_missing=False))
     fps = (sample_tsv, tmp_path / "not_a_file.tsv")
     cols = ("0", "not-a-column")
-    yield factories, fps, cols
+    return itertools.product(factories, fps, cols)
 
 
 def test_allow_missing(missing_configurations):
@@ -58,7 +58,19 @@ def test_allow_missing(missing_configurations):
 
     # TODO make this parametrize
     for factory, fp, col in missing_configurations:
-        asdf
+        recipe = SeriesFromDelimited(file_path=fp, column_name=col)
+
+        if not factory.allow_missing and fp.name == "not_a_file.tsv":
+            with pytest.raises(FileNotFoundError):
+                factory.process_recipe(recipe)
+        else:
+            result = factory.process_recipe(recipe)
+            assert result.to_pairs() == (
+                (0, "zjZQ"),
+                (1, "zO5l"),
+                (2, "zEdH"),
+                (3, "zB7E"),
+            )
 
     f = Factory()
     # missing column in existing file. With index.

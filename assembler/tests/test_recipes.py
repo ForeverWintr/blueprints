@@ -33,11 +33,15 @@ def test_extract_from_dependencies():
     assert recipe.extract_from_dependencies() == TABLES["A"]
 
 
-def to_do():
+@pytest.mark.skip
+def test_to_do():
     # Should I use dataclasses? - yes
     # Multiprocessing
     # Frames
     # CI
     # Real recipe
     # Caching
+    # Bind factory? - Can't really do that in Multiprocessing context? Especially if cache.
+    #  Special sentinal for call?
+    #
     assert 0
