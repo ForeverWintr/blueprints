@@ -4,7 +4,7 @@ from pathlib import Path
 import static_frame as sf
 from frozendict import frozendict
 
-from assembler.recipes.base import Recipe, DependencyRequest
+from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
 
 
 class _FromDelimited(Recipe):
@@ -39,7 +39,7 @@ class SeriesFromDelimited(_FromDelimited):
         )
         return DependencyRequest(frame_recipe)
 
-    def extract_from_dependencies(self, dependencies: DependencyRequest) -> tp.Any:
+    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
         return frame[self.column_name]
 
 

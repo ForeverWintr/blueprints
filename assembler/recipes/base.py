@@ -27,6 +27,10 @@ import dataclasses
 # yield from self.kwargs.values()
 
 
+class Parameters(tp.NamedTuple):
+    allow_missing_overide: bool
+
+
 class DependencyRequest:
     def __init__(self, *args: Recipe, **kwargs: Recipe):
         """Returned from recipes' get_dependencies method. Used to indicate which other
@@ -40,24 +44,31 @@ class DependencyRequest:
 
 
 class Dependencies:
-    def __init__(self, args: tp.Tuple[tp.Any, ...], kwargs: tp.Dict[str, tp.Any]):
+    def __init__(
+        self,
+        args: tp.Tuple[tp.Any, ...],
+        kwargs: tp.Dict[str, tp.Any],
+        metadata: Parameters,
+    ):
         """Passed to recipes' extract_from_dependencies method. Has the same signature
         as the `DependencyRequest` produced by the recipe, but with recipes replaced by
         the data they describe."""
         self.args = args
         self.kwargs = kwargs
+        self.metadata = metadata
 
     @classmethod
-    def from_dependency_spec(
+    def from_request(
         cls,
-        dependency_spec: DependencyRequest,
+        dependency_request: DependencyRequest,
         recipe_to_dependency: dict[Recipe, tp.Any],
+        metadata: Parameters,
     ) -> Dependencies:
-        new_args = tuple(recipe_to_dependency[r] for r in dependency_spec.args)
+        new_args = tuple(recipe_to_dependency[r] for r in dependency_request.args)
         new_kwargs = {
-            k: recipe_to_dependency[v] for k, v in dependency_spec.kwargs.items()
+            k: recipe_to_dependency[v] for k, v in dependency_request.kwargs.items()
         }
-        return cls(new_args, new_kwargs)
+        return cls(new_args, new_kwargs, metadata)
 
 
 class Recipe(ABC):

@@ -4,7 +4,7 @@ import os
 import multiprocessing
 
 
-from assembler.recipes.base import Recipe
+from assembler.recipes.base import Recipe, Dependencies, Parameters
 from assembler import util
 from assembler.blueprint import Blueprint
 from assembler import exceptions
@@ -13,14 +13,17 @@ from assembler import exceptions
 class Factory:
     def __init__(self, allow_missing: bool = True):
         """A factory controls the construction of recipes.
-        Args:
-        allow_missing: If False, individual recipes' allow_missing settings are ignored, and any missing data errors are raised. If both the factory and recipe have allow_missing set to true, missing data sentinels are returned instead.
 
+        Args:
+            allow_missing: If False, individual recipes' allow_missing settings are ignored,
+        and any missing data errors are raised. If both the factory and recipe have
+        allow_missing set to true, missing data sentinels are returned instead.
         """
         self.allow_missing = allow_missing
 
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
+        metadata = Parameters(allow_missing_overide=self.allow_missing)
 
         while len(instantiated) < len(blueprint):
             buildable = blueprint.buildable_recipes()
@@ -30,7 +33,11 @@ class Factory:
                 )
             for recipe in buildable:
                 request = blueprint.get_dependency_request(recipe)
-                dependencies = util.Dependencies(recipe, instantiated)
+                dependencies = Dependencies.from_request(
+                    request,
+                    instantiated,
+                    metadata=metadata,
+                )
                 _, result = util.process_recipe(
                     recipe,
                     allow_missing_override=self.allow_missing,
