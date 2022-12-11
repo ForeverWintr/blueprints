@@ -23,7 +23,7 @@ class Factory:
 
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
-        metadata = Parameters(allow_missing_overide=self.allow_missing)
+        metadata = Parameters(factory_allow_missing=self.allow_missing)
 
         while len(instantiated) < len(blueprint):
             buildable = blueprint.buildable_recipes()

@@ -12,7 +12,7 @@ from assembler.factory import Factory
 
 @pytest.fixture
 def sample_frame() -> sf.Frame:
-    return ff.parse("v(str,str,bool,float)|s(4,8)")
+    return ff.parse("i(I,str)|v(str,str,bool,float)|s(4,8)")
 
 
 @pytest.fixture
@@ -22,13 +22,11 @@ def sample_tsv(sample_frame, tmp_path) -> Path:
     return fp
 
 
-def test_frame_from_delimited(sample_tsv):
-    expected = sf.Frame.from_tsv(sample_tsv)
-
-    r = FrameFromDelimited(file_path=sample_tsv)
+def test_frame_from_delimited(sample_tsv, sample_frame):
+    r = FrameFromDelimited(file_path=sample_tsv, index_column="__index0__")
 
     frame = Factory().process_recipe(r)
-    assert frame.equals(expected)
+    assert frame.equals(sample_frame)
 
 
 def test_series_from_delimited(sample_tsv):
@@ -50,7 +48,7 @@ def missing_configurations(
     return itertools.product(factories, fps, cols)
 
 
-def test_allow_missing(missing_configurations):
+def test_allow_missing(missing_configurations, sample_frame):
     # Configurations
     # factory allows and not
     # file exists and not
@@ -58,18 +56,37 @@ def test_allow_missing(missing_configurations):
 
     # TODO make this parametrize
     for factory, fp, col in missing_configurations:
-        recipe = SeriesFromDelimited(file_path=fp, column_name=col)
+        recipe = SeriesFromDelimited(
+            file_path=fp,
+            column_name=col,
+            allow_missing=True,
+            index_column="__index0__",
+            missing_data_fill_value="missing",
+        )
+        err = None
+        if col == "not-a-column":
+            err = KeyError
+        if fp.name == "not_a_file.tsv":
+            err = FileNotFoundError
 
-        if not factory.allow_missing and fp.name == "not_a_file.tsv":
-            with pytest.raises(FileNotFoundError):
-                factory.process_recipe(recipe)
+        if err:
+            if factory.allow_missing:
+                assert factory.process_recipe(recipe).to_pairs() == (
+                    ("zZbu", "missing"),
+                    ("ztsv", "missing"),
+                    ("zUvW", "missing"),
+                    ("zkuW", "missing"),
+                )
+
+            else:
+                with pytest.raises(err):
+                    factory.process_recipe(recipe)
         else:
-            result = factory.process_recipe(recipe)
-            assert result.to_pairs() == (
-                (0, "zjZQ"),
-                (1, "zO5l"),
-                (2, "zEdH"),
-                (3, "zB7E"),
+            assert factory.process_recipe(recipe).to_pairs() == (
+                ("zZbu", "zjZQ"),
+                ("ztsv", "zO5l"),
+                ("zUvW", "zEdH"),
+                ("zkuW", "zB7E"),
             )
 
     f = Factory()

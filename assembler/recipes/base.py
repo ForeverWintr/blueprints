@@ -28,7 +28,7 @@ import dataclasses
 
 
 class Parameters(tp.NamedTuple):
-    allow_missing_overide: bool
+    factory_allow_missing: bool
 
 
 class DependencyRequest:
@@ -71,11 +71,12 @@ class Dependencies:
         return cls(new_args, new_kwargs, metadata)
 
 
+@dataclasses.dataclass(frozen=True, repr=False, kw_only=True)
 class Recipe(ABC):
     """Base class for recipes"""
 
     allow_missing: bool = False
-    missing_data_exceptions: tp.Type[Exception] | tp.Tuple[tp.Type[Exception], ...]
+    missing_data_exceptions: tp.Type[Exception] | tp.Tuple[tp.Type[Exception], ...] = ()
 
     def get_dependencies(self) -> DependencyRequest:
         """Return a Call specifiying recipes that this recipe depends on."""
@@ -89,6 +90,7 @@ class Recipe(ABC):
     ### Below this line, methods are internal and not intended to be overriden.
 
     def __init_subclass__(cls, **kwargs) -> None:
+        # Automatically make other recipes dataclasses.
         r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)  # type: ignore
         assert r is cls
 
