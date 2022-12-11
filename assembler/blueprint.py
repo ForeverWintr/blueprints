@@ -99,14 +99,6 @@ class Blueprint:
             NodeAttrs.dependency_request
         ]
 
-    def fill_dependencies(
-        self, recipe: Recipe, recipe_to_dependency: dict[Recipe, tp.Any]
-    ) -> Dependencies:
-        """Return an object containing the dependencies for the provided recipe. To be
-        sent to the given recipe's extract_from_dependencies method."""
-        spec = self.get_dependency_request(recipe)
-        return Dependencies.from_dependency_spec(spec, recipe_to_dependency)
-
     def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
         self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state
 
