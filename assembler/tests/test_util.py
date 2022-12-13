@@ -4,7 +4,7 @@ import dataclasses
 import pytest
 
 from assembler import util
-from assembler.recipes.base import Recipe
+from assembler.recipes.base import Recipe, Dependencies, Parameters
 from assembler.constants import BuildStatus
 
 
@@ -14,7 +14,8 @@ def test_process_recipe_success():
             return 1
 
     r = Success()
-    result = util.process_recipe(r, allow_missing=True, dependencies=None)
+    deps = Dependencies((), {}, metadata=Parameters(factory_allow_missing=True))
+    result = util.process_recipe(r, dependencies=deps)
     assert result.recipe == r
     assert result.status == BuildStatus.BUILT
     assert result.output == 1
@@ -29,11 +30,12 @@ def test_process_recipe_missing():
             1 / 0
 
     r = Missing()
-    result = util.process_recipe(r, allow_missing=True, dependencies=None)
+    deps = Dependencies((), {}, metadata=Parameters(factory_allow_missing=True))
+    result = util.process_recipe(r, dependencies=deps)
     assert result.recipe == r
     assert result.status == BuildStatus.MISSING
     assert result.output == util.MissingPlaceholder(
-        reason='division by zero', fill_value=None
+        reason="division by zero", fill_value=None
     )
 
 
@@ -46,12 +48,14 @@ def test_process_recipe_raises():
             1 / 0
 
     r = Missing()
+    deps = Dependencies((), {}, metadata=Parameters(factory_allow_missing=True))
 
     # This fails because the recipe has `allow_missing=False`.
     with pytest.raises(ZeroDivisionError):
-        util.process_recipe(r, allow_missing=True, dependencies=None)
+        util.process_recipe(r, dependencies=deps)
 
-    # This fails because the value of allow missing is overridden in the call to process_recipe.
+    # This fails because the value of allow missing is overridden in the dependencies metadata.
     r2 = dataclasses.replace(r, allow_missing=True)
+    deps2 = Dependencies((), {}, metadata=Parameters(factory_allow_missing=False))
     with pytest.raises(ZeroDivisionError):
-        util.process_recipe(r2, allow_missing=False, dependencies=None)
+        util.process_recipe(r2, dependencies=deps2)
