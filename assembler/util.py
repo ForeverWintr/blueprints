@@ -15,16 +15,14 @@ class ProcessResult(tp.NamedTuple):
     output: tp.Any
 
 
-def process_recipe(
-    recipe: Recipe, allow_missing: bool, dependencies: Dependencies
-) -> ProcessResult:
+def process_recipe(recipe: Recipe, dependencies: Dependencies) -> ProcessResult:
     """Called in a child process, this utility function returns both the recipe and the result of
     its `extract_from_dependencies` method."""
 
     try:
         result = recipe.extract_from_dependencies(dependencies)
     except recipe.missing_data_exceptions as e:
-        if not allow_missing or not recipe.allow_missing:
+        if not dependencies.metadata.factory_allow_missing or not recipe.allow_missing:
             raise
         else:
             result = MissingPlaceholder(

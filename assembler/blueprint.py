@@ -151,17 +151,16 @@ class Blueprint:
 
     def update_result(
         self,
-        recipe: Recipe,
         result: util.ProcessResult,
         instantiated: dict[Recipe, tp.Any],
     ) -> None:
         """Update internal state based on the result of building a recipe."""
-        instantiated[recipe] = result.output
+        instantiated[result.recipe] = result.output
         if result.status is BuildStatus.BUILT:
-            self.mark_built(recipe)
+            self.mark_built(result.recipe)
         elif result.status is BuildStatus.MISSING:
             # Mark all downstream recipes that skip missing as missing too.
-            self.mark_missing(recipe, instantiated)
+            self.mark_missing(result.recipe, instantiated)
 
     def buildable_recipes(self) -> frozenset[Recipe]:
         """Return recipes can be built (i.e., all of their dependencies were already built)"""

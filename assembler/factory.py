@@ -35,13 +35,9 @@ class Factory:
                 dependencies = blueprint.prepare_to_build(
                     recipe, instantiated, metadata=metadata
                 )
-                result = util.process_recipe(
-                    recipe,
-                    allow_missing=self.allow_missing,
-                    dependencies=dependencies,
-                )
+                result = util.process_recipe(recipe, dependencies=dependencies)
 
-                blueprint.update_result(recipe, result, instantiated)
+                blueprint.update_result(result, instantiated)
 
         return {r: instantiated[r] for r in blueprint.outputs}
 
@@ -101,10 +97,9 @@ class FactoryMP(Factory):
                     future = executor.submit(
                         util.process_recipe,
                         recipe=recipe,
-                        allow_missing_override=self.allow_missing,
                         dependencies=dependencies,
                     )
-                    # TODO. blueprint can handle building.
+                    # TODO. blueprint can handle building?
                     running_futures.add(future)
                     building.add(recipe)
 
@@ -115,9 +110,9 @@ class FactoryMP(Factory):
                 # At least one recipe has completed. Add the results.
                 for task in completed:
                     # If task failed, an exception is raised here.
-                    recipe, data = task.result()
-                    blueprint.mark_built(recipe)
-                    instantiated[recipe] = data
-                    building.remove(recipe)
+                    result = task.result()
+                    print(result)
+                    blueprint.update_result(result, instantiated)
+                    building.remove(result.recipe)
 
         return instantiated
