@@ -3,6 +3,8 @@ import typing as tp
 from abc import ABC, abstractmethod
 import dataclasses
 
+from assembler.constants import MissingDependencyBehavior
+
 
 class Parameters(tp.NamedTuple):
     factory_allow_missing: bool
@@ -54,6 +56,11 @@ class Recipe(ABC):
 
     allow_missing: bool = False
     missing_data_exceptions: tp.Type[Exception] | tp.Tuple[tp.Type[Exception], ...] = ()
+
+    ## Class level configuration
+    on_missing_dependency: tp.ClassVar[
+        MissingDependencyBehavior
+    ] = MissingDependencyBehavior.SKIP
 
     def get_dependencies(self) -> DependencyRequest:
         """Return a DependencyRequest specifiying recipes that this recipe depends on."""

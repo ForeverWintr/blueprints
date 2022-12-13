@@ -40,7 +40,7 @@ class Factory:
                 )
                 _, result = util.process_recipe(
                     recipe,
-                    allow_missing_override=self.allow_missing,
+                    allow_missing=self.allow_missing,
                     dependencies=dependencies,
                 )
                 instantiated[recipe] = result
