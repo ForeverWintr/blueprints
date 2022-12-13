@@ -148,9 +148,10 @@ def test_dependency_request():
     assert tuple(c.recipes()) == (1, 2, 3, 5)
 
     recipe_to_dependency = {x: str(x) for x in (1, 2, 3, 5)}
-    args, kwargs = c.fill_dependencies(recipe_to_dependency)
-    assert args == ("1", "2", "3")
-    assert kwargs == {"foo": "5"}
+    d = Dependencies.from_request(c, recipe_to_dependency, metadata=None)
+
+    assert d.args == ("1", "2", "3")
+    assert d.kwargs == {"foo": "5"}
 
 
 def test_outputs(basic_blueprint):
