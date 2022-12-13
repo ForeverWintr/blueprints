@@ -12,7 +12,7 @@ class MissingPlaceholder(tp.NamedTuple):
 class ProcessResult(tp.NamedTuple):
     recipe: Recipe
     status: BuildStatus
-    result: tp.Any
+    output: tp.Any
 
 
 def process_recipe(
@@ -31,5 +31,8 @@ def process_recipe(
                 reason=str(e),
                 fill_value=getattr(recipe, "missing_data_fill_value", None),
             )
+            status = BuildStatus.MISSING
+    else:
+        status = BuildStatus.BUILT
 
-    return ProcessResult(recipe=recipe, status=BuildStatus.BUILT, result=result)
+    return ProcessResult(recipe=recipe, status=status, output=result)

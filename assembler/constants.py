@@ -16,7 +16,7 @@ class BuildStatus(Enum):
     NOT_STARTED = auto()
     BUILDING = auto()
     BUILT = auto()
-    ERROR = auto()
+    MISSING = auto()
 
 
 class MissingDependencyBehavior(Enum):
@@ -38,5 +38,5 @@ BUILD_STATUS_TO_COLOR = {
     BuildStatus.NOT_STARTED: "#eaecee",
     BuildStatus.BUILDING: "#f4d03f",
     BuildStatus.BUILT: "#2ecc71",
-    BuildStatus.ERROR: "#e74c3c",
+    BuildStatus.MISSING: "#e74c3c",
 }
