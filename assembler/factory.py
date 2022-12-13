@@ -4,7 +4,7 @@ import os
 import multiprocessing
 
 
-from assembler.recipes.base import Recipe, Dependencies, Parameters
+from assembler.recipes.base import Recipe, Parameters
 from assembler import util
 from assembler.blueprint import Blueprint
 from assembler import exceptions
@@ -32,11 +32,8 @@ class Factory:
                     "Blueprint is not built but returned no buildable recipes."
                 )
             for recipe in buildable:
-                request = blueprint.get_dependency_request(recipe)
-                dependencies = Dependencies.from_request(
-                    request,
-                    instantiated,
-                    metadata=metadata,
+                dependencies = blueprint.prepare_to_build(
+                    recipe, instantiated, metadata=metadata
                 )
                 result = util.process_recipe(
                     recipe,
@@ -48,8 +45,9 @@ class Factory:
 
                 # Pass instantiated to blueprint?
                 # Blueprint.prepare_to_build, blueprint.update_result?
-                blueprint.mark_built(recipe)
-                instantiated[recipe] = result
+                blueprint.update_result(recipe, result, instantiated)
+                # blueprint.mark_built(recipe)
+                # instantiated[recipe] = result
 
         return {r: instantiated[r] for r in blueprint.outputs}
 

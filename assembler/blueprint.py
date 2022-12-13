@@ -3,9 +3,15 @@ import typing as tp
 
 import networkx as nx
 
-from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
+from assembler.recipes.base import Recipe, DependencyRequest, Dependencies, Parameters
 from assembler import exceptions
-from assembler.constants import NodeAttrs, BuildStatus, BUILD_STATUS_TO_COLOR
+from assembler.constants import (
+    NodeAttrs,
+    BuildStatus,
+    BUILD_STATUS_TO_COLOR,
+    MissingDependencyBehavior,
+)
+from assembler import util
 
 if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt
@@ -99,6 +105,21 @@ class Blueprint:
             NodeAttrs.dependency_request
         ]
 
+    def prepare_to_build(
+        self, recipe: Recipe, instantiated: dict[Recipe, tp.Any], metadata: Parameters
+    ) -> Dependencies:
+        """Prepare to build the given recipe. Find its dependencies in the given
+        `instantiated` dict and return a `Dependencies` object that can be passed to the
+        recipe. Mark the recipe as `BUILDING`."""
+        request = self.get_dependency_request(recipe)
+        dependencies = Dependencies.from_request(
+            request,
+            instantiated,
+            metadata=metadata,
+        )
+        self._set_build_state(recipe, BuildStatus.BUILDING)
+        return dependencies
+
     def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
         self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state
 
@@ -115,6 +136,32 @@ class Blueprint:
                 if self._dependency_count[successor] == 0:
                     # This successor is now buildable.
                     self._buildable.add(successor)
+
+    def mark_missing(self, recipe: Recipe, instantiated: dict[Recipe, tp.Any]) -> None:
+        """If a recipe is missing, all its successors with
+        MissingDependencyBehavior.SKIP are set to missing as well. Those same successors
+        have their results set to missing in the `instantiated` dict."""
+        self._set_build_state(recipe, BuildStatus.MISSING)
+        self._buildable.remove(recipe)
+
+        for successor in self._dependency_graph.successors(recipe):
+            if successor.on_missing_dependency is MissingDependencyBehavior.SKIP:
+                self._set_build_state(successor, BuildStatus.MISSING)
+                instantiated[successor] = instantiated[recipe]
+
+    def update_result(
+        self,
+        recipe: Recipe,
+        result: util.ProcessResult,
+        instantiated: dict[Recipe, tp.Any],
+    ) -> None:
+        """Update internal state based on the result of building a recipe."""
+        instantiated[recipe] = result.output
+        if result.status is BuildStatus.BUILT:
+            self.mark_built(recipe)
+        elif result.status is BuildStatus.MISSING:
+            # Mark all downstream recipes that skip missing as missing too.
+            self.mark_missing(recipe, instantiated)
 
     def buildable_recipes(self) -> frozenset[Recipe]:
         """Return recipes can be built (i.e., all of their dependencies were already built)"""
