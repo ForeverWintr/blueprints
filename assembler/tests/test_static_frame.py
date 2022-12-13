@@ -13,7 +13,9 @@ from assembler import util
 
 @pytest.fixture
 def sample_frame() -> sf.Frame:
-    return ff.parse("i(I,str)|v(str,str,bool,float)|s(4,8)")
+    return ff.parse("i(I,str)|c(I,str)|v(str,str,bool,float)|s(4,8)").rename(
+        index="index"
+    )
 
 
 @pytest.fixture
@@ -24,7 +26,7 @@ def sample_tsv(sample_frame, tmp_path) -> Path:
 
 
 def test_frame_from_delimited(sample_tsv, sample_frame):
-    r = FrameFromDelimited(file_path=sample_tsv, index_column="__index0__")
+    r = FrameFromDelimited(file_path=sample_tsv, index_column="index")
 
     frame = Factory().process_recipe(r)
     assert frame.equals(sample_frame)
@@ -32,11 +34,16 @@ def test_frame_from_delimited(sample_tsv, sample_frame):
 
 def test_series_from_delimited(sample_tsv):
     r = SeriesFromDelimited(
-        file_path=sample_tsv, column_name="0", index_column="__index0__"
+        file_path=sample_tsv, column_name="zZbu", index_column="index"
     )
 
     series = Factory().process_recipe(r)
-    assert series.to_pairs() == ((0, "zjZQ"), (1, "zO5l"), (2, "zEdH"), (3, "zB7E"))
+    assert series.to_pairs() == (
+        ("zZbu", "zjZQ"),
+        ("ztsv", "zO5l"),
+        ("zUvW", "zEdH"),
+        ("zkuW", "zB7E"),
+    )
 
 
 @pytest.fixture
@@ -45,7 +52,7 @@ def missing_configurations(
 ) -> tp.Iterable[tp.Tuple[Factory, Path, str]]:
     factories = (Factory(), Factory(allow_missing=False))
     fps = (sample_tsv, tmp_path / "not_a_file.tsv")
-    cols = ("0", "not-a-column")
+    cols = ("zZbu", "not-a-column")
     return itertools.product(factories, fps, cols)
 
 
@@ -56,7 +63,7 @@ def test_allow_missing(missing_configurations, sample_frame):
             file_path=fp,
             column_name=col,
             allow_missing=True,
-            index_column="__index0__",
+            index_column="index",
             missing_data_fill_value="missing",
         )
         err = None

@@ -64,7 +64,7 @@ class FrameFromDelimited(_FromDelimited):
     def extract_from_dependencies(self, _: Dependencies) -> tp.Any:
         f = self.frame_extract_function(self.file_path, **self.frame_extract_kwargs)
         if self.index_column:
-            f = f.set_index(self.index_column)
+            f = f.set_index(self.index_column, drop=True)
         return f
 
 
