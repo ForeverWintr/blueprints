@@ -38,13 +38,18 @@ class Factory:
                     instantiated,
                     metadata=metadata,
                 )
-                _, result = util.process_recipe(
+                result = util.process_recipe(
                     recipe,
                     allow_missing=self.allow_missing,
                     dependencies=dependencies,
                 )
-                instantiated[recipe] = result
+
+                # If missing, the blueprint needs to mark downstream recipes appropriately. Any that are skipped need to have their result set appropriately, too.
+
+                # Pass instantiated to blueprint?
+                # Blueprint.prepare_to_build, blueprint.update_result?
                 blueprint.mark_built(recipe)
+                instantiated[recipe] = result
 
         return {r: instantiated[r] for r in blueprint.outputs}
 
