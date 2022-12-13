@@ -8,6 +8,7 @@ import pytest
 
 from assembler.recipes.static_frame import FrameFromDelimited, SeriesFromDelimited
 from assembler.factory import Factory
+from assembler import util
 
 
 @pytest.fixture
@@ -49,12 +50,7 @@ def missing_configurations(
 
 
 def test_allow_missing(missing_configurations, sample_frame):
-    # Configurations
-    # factory allows and not
-    # file exists and not
-    # column exists and not
-
-    # TODO make this parametrize
+    # This code to determine what is expected is more complex than I would like.
     for factory, fp, col in missing_configurations:
         recipe = SeriesFromDelimited(
             file_path=fp,
@@ -69,7 +65,7 @@ def test_allow_missing(missing_configurations, sample_frame):
         if fp.name == "not_a_file.tsv":
             err = FileNotFoundError
 
-        if err:
+        if err == KeyError:
             if factory.allow_missing:
                 assert factory.process_recipe(recipe).to_pairs() == (
                     ("zZbu", "missing"),
@@ -77,7 +73,14 @@ def test_allow_missing(missing_configurations, sample_frame):
                     ("zUvW", "missing"),
                     ("zkuW", "missing"),
                 )
+            else:
+                with pytest.raises(err):
+                    factory.process_recipe(recipe)
 
+        elif err == FileNotFoundError:
+            if factory.allow_missing:
+                m = factory.process_recipe(recipe)
+                assert isinstance(m, util.MissingPlaceholder)
             else:
                 with pytest.raises(err):
                     factory.process_recipe(recipe)
@@ -88,23 +91,3 @@ def test_allow_missing(missing_configurations, sample_frame):
                 ("zUvW", "zEdH"),
                 ("zkuW", "zB7E"),
             )
-
-    f = Factory()
-    # missing column in existing file. With index.
-    r = f.process_recipe(
-        SeriesFromDelimited(
-            file_path=sample_tsv, column_name="not there", index_column="__index0__"
-        )
-    )
-
-    # missing column in existing file. Without index.
-    r = f.process_recipe(
-        SeriesFromDelimited(file_path=sample_tsv, column_name="not there")
-    )
-
-    # missing file.
-
-    r = f.process_recipe(
-        SeriesFromDelimited(file_path=sample_tsv, column_name="not there")
-    )
-    assert 0
