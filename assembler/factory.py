@@ -41,13 +41,7 @@ class Factory:
                     dependencies=dependencies,
                 )
 
-                # If missing, the blueprint needs to mark downstream recipes appropriately. Any that are skipped need to have their result set appropriately, too.
-
-                # Pass instantiated to blueprint?
-                # Blueprint.prepare_to_build, blueprint.update_result?
                 blueprint.update_result(recipe, result, instantiated)
-                # blueprint.mark_built(recipe)
-                # instantiated[recipe] = result
 
         return {r: instantiated[r] for r in blueprint.outputs}
 
@@ -85,6 +79,7 @@ class FactoryMP(Factory):
         instantiated: dict[Recipe, tp.Any] = {}
         running_futures: set[Future] = set()
         building: set[Recipe] = set()
+        metadata = Parameters(factory_allow_missing=self.allow_missing)
 
         with ProcessPoolExecutor(
             max_workers=min(self.max_workers, len(blueprint)),
@@ -99,17 +94,19 @@ class FactoryMP(Factory):
                     )
 
                 # Remove recipes that are currently in progress from buildable.
-                for b in buildable - building:
-                    args, kwargs = blueprint.fill_dependencies(b, instantiated)
+                for recipe in buildable - building:
+                    dependencies = blueprint.prepare_to_build(
+                        recipe, instantiated, metadata=metadata
+                    )
                     future = executor.submit(
                         util.process_recipe,
-                        recipe=b,
+                        recipe=recipe,
                         allow_missing_override=self.allow_missing,
-                        args=args,
-                        kwargs=kwargs,
+                        dependencies=dependencies,
                     )
+                    # TODO. blueprint can handle building.
                     running_futures.add(future)
-                    building.add(b)
+                    building.add(recipe)
 
                 completed, running_futures = wait(
                     running_futures, timeout=self.timeout, return_when=FIRST_COMPLETED
