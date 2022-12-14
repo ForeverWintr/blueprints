@@ -20,7 +20,7 @@ class BuildStatus(Enum):
 
 
 class MissingDependencyBehavior(Enum):
-    '''Setting to determine how a recipe behaves when one of its dependencies are
+    """Setting to determine how a recipe behaves when one of its dependencies are
     missing. The options are:
 
     SKIP: If an upstream dependency is missing, treat this recipe as missing as well.
@@ -28,7 +28,7 @@ class MissingDependencyBehavior(Enum):
 
     BIND: The recipe receives a missing placeholder for any of its dependencies that are
     missing.
-    '''
+    """
 
     SKIP = auto()
     BIND = auto()
