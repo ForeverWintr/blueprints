@@ -126,8 +126,12 @@ def test_missing_bind(factory_constructor):
     will_bind = BindMissing(columns=(Raiser(),))
     will_bind_also = BindMissing(columns=(will_bind,))
 
-    r = f.process_recipe(will_bind_also)
-    assert 0
+    placeholder = util.MissingPlaceholder(
+        reason="RuntimeError()", fill_value="fill_value"
+    )
+    # The tuple wrapping is specific to the BindMissing recipe.
+    assert f.process_recipe(will_bind) == (placeholder,)
+    assert f.process_recipe(will_bind_also) == ((placeholder,),)
 
 
 @pytest.mark.skip

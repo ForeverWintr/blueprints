@@ -164,7 +164,8 @@ class Blueprint:
                     self._set_build_state(successor, BuildStatus.MISSING)
                     instantiated[successor] = instantiated[recipe]
                 elif successor.on_missing_dependency is MissingDependencyBehavior.BIND:
-                    breakpoint()
+                    # The successor is buildable. It will receive a missing placeholder.
+                    self.mark_buildable(successor)
             else:
                 unbuildable.add(successor)
         return unbuildable
