@@ -35,7 +35,6 @@ def test_extract_from_dependencies():
 
 @pytest.mark.skip
 def test_to_do():
-    # Should I use dataclasses? - yes
     # Frames
     # What happens to downstream recipes when something is missing?
 

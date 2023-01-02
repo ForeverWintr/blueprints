@@ -24,7 +24,7 @@ class MissingDependencyBehavior(Enum):
     missing. The options are:
 
     SKIP: If an upstream dependency is missing, treat this recipe as missing as well.
-    This will result in a failure if the recipe has allow_missin=False.
+    This will result in a failure if the recipe has allow_missing=False.
 
     BIND: The recipe receives a missing placeholder for any of its dependencies that are
     missing.
