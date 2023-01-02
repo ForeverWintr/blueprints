@@ -24,7 +24,7 @@ class Factory:
         self, blueprint: Blueprint, building: tp.Optional[set[Recipe]] = None
     ) -> frozenset[Recipe]:
         buildable = blueprint.buildable_recipes()
-        if not buildable:  # and blueprint.is_built():
+        if not buildable and not blueprint.is_built():
             # This should not happen. If it does, it indicates an internal error in
             # the factory.
             raise exceptions.AssemblerError(
