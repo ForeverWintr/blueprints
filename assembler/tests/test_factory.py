@@ -1,12 +1,21 @@
 from __future__ import annotations
+import typing as tp
 
 import pytest
 
 from assembler.factory import Factory, FactoryMP
-from assembler.tests.conftest import TestData, TestColumn, TABLES, MultiColumn, Raiser
+from assembler.tests.conftest import (
+    TestData,
+    TestColumn,
+    TABLES,
+    MultiColumn,
+    Raiser,
+    BindMissing,
+)
 from assembler.blueprint import Blueprint
 from assembler import exceptions
 from assembler import util
+from assembler import constants
 
 FACTORY_TYPES = (Factory, FactoryMP)
 
@@ -93,19 +102,31 @@ def test_missing_fail(factory_constructor):
     # MissingDependencyBehavior.SKIP OR BIND cause a failure when a dependency is
     # missing.
     f = factory_constructor()
-    skip_fail = MultiColumn(columns=(Raiser(),), allow_missing=False)
-    with pytest.raises(exceptions.MissingDependencyError) as e:
-        f.process_recipe(skip_fail)
+    skip_fail = MultiColumn(columns=(Raiser(),))
+    bind_fail = BindMissing(columns=(Raiser(),), allow_missing=False)
 
-    assert e.value.args == (
-        "Unable to build 1 recipes because RuntimeError() from Raiser(\n)",
-    )
+    for r in (
+        bind_fail,
+        skip_fail,
+    ):
+        with pytest.raises(exceptions.MissingDependencyError) as e:
+            f.process_recipe(r)
+
+            assert e.value.args == (
+                "Unable to build 1 recipes because RuntimeError() from Raiser(\n)",
+            )
 
 
 @pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
 def test_missing_bind(factory_constructor):
     # Downstream recipes that have allow_missing true and MissingDependencyBehavior.BIND
     # receive a placeholder when a dependency is missing.
+
+    f = factory_constructor()
+    will_bind = BindMissing(columns=(Raiser(),))
+    will_bind_also = BindMissing(columns=(will_bind,))
+
+    r = f.process_recipe(will_bind_also)
     assert 0
 
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 import typing as tp
 
 from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
+from assembler import constants
 
 #  Pretend these are tables
 TABLES = {
@@ -43,6 +44,14 @@ class MultiColumn(Recipe):
     def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
         columns = dependencies.args
         return columns
+
+
+class BindMissing(MultiColumn):
+    allow_missing: bool = True
+
+    on_missing_dependency: tp.ClassVar[
+        constants.MissingDependencyBehavior
+    ] = constants.MissingDependencyBehavior.BIND
 
 
 class Raiser(Recipe):
