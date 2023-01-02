@@ -1,11 +1,19 @@
 from __future__ import annotations
 from enum import Enum, auto
-import typing as tp
-import dataclasses
 
 
 class NodeAttrs:
-    """Constants for attributes defined on nodes."""
+    """Constants for attributes defined on blueprint nodes.
+
+    Meanings:
+
+    is_output: This recipe is an output (rather than an internal dependency).
+
+    build_status: The current state of the recipe. See BuildStatus enum.
+
+    dependency_request: The DependencyRequest returned by the recipe's get_dependencies
+    method.
+    """
 
     is_output = "is_output"
     build_status = "build_status"
