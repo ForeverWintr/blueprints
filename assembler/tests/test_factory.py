@@ -43,14 +43,28 @@ def test_process_recipes(factory_constructor):
 
 
 @pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
-def test_empty_buildable_error(factory_constructor):
+def test_recipes_to_build(factory_constructor):
+    r = TestData(table_name="A")
+    r2 = TestData(table_name="b")
+    b = Blueprint.from_recipes((r, r2))
+
+    f = factory_constructor()
+    assert f.recipes_to_build(b) == {r, r2}
+
+    assert f.recipes_to_build(b, building={r}) == {r2}
+    b.mark_built(r2)
+    assert not f.recipes_to_build(b, building={r})
+
+
+@pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
+def test_recipes_to_build_error(factory_constructor):
     # A malformed blueprint that has no buildable recipes.
     b = Blueprint.from_recipes((TestColumn(table_name="A", key=1),))
     b._buildable = frozenset()
 
     f = factory_constructor()
     with pytest.raises(exceptions.AssemblerError):
-        f.process_blueprint(b)
+        f.recipes_to_build(b)
 
 
 @pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
@@ -136,10 +150,6 @@ def test_missing_bind(factory_constructor):
     # The tuple wrapping is specific to the BindMissing recipe.
     assert f.process_recipe(will_bind) == (placeholder,)
     assert f.process_recipe(will_bind_also) == ((placeholder,),)
-
-
-def test_buildable_recipes():
-    assert 0
 
 
 @pytest.mark.skip

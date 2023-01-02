@@ -20,8 +20,9 @@ class Factory:
         """
         self.allow_missing = allow_missing
 
+    @staticmethod
     def recipes_to_build(
-        self, blueprint: Blueprint, building: tp.Optional[set[Recipe]] = None
+        blueprint: Blueprint, building: tp.Optional[set[Recipe]] = None
     ) -> frozenset[Recipe]:
         buildable = blueprint.buildable_recipes()
         if not buildable and not blueprint.is_built():
@@ -104,7 +105,6 @@ class FactoryMP(Factory):
                         recipe=recipe,
                         dependencies=dependencies,
                     )
-                    # TODO. blueprint can handle building?
                     running_futures.add(future)
                     building.add(recipe)
 
