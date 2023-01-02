@@ -35,7 +35,7 @@ def test_process_recipe_missing():
     assert result.recipe == r
     assert result.status == BuildStatus.MISSING
     assert result.output == util.MissingPlaceholder(
-        reason="division by zero", fill_value=None
+        reason="ZeroDivisionError('division by zero')", fill_value=None
     )
 
 
