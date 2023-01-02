@@ -157,17 +157,31 @@ class Blueprint:
         self._set_build_state(recipe, BuildStatus.MISSING)
         self._buildable.remove(recipe)
 
+        # Update successors of this recipe depending on how they handle a missing
+        # dependency.
+        to_update = list(self._dependency_graph.successors(recipe))
         unbuildable = set()
-        for successor in self._dependency_graph.successors(recipe):
+        updated = set()
+
+        for successor in to_update:
+            if successor in updated:
+                continue
+
             if successor.allow_missing:
                 if successor.on_missing_dependency is MissingDependencyBehavior.SKIP:
+                    # Mark this child recipe missing as well.
                     instantiated[successor] = instantiated[recipe]
                     self._set_build_state(successor, BuildStatus.MISSING)
+
+                    # We must now update it's successors too.
+                    to_update.extend(self._dependency_graph.successors(successor))
+
                 elif successor.on_missing_dependency is MissingDependencyBehavior.BIND:
                     # The successor is buildable. It will receive a missing placeholder.
                     self.mark_buildable(successor)
             else:
                 unbuildable.add(successor)
+            updated.add(successor)
         return unbuildable
 
     def update_result(
