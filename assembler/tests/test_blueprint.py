@@ -67,7 +67,7 @@ def test_from_recipes() -> None:
     node.pop(NodeAttrs.dependency_request)
     assert node == {
         NodeAttrs.output: False,
-        NodeAttrs.build_status: BuildStatus.NOT_STARTED,
+        NodeAttrs.build_status: BuildStatus.BUILDABLE,
     }
 
     assert set(b._dependency_graph[TestData(table_name="b")]) == {r2}
@@ -124,7 +124,12 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         r.name: basic_blueprint.get_build_state(r)
         for r in basic_blueprint._dependency_graph
     }
-    assert set(name_to_state.values()) == {BuildStatus.NOT_STARTED}
+    assert name_to_state == {
+        "b": BuildStatus.NOT_STARTED,
+        "a": BuildStatus.BUILDABLE,
+        "c": BuildStatus.NOT_STARTED,
+        "d": BuildStatus.BUILDABLE,
+    }
 
     basic_blueprint.mark_built(Node(name="a"))
     name_to_state = {
@@ -132,10 +137,10 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         for r in basic_blueprint._dependency_graph
     }
     assert name_to_state == {
-        "b": BuildStatus.NOT_STARTED,
+        "b": BuildStatus.BUILDABLE,
         "a": BuildStatus.BUILT,
         "c": BuildStatus.NOT_STARTED,
-        "d": BuildStatus.NOT_STARTED,
+        "d": BuildStatus.BUILDABLE,
     }
 
 

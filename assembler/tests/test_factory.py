@@ -78,7 +78,9 @@ def test_allow_missing(factory_constructor):
     f = factory_constructor(allow_missing=True)
     r = f.process_recipe(recipe)
 
-    assert r == util.MissingPlaceholder(reason="", fill_value="fill_value")
+    assert r == util.MissingPlaceholder(
+        reason="RuntimeError()", fill_value="fill_value"
+    )
 
 
 @pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
