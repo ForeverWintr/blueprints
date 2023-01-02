@@ -188,6 +188,21 @@ def test_outputs(basic_blueprint):
     assert {n.name for n in basic_blueprint.outputs} == {"b", "c"}
 
 
+def test_is_built(nodes: dict[str, Node], basic_blueprint: basic_blueprint):
+    assert not basic_blueprint.is_built()
+
+    # mark everything built or missing:
+    for n in nodes.values():
+        basic_blueprint.mark_built(n)
+    assert basic_blueprint.is_built()
+
+    basic_blueprint.mark_missing(nodes["a"], instantiated={})
+    assert basic_blueprint.is_built()
+
+    basic_blueprint.mark_buildable(nodes["b"])
+    assert not basic_blueprint.is_built()
+
+
 @pytest.mark.skip
 def test_visualize() -> None:
     # Slow import.

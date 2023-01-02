@@ -79,6 +79,14 @@ class Blueprint:
         """
         self._dependency_graph = dependency_graph
         self.outputs = outputs
+        self._node_view: nx.reportviews.NodeDataView = dependency_graph.nodes(data=True)
+
+        # Recipes that are not yet finished processing.
+        self._unbuilt = {
+            r
+            for r, d in self._node_view
+            if d[NodeAttrs.build_status] not in {BuildStatus.BUILT, BuildStatus.MISSING}
+        }
 
         # Recipes that are currently buildable.
         self._buildable: set = set()
@@ -99,13 +107,11 @@ class Blueprint:
 
     def get_build_state(self, recipe: Recipe) -> BuildStatus:
         """Return the build state of the given recipe"""
-        return self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status]
+        return self._node_view[recipe][NodeAttrs.build_status]
 
     def get_dependency_request(self, recipe: Recipe) -> DependencyRequest:
         """Return the `DependencyRequest` object associated with the given recipe"""
-        return self._dependency_graph.nodes(data=True)[recipe][
-            NodeAttrs.dependency_request
-        ]
+        return self._node_view[recipe][NodeAttrs.dependency_request]
 
     def prepare_to_build(
         self, recipe: Recipe, instantiated: dict[Recipe, tp.Any], metadata: Parameters
@@ -123,16 +129,21 @@ class Blueprint:
         return dependencies
 
     def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
-        self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state
+        self._node_view[recipe][NodeAttrs.build_status] = state
 
     def mark_buildable(self, recipe: Recipe) -> None:
         self._buildable.add(recipe)
         self._set_build_state(recipe, BuildStatus.BUILDABLE)
 
+        # In practice the recipe should already be in this set, but for conceptual
+        # consistency and testing, we add it again.
+        self._unbuilt.add(recipe)
+
     def mark_built(self, recipe: Recipe) -> None:
         """Update the blueprint to reflect that the given node was built successfully"""
         self._set_build_state(recipe, BuildStatus.BUILT)
-        self._buildable.remove(recipe)
+        self._buildable.discard(recipe)
+        self._unbuilt.discard(recipe)
 
         # What new recipes are now buildable?
         for successor in self._dependency_graph.successors(recipe):
@@ -155,7 +166,8 @@ class Blueprint:
         result of this.
         """
         self._set_build_state(recipe, BuildStatus.MISSING)
-        self._buildable.remove(recipe)
+        self._buildable.discard(recipe)
+        self._unbuilt.discard(recipe)
 
         # Update successors of this recipe depending on how they handle a missing
         # dependency.
@@ -164,18 +176,16 @@ class Blueprint:
         updated = set()
 
         for successor in to_update:
-            if successor in updated:
+            # It's possible this successor was already marked missing.
+            if successor not in self._unbuilt:
                 continue
 
             if successor.allow_missing:
                 if successor.on_missing_dependency is MissingDependencyBehavior.SKIP:
                     # Mark this child recipe missing as well.
                     instantiated[successor] = instantiated[recipe]
-                    self._set_build_state(successor, BuildStatus.MISSING)
-
                     # We must now update it's successors too.
-                    to_update.extend(self._dependency_graph.successors(successor))
-
+                    self.mark_missing(successor)
                 elif successor.on_missing_dependency is MissingDependencyBehavior.BIND:
                     # The successor is buildable. It will receive a missing placeholder.
                     self.mark_buildable(successor)
@@ -203,15 +213,19 @@ class Blueprint:
         """Return recipes can be built (i.e., all of their dependencies were already built)"""
         return frozenset(self._buildable)
 
+    def is_built(self) -> bool:
+        """Return True if every recipe in the blueprint is built (or marked missing)."""
+        return not self._unbuilt
+
     def draw(self, ax: plt.Axes) -> None:
         """Draw the blueprint on the given matplotlib ax object"""
         positions = get_blueprint_layout(self._dependency_graph)
 
-        node_data = self._dependency_graph.nodes(data=True)
         nodes = sorted(self._dependency_graph, key=str)
         labels = {n: str(n) for n in nodes}
         colors = [
-            BUILD_STATUS_TO_COLOR[node_data[n][NodeAttrs.build_status]] for n in nodes
+            BUILD_STATUS_TO_COLOR[self._node_view[n][NodeAttrs.build_status]]
+            for n in nodes
         ]
 
         nx.draw_networkx(
