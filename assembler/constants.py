@@ -7,7 +7,7 @@ import dataclasses
 class NodeAttrs:
     """Constants for attributes defined on nodes."""
 
-    output = "output"
+    is_output = "is_output"
     build_status = "build_status"
     dependency_request = "dependency_request"
 

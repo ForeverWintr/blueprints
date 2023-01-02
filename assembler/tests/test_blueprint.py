@@ -66,7 +66,7 @@ def test_from_recipes() -> None:
     node = nodes[dep]
     node.pop(NodeAttrs.dependency_request)
     assert node == {
-        NodeAttrs.output: False,
+        NodeAttrs.is_output: False,
         NodeAttrs.build_status: BuildStatus.BUILDABLE,
     }
 
@@ -74,7 +74,7 @@ def test_from_recipes() -> None:
     node = nodes[r1]
     node.pop(NodeAttrs.dependency_request)
     assert nodes[r1] == {
-        NodeAttrs.output: True,
+        NodeAttrs.is_output: True,
         NodeAttrs.build_status: BuildStatus.NOT_STARTED,
     }
 
