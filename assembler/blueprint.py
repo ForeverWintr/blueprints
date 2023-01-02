@@ -161,8 +161,8 @@ class Blueprint:
         for successor in self._dependency_graph.successors(recipe):
             if successor.allow_missing:
                 if successor.on_missing_dependency is MissingDependencyBehavior.SKIP:
-                    self._set_build_state(successor, BuildStatus.MISSING)
                     instantiated[successor] = instantiated[recipe]
+                    self._set_build_state(successor, BuildStatus.MISSING)
                 elif successor.on_missing_dependency is MissingDependencyBehavior.BIND:
                     # The successor is buildable. It will receive a missing placeholder.
                     self.mark_buildable(successor)

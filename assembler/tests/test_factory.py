@@ -88,13 +88,13 @@ def test_missing_skip(factory_constructor):
     # Downstream recipes that have allow_missing true and MissingDependencyBehavior.SKIP
     # are skipped when a dependency is missing.
     f = factory_constructor()
-    will_be_skipped = MultiColumn(columns=(Raiser(),))
-    will_be_skipped_also = MultiColumn(columns=(will_be_skipped,))
-    assert f.process_recipe(will_be_skipped) == util.MissingPlaceholder(
-        reason="", fill_value="fill_value"
-    )
+    will_be_skipped = MultiColumn(columns=(Raiser(),), allow_missing=True)
+    will_be_skipped_also = MultiColumn(columns=(will_be_skipped,), allow_missing=True)
     assert f.process_recipe(will_be_skipped_also) == util.MissingPlaceholder(
-        reason="", fill_value="fill_value"
+        reason="RuntimeError()", fill_value="fill_value"
+    )
+    assert f.process_recipe(will_be_skipped) == util.MissingPlaceholder(
+        reason="RuntimeError()", fill_value="fill_value"
     )
 
 

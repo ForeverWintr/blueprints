@@ -27,6 +27,8 @@ class Factory:
         while len(instantiated) < len(blueprint):
             buildable = blueprint.buildable_recipes()
             if not buildable:
+                # This should not happen. If it does, it indicates an internal error in
+                # the factory.
                 raise exceptions.AssemblerError(
                     "Blueprint is not built but returned no buildable recipes."
                 )
