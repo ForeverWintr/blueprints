@@ -81,7 +81,9 @@ class Blueprint:
         self.outputs = outputs
 
         # Recipes that are currently buildable.
-        self._buildable = {v for v, d in dependency_graph.in_degree() if d == 0}
+        self._buildable: set = set()
+        for r in {v for v, d in dependency_graph.in_degree() if d == 0}:
+            self.mark_buildable(r)
 
         # Map of current number of unbuilt dependencies per recipe
         self._dependency_count = {
@@ -123,6 +125,10 @@ class Blueprint:
     def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
         self._dependency_graph.nodes(data=True)[recipe][NodeAttrs.build_status] = state
 
+    def mark_buildable(self, recipe: Recipe) -> None:
+        self._buildable.add(recipe)
+        self._set_build_state(recipe, BuildStatus.BUILDABLE)
+
     def mark_built(self, recipe: Recipe) -> None:
         """Update the blueprint to reflect that the given node was built successfully"""
         self._set_build_state(recipe, BuildStatus.BUILT)
@@ -135,7 +141,7 @@ class Blueprint:
                 self._dependency_count[successor] -= 1
                 if self._dependency_count[successor] == 0:
                     # This successor is now buildable.
-                    self._buildable.add(successor)
+                    self.mark_buildable(successor)
 
     def mark_missing(
         self, recipe: Recipe, instantiated: dict[Recipe, tp.Any]
@@ -157,6 +163,8 @@ class Blueprint:
                 if successor.on_missing_dependency is MissingDependencyBehavior.SKIP:
                     self._set_build_state(successor, BuildStatus.MISSING)
                     instantiated[successor] = instantiated[recipe]
+                elif successor.on_missing_dependency is MissingDependencyBehavior.BIND:
+                    breakpoint()
             else:
                 unbuildable.add(successor)
         return unbuildable

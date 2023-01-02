@@ -15,12 +15,22 @@ from assembler.tests.conftest import TestData, TestColumn
 
 
 @pytest.fixture
-def basic_blueprint() -> Blueprint:
+def nodes() -> dict[str, Node]:
     a = Node(name="a")
     d = Node(name="d")
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
-    return Blueprint.from_recipes([b, c])
+    return {
+        "a": a,
+        "d": d,
+        "b": b,
+        "c": c,
+    }
+
+
+@pytest.fixture
+def basic_blueprint(nodes) -> Blueprint:
+    return Blueprint.from_recipes([nodes["b"], nodes["c"]])
 
 
 class Node(Recipe):
@@ -127,6 +137,21 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         "c": BuildStatus.NOT_STARTED,
         "d": BuildStatus.NOT_STARTED,
     }
+
+
+def test_mark_buildable(nodes: dict[str, Node], basic_blueprint: Blueprint) -> None:
+
+    assert basic_blueprint._buildable == {nodes["a"], nodes["d"]}
+
+    # This is a way of awkwardly re-constructing a re
+    mark = nodes["c"]
+    basic_blueprint.mark_buildable(mark)
+
+    basic_blueprint.buildable_recipes() == {
+        n for k, n in nodes.items() if n.name in {"a", "d", "c"}
+    }
+    for r in basic_blueprint.buildable_recipes():
+        assert basic_blueprint.get_build_state(r) == BuildStatus.BUILDABLE
 
 
 def test_buildable_recipes(basic_blueprint: Blueprint) -> None:

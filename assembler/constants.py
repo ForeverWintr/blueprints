@@ -14,6 +14,7 @@ class NodeAttrs:
 
 class BuildStatus(Enum):
     NOT_STARTED = auto()
+    BUILDABLE = auto()
     BUILDING = auto()
     BUILT = auto()
     MISSING = auto()
