@@ -136,6 +136,10 @@ def test_missing_bind(factory_constructor):
     assert f.process_recipe(will_bind_also) == ((placeholder,),)
 
 
+def test_buildable_recipes():
+    assert 0
+
+
 @pytest.mark.skip
 def test_mp_timeout():
 

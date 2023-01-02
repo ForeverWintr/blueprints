@@ -20,19 +20,27 @@ class Factory:
         """
         self.allow_missing = allow_missing
 
+    def recipes_to_build(
+        self, blueprint: Blueprint, building: tp.Optional[set[Recipe]] = None
+    ) -> frozenset[Recipe]:
+        buildable = blueprint.buildable_recipes()
+        if not buildable:
+            # This should not happen. If it does, it indicates an internal error in
+            # the factory.
+            raise exceptions.AssemblerError(
+                "Blueprint is not built but returned no buildable recipes."
+            )
+        if building:
+            buildable = buildable - building
+
+        return buildable
+
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
         metadata = Parameters(factory_allow_missing=self.allow_missing)
 
         while len(instantiated) < len(blueprint):
-            buildable = blueprint.buildable_recipes()
-            if not buildable:
-                # This should not happen. If it does, it indicates an internal error in
-                # the factory.
-                raise exceptions.AssemblerError(
-                    "Blueprint is not built but returned no buildable recipes."
-                )
-            for recipe in buildable:
+            for recipe in self.recipes_to_build(blueprint):
                 dependencies = blueprint.prepare_to_build(
                     recipe, instantiated, metadata=metadata
                 )
@@ -87,15 +95,7 @@ class FactoryMP(Factory):
             mp_context=self.mp_context,
         ) as executor:
             while len(instantiated) < len(blueprint):
-
-                buildable = blueprint.buildable_recipes()
-                if not buildable:
-                    raise exceptions.AssemblerError(
-                        "Blueprint is not built but returned no buildable recipes."
-                    )
-
-                # Remove recipes that are currently in progress from buildable.
-                for recipe in buildable - building:
+                for recipe in self.recipes_to_build(blueprint, building=building):
                     dependencies = blueprint.prepare_to_build(
                         recipe, instantiated, metadata=metadata
                     )
