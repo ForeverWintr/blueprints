@@ -137,30 +137,44 @@ class Blueprint:
                     # This successor is now buildable.
                     self._buildable.add(successor)
 
-    def mark_missing(self, recipe: Recipe, instantiated: dict[Recipe, tp.Any]) -> None:
+    def mark_missing(
+        self, recipe: Recipe, instantiated: dict[Recipe, tp.Any]
+    ) -> set[Recipe]:
         """If a recipe is missing, all its successors with
-        MissingDependencyBehavior.SKIP are set to missing as well. Those same successors
-        have their results set to missing in the `instantiated` dict."""
+        MissingDependencyBehavior.SKIP and allow_missing=True are set to missing as
+        well. Those same successors have their results set to missing in the
+        `instantiated` dict.
+
+        Return any recipes that cannot be built (i.e. they do not allow_missing) as a
+        result of this.
+        """
         self._set_build_state(recipe, BuildStatus.MISSING)
         self._buildable.remove(recipe)
 
+        unbuildable = set()
         for successor in self._dependency_graph.successors(recipe):
-            if successor.on_missing_dependency is MissingDependencyBehavior.SKIP:
-                self._set_build_state(successor, BuildStatus.MISSING)
-                instantiated[successor] = instantiated[recipe]
+            if successor.allow_missing:
+                if successor.on_missing_dependency is MissingDependencyBehavior.SKIP:
+                    self._set_build_state(successor, BuildStatus.MISSING)
+                    instantiated[successor] = instantiated[recipe]
+            else:
+                unbuildable.add(successor)
+        return unbuildable
 
     def update_result(
         self,
         result: util.ProcessResult,
         instantiated: dict[Recipe, tp.Any],
-    ) -> None:
+    ) -> set[Recipe]:
         """Update internal state based on the result of building a recipe."""
         instantiated[result.recipe] = result.output
         if result.status is BuildStatus.BUILT:
             self.mark_built(result.recipe)
+            unbuildable = set()
         elif result.status is BuildStatus.MISSING:
-            # Mark all downstream recipes that skip missing as missing too.
-            self.mark_missing(result.recipe, instantiated)
+            # Mark all downstream recipes that skip missing as missing too. Return any that cannot be built.
+            unbuildable = self.mark_missing(result.recipe, instantiated)
+        return unbuildable
 
     def buildable_recipes(self) -> frozenset[Recipe]:
         """Return recipes can be built (i.e., all of their dependencies were already built)"""

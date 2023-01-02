@@ -3,7 +3,6 @@ from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, Futur
 import os
 import multiprocessing
 
-
 from assembler.recipes.base import Recipe, Parameters
 from assembler import util
 from assembler.blueprint import Blueprint
@@ -37,7 +36,11 @@ class Factory:
                 )
                 result = util.process_recipe(recipe, dependencies=dependencies)
 
-                blueprint.update_result(result, instantiated)
+                unbuildable = blueprint.update_result(result, instantiated)
+                if unbuildable:
+                    raise exceptions.MissingDependencyError(
+                        f"Unable to build {len(unbuildable)} recipes because {result.output.reason} from {recipe}"
+                    )
 
         return {r: instantiated[r] for r in blueprint.outputs}
 

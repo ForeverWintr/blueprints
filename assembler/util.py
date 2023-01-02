@@ -26,7 +26,7 @@ def process_recipe(recipe: Recipe, dependencies: Dependencies) -> ProcessResult:
             raise
         else:
             result = MissingPlaceholder(
-                reason=str(e),
+                reason=repr(e),
                 fill_value=getattr(recipe, "missing_data_fill_value", None),
             )
             status = BuildStatus.MISSING

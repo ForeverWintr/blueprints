@@ -10,6 +10,7 @@ TABLES = {
 }
 
 
+### Recipes created for tests.
 class TestData(Recipe):
     table_name: str
 

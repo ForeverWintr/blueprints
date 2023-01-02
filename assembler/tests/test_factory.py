@@ -72,6 +72,43 @@ def test_allow_missing(factory_constructor):
     assert r == util.MissingPlaceholder(reason="", fill_value="fill_value")
 
 
+@pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
+def test_missing_skip(factory_constructor):
+    # Downstream recipes that have allow_missing true and MissingDependencyBehavior.SKIP
+    # are skipped when a dependency is missing.
+    f = factory_constructor()
+    will_be_skipped = MultiColumn(columns=(Raiser(),))
+    will_be_skipped_also = MultiColumn(columns=(will_be_skipped,))
+    assert f.process_recipe(will_be_skipped) == util.MissingPlaceholder(
+        reason="", fill_value="fill_value"
+    )
+    assert f.process_recipe(will_be_skipped_also) == util.MissingPlaceholder(
+        reason="", fill_value="fill_value"
+    )
+
+
+@pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
+def test_missing_fail(factory_constructor):
+    # Downstream recipes that have allow_missing false and
+    # MissingDependencyBehavior.SKIP OR BIND cause a failure when a dependency is
+    # missing.
+    f = factory_constructor()
+    skip_fail = MultiColumn(columns=(Raiser(),), allow_missing=False)
+    with pytest.raises(exceptions.MissingDependencyError) as e:
+        f.process_recipe(skip_fail)
+
+    assert e.value.args == (
+        "Unable to build 1 recipes because RuntimeError() from Raiser(\n)",
+    )
+
+
+@pytest.mark.parametrize("factory_constructor", FACTORY_TYPES)
+def test_missing_bind(factory_constructor):
+    # Downstream recipes that have allow_missing true and MissingDependencyBehavior.BIND
+    # receive a placeholder when a dependency is missing.
+    assert 0
+
+
 @pytest.mark.skip
 def test_mp_timeout():
 
