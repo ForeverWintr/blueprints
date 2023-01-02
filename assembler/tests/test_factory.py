@@ -1,6 +1,8 @@
 from __future__ import annotations
 import typing as tp
 
+import functools
+
 import pytest
 
 from assembler.factory import Factory, FactoryMP

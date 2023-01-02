@@ -24,7 +24,7 @@ class Factory:
         self, blueprint: Blueprint, building: tp.Optional[set[Recipe]] = None
     ) -> frozenset[Recipe]:
         buildable = blueprint.buildable_recipes()
-        if not buildable:
+        if not buildable:  # and blueprint.is_built():
             # This should not happen. If it does, it indicates an internal error in
             # the factory.
             raise exceptions.AssemblerError(
@@ -118,12 +118,14 @@ class FactoryMP(Factory):
                     result = task.result()
                     unbuildable = blueprint.update_result(result, instantiated)
                     if unbuildable:
-                        # Cancel pending futures (those that haven't actually started running yet). This does not stop futures that are already running.
+                        # Cancel pending futures (those that haven't actually started
+                        # running yet). This does not stop futures that are already
+                        # running.
                         for f in running_futures:
                             f.cancel()
-                            raise exceptions.MissingDependencyError(
-                                f"Unable to build {len(unbuildable)} recipes because {result.output.reason} from {recipe}"
-                            )
+                        raise exceptions.MissingDependencyError(
+                            f"Unable to build {len(unbuildable)} recipes because {result.output.reason} from {recipe}"
+                        )
                     building.remove(result.recipe)
 
         return instantiated
