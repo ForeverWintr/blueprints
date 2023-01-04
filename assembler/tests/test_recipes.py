@@ -2,6 +2,8 @@ import dataclasses
 import pytest
 
 from assembler.tests.conftest import TestData, TestColumn, TABLES
+from assembler.recipes import general
+from assembler.factory import Factory
 
 
 def test_immutable():
@@ -31,6 +33,33 @@ def test_hash_eq():
 def test_extract_from_dependencies():
     recipe = TestData(table_name="A")
     assert recipe.extract_from_dependencies(None) == TABLES["A"]
+
+
+def test_from_function():
+    call_count = 0
+
+    def function(a, b, c):
+        nonlocal call_count
+        call_count += 1
+        return (a, b, c)
+
+    r = general.FromFunction(
+        function=function,
+        args=(1, 2),
+        kwargs={
+            "c": 3,
+        },
+    )
+    r2 = general.FromFunction(
+        function=function,
+        args=(1, 2),
+        kwargs={
+            "c": 3,
+        },
+    )
+    f = Factory()
+    result = f.process_recipes((r, r2))
+    assert list(result.values()) == [(1, 2, 3)]
 
 
 @pytest.mark.skip
