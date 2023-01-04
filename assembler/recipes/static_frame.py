@@ -74,8 +74,14 @@ class FrameFromConcat(Recipe):
     """Create a frame by concatenating the result of other recipes (all of which should return frames or series).
 
     Args:
-        columns: a tuple of recipes, each of which should return a frame or series. By default, the indexes will be unioned.
-        index: A recipe that produces a static_frame Index subclass. If provided, this index will be used for the resulting frame.
+        columns: a tuple of recipes, each of which should return a frame or series. By
+        default, the indexes will be unioned.
+
+        index: A recipe, the result of which is passed as the index kwarg to
+        Frame.from_concat.
+
+        axis: Argument to Frame.from_concat. 0 for vertical concatenation, 1 for
+        horizontal.
     """
 
     columns: tuple[Recipe, ...]

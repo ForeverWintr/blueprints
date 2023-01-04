@@ -65,6 +65,11 @@ def test_from_function():
     assert call_count == 1
 
 
+def test_object():
+    r = general.Object(payload=5)
+    assert Factory().process_recipe(r) == 5
+
+
 @pytest.mark.skip
 def test_to_do():
     # Frames
