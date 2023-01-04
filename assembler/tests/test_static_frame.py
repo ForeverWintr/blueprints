@@ -6,12 +6,17 @@ import static_frame as sf
 import frame_fixtures as ff
 import pytest
 
-from assembler.recipes.static_frame import FrameFromDelimited, SeriesFromDelimited
+from assembler.recipes.static_frame import (
+    FrameFromDelimited,
+    SeriesFromDelimited,
+    FrameFromConcat,
+)
+from assembler.recipes.general import FromFunction
 from assembler.factory import Factory
 from assembler import util
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def sample_frame() -> sf.Frame:
     return ff.parse("i(I,str)|c(I,str)|v(str,str,bool,float)|s(4,8)").rename(
         index="index"
@@ -98,3 +103,25 @@ def test_allow_missing(missing_configurations, sample_frame):
                 ("zUvW", "zEdH"),
                 ("zkuW", "zB7E"),
             )
+
+
+def test_frame_from_concat(sample_frame):
+
+    # I'm using FromFunction as an easy way to get a recipe that generates Frame/Series.
+    series = FromFunction(function=lambda: sample_frame[sf.ILoc[1]])
+    frame = FromFunction(function=lambda: sample_frame[sf.ILoc[2:4]])
+
+    concat = FrameFromConcat(columns=(series, frame), axis=1)
+
+    f = Factory()
+    result = f.process_recipe(concat)
+    assert sample_frame[sf.ILoc[1:4]].equals(result)
+
+
+def test_frame_from_concat_index_columns(sample_frame):
+    # Don't forget fill value
+    assert 0
+
+
+def test_frame_from_concat_missing(sample_frame):
+    assert 0

@@ -2,6 +2,7 @@ from __future__ import annotations
 import typing as tp
 from abc import ABC, abstractmethod
 import dataclasses
+import itertools
 
 from assembler.constants import MissingDependencyBehavior
 
@@ -11,15 +12,18 @@ class Parameters(tp.NamedTuple):
 
 
 class DependencyRequest:
-    def __init__(self, *args: Recipe, **kwargs: Recipe):
+    def __init__(self, *args: Recipe | None, **kwargs: Recipe | None):
         """Returned from recipes' get_dependencies method. Used to indicate which other
         recipes a recipe depends on."""
-        self.args = args
-        self.kwargs = kwargs
+        self.args: tuple = args
+        self.kwargs: dict = kwargs
 
     def recipes(self) -> tp.Iterator[Recipe]:
-        yield from self.args
-        yield from self.kwargs.values()
+        """Return an iterator over all recipes. If an arg or kwarg was specifically
+        passed as None, it is skipped here."""
+        for item in itertools.chain(self.args, self.kwargs.values()):
+            if item is not None:
+                yield item
 
 
 class Dependencies:
@@ -40,12 +44,15 @@ class Dependencies:
     def from_request(
         cls,
         dependency_request: DependencyRequest,
-        recipe_to_dependency: dict[Recipe, tp.Any],
+        recipe_to_dependency: dict[Recipe | None, tp.Any],
         metadata: Parameters,
     ) -> Dependencies:
         new_args = tuple(recipe_to_dependency[r] for r in dependency_request.args)
+
+        # Note: get is used here in case a dependency request had a recipe explicitly
+        # set to None.
         new_kwargs = {
-            k: recipe_to_dependency[v] for k, v in dependency_request.kwargs.items()
+            k: recipe_to_dependency.get(v) for k, v in dependency_request.kwargs.items()
         }
         return cls(new_args, new_kwargs, metadata)
 

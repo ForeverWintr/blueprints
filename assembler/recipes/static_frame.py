@@ -59,6 +59,8 @@ class SeriesFromDelimited(_FromDelimited):
 
 
 class FrameFromDelimited(_FromDelimited):
+    """A recipe for a frame from a file"""
+
     missing_data_exceptions: tp.Type[BaseException] = FileNotFoundError
 
     def extract_from_dependencies(self, _: Dependencies) -> tp.Any:
@@ -66,6 +68,27 @@ class FrameFromDelimited(_FromDelimited):
         if self.index_column:
             f = f.set_index(self.index_column, drop=True)
         return f
+
+
+class FrameFromConcat(Recipe):
+    """Create a frame by concatenating the result of other recipes (all of which should return frames or series).
+
+    Args:
+        columns: a tuple of recipes, each of which should return a frame or series. By default, the indexes will be unioned.
+        index: A recipe that produces a static_frame Index subclass. If provided, this index will be used for the resulting frame.
+    """
+
+    columns: tuple[Recipe, ...]
+    index: Recipe | None = None
+    axis: int = 0
+
+    def get_dependencies(self) -> DependencyRequest:
+        return DependencyRequest(*self.columns, index=self.index)
+
+    def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
+        return sf.Frame.from_concat(
+            dependencies.args, index=dependencies.kwargs["index"], axis=self.axis
+        )
 
 
 # Series from frame needs to provide args

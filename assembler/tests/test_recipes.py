@@ -61,6 +61,9 @@ def test_from_function():
     result = f.process_recipes((r, r2))
     assert list(result.values()) == [(1, 2, 3)]
 
+    # the underlying function is only called once.
+    assert call_count == 1
+
 
 @pytest.mark.skip
 def test_to_do():
