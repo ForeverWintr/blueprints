@@ -7,8 +7,8 @@ from assembler.recipes.base import Recipe, Dependencies
 
 class FromFunction(Recipe):
     function: tp.Callable
-    args: tuple
-    kwargs: dict
+    args: tuple = ()
+    kwargs: dict = frozendict()
 
     def __post_init__(self):
         # Make kwargs immutable.
