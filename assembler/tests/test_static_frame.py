@@ -111,7 +111,7 @@ def test_frame_from_concat(sample_frame):
     series = FromFunction(function=lambda: sample_frame[sf.ILoc[1]])
     frame = FromFunction(function=lambda: sample_frame[sf.ILoc[2:4]])
 
-    concat = FrameFromConcat(columns=(series, frame), axis=1)
+    concat = FrameFromConcat(to_concat=(series, frame), axis=1)
 
     f = Factory()
     result = f.process_recipe(concat)
@@ -119,7 +119,10 @@ def test_frame_from_concat(sample_frame):
 
 
 def test_frame_from_concat_index_columns(sample_frame):
-    # Don't forget fill value
+    # Don't forget fill value.
+    # axis 1,0
+    # Columns/index None, series, autofactory, multiindex. Surprisingly a frame works too.
+    # Missing
     assert 0
 
 

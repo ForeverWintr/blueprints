@@ -74,7 +74,7 @@ class FrameFromConcat(Recipe):
     """Create a frame by concatenating the result of other recipes (all of which should return frames or series).
 
     Args:
-        columns: a tuple of recipes, each of which should return a frame or series. By
+        to_concat: a tuple of recipes, each of which should return a frame or series. By
         default, the indexes will be unioned.
 
         index: A recipe, the result of which is passed as the index kwarg to
@@ -84,12 +84,12 @@ class FrameFromConcat(Recipe):
         horizontal.
     """
 
-    columns: tuple[Recipe, ...]
+    to_concat: tuple[Recipe, ...]
     index: Recipe | None = None
     axis: int = 0
 
     def get_dependencies(self) -> DependencyRequest:
-        return DependencyRequest(*self.columns, index=self.index)
+        return DependencyRequest(*self.to_concat, index=self.index)
 
     def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
         return sf.Frame.from_concat(
