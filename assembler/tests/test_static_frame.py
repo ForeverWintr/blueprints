@@ -128,3 +128,7 @@ def test_frame_from_concat_index_columns(sample_frame):
 
 def test_frame_from_concat_missing(sample_frame):
     assert 0
+
+
+def test_frame_from_concat_different_index():
+    assert 0

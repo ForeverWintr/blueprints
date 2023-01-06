@@ -70,11 +70,27 @@ class FrameFromDelimited(_FromDelimited):
         return f
 
 
-class FrameFromConcat(Recipe):
+# FrameFromVerticalConcat
+# FrameVertical
+# FrameHorizontal
+# FrameFromConcatH
+# FrameFromConcatV
+# FrameFromHConcat
+
+# FrameFromRecipes
+# concat = Vertical/Horizontal
+
+
+# Do I still need index? Could call it 'filter'. But is it better to filter in the
+# recipe itself? Doing so would let us apply a
+# 'reindex_fill_value'/'missing_fill_value'. That seems reason enough.
+
+
+class FrameFromRecipes(Recipe):
     """Create a frame by concatenating the result of other recipes (all of which should return frames or series).
 
     Args:
-        to_concat: a tuple of recipes, each of which should return a frame or series. By
+        recipes: a tuple of recipes, each of which should return a frame or series. By
         default, the indexes will be unioned.
 
         index: A recipe, the result of which is passed as the index kwarg to
