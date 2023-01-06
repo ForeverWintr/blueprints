@@ -83,25 +83,29 @@ class FrameFromDelimited(_FromDelimited):
 
 # Do I still need index? Could call it 'filter'. But is it better to filter in the
 # recipe itself? Doing so would let us apply a
-# 'reindex_fill_value'/'missing_fill_value'. That seems reason enough.
+# 'reindex_fill_value'/'missing_fill_value'. Also, an index allows you to expand missing values. In fact we might want it to ALWAYS be index. Or always allow both index and columns?
+# Hconcat with series and columns would be weird. Would need to select series by label. You might also have missing data with no missing fill value. That's too complicate.
+
+# Labels? Applied to index for vcat and columns for hcat.
 
 
 class FrameFromRecipes(Recipe):
-    """Create a frame by concatenating the result of other recipes (all of which should return frames or series).
+    """Create a frame by concatenating the result of other recipes (all of which should
+    return frames or series).
 
     Args:
         recipes: a tuple of recipes, each of which should return a frame or series. By
         default, the indexes will be unioned.
 
-        index: A recipe, the result of which is passed as the index kwarg to
-        Frame.from_concat.
+        labels: A recipe, the result of which is used for the index labels in horizontal
+        concatenation or column labels in vertical concatenation.
 
         axis: Argument to Frame.from_concat. 0 for vertical concatenation, 1 for
         horizontal.
     """
 
     to_concat: tuple[Recipe, ...]
-    index: Recipe | None = None
+    labels: Recipe | None = None
     axis: int = 0
 
     def get_dependencies(self) -> DependencyRequest:

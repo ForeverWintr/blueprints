@@ -9,7 +9,7 @@ import pytest
 from assembler.recipes.static_frame import (
     FrameFromDelimited,
     SeriesFromDelimited,
-    FrameFromConcat,
+    FrameFromRecipes,
 )
 from assembler.recipes.general import FromFunction
 from assembler.factory import Factory
@@ -105,20 +105,20 @@ def test_allow_missing(missing_configurations, sample_frame):
             )
 
 
-def test_frame_from_concat(sample_frame):
+def test_frame_from_recipes(sample_frame):
 
     # I'm using FromFunction as an easy way to get a recipe that generates Frame/Series.
     series = FromFunction(function=lambda: sample_frame[sf.ILoc[1]])
     frame = FromFunction(function=lambda: sample_frame[sf.ILoc[2:4]])
 
-    concat = FrameFromConcat(to_concat=(series, frame), axis=1)
+    concat = FrameFromRecipes(to_concat=(series, frame), axis=1)
 
     f = Factory()
     result = f.process_recipe(concat)
     assert sample_frame[sf.ILoc[1:4]].equals(result)
 
 
-def test_frame_from_concat_index_columns(sample_frame):
+def test_frame_from_recipes_labels(sample_frame):
     # Don't forget fill value.
     # axis 1,0
     # Columns/index None, series, autofactory, multiindex. Surprisingly a frame works too.
@@ -126,9 +126,9 @@ def test_frame_from_concat_index_columns(sample_frame):
     assert 0
 
 
-def test_frame_from_concat_missing(sample_frame):
+def test_frame_from_recipes_missing(sample_frame):
     assert 0
 
 
-def test_frame_from_concat_different_index():
+def test_frame_from_recipes_different_index():
     assert 0
