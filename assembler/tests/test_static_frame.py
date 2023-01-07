@@ -23,6 +23,13 @@ def sample_frame() -> sf.Frame:
     )
 
 
+@pytest.fixture(scope="module")
+def row_col_frame() -> sf.Frame:
+    return sf.Frame.from_element(
+        0, index=[f"i{x}" for x in range(3)], columns=[f"c{x}" for x in range(3)]
+    )
+
+
 @pytest.fixture
 def sample_tsv(sample_frame, tmp_path) -> Path:
     fp = tmp_path / "frame.tsv"
@@ -118,7 +125,34 @@ def test_frame_from_recipes(sample_frame):
     assert sample_frame[sf.ILoc[1:4]].equals(result)
 
 
-def test_frame_from_recipes_labels(sample_frame):
+# row/col select, labels, axis, expected
+class FRFixture(tp.NamedTuple):
+    name: str
+    row_col_select: sf.GetItemKeyType
+    expected_index: str | list[str]
+    expected_cols: str | list[str]
+    extra: tuple[util.MissingPlaceholder] = ()
+    labels: list[str] | None = None
+    axis: int = 0
+
+    def __str__(self) -> str:
+        return self.name
+
+
+FROM_RECIPES_CONFIGURATIONS = (
+    FRFixture(
+        name="simple",
+        row_col_select=["c0", "c2"],
+        labels=["i1", "i2"],
+        expected_index=["i1", "i2"],
+        expected_cols=["c0", "c2"],
+    ),
+)
+
+
+@pytest.mark.parametrize("fixture", FROM_RECIPES_CONFIGURATIONS, ids=str)
+def test_frame_from_recipes_labels(row_col_frame, fixture):
+
     # Don't forget fill value.
     # axis 1,0
     # Columns/index None, series, autofactory, multiindex. Surprisingly a frame works too.
