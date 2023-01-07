@@ -111,7 +111,7 @@ def test_frame_from_recipes(sample_frame):
     series = FromFunction(function=lambda: sample_frame[sf.ILoc[1]])
     frame = FromFunction(function=lambda: sample_frame[sf.ILoc[2:4]])
 
-    concat = FrameFromRecipes(to_concat=(series, frame), axis=1)
+    concat = FrameFromRecipes(recipes=(series, frame), axis=1)
 
     f = Factory()
     result = f.process_recipe(concat)

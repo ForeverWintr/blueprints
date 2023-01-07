@@ -104,16 +104,16 @@ class FrameFromRecipes(Recipe):
         horizontal.
     """
 
-    to_concat: tuple[Recipe, ...]
+    recipes: tuple[Recipe, ...]
     labels: Recipe | None = None
     axis: int = 0
 
     def get_dependencies(self) -> DependencyRequest:
-        return DependencyRequest(*self.to_concat, index=self.index)
+        return DependencyRequest(*self.recipes, labels=self.labels)
 
     def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
         return sf.Frame.from_concat(
-            dependencies.args, index=dependencies.kwargs["index"], axis=self.axis
+            dependencies.args, index=dependencies.kwargs["labels"], axis=self.axis
         )
 
 
