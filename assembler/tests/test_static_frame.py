@@ -153,6 +153,13 @@ FROM_RECIPES_CONFIGURATIONS = (
 @pytest.mark.parametrize("fixture", FROM_RECIPES_CONFIGURATIONS, ids=str)
 def test_frame_from_recipes_labels(row_col_frame, fixture):
 
+    # test all combinations of these
+    # combining frame and columns
+    # Missing placeholder
+    # Labels
+    # Labels multiindex
+    # Axis
+
     # Don't forget fill value.
     # axis 1,0
     # Columns/index None, series, autofactory, multiindex. Surprisingly a frame works too.
