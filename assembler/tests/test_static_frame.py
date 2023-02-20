@@ -147,16 +147,26 @@ FROM_RECIPES_CONFIGURATIONS = (
         expected_index=["i1", "i2"],
         expected_cols=["c0", "c2"],
     ),
+    FRFixture(
+        name="missing",
+        col_select=[["c0"], "c2"],
+        extra=(Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),),
+        labels=("i1", "i2"),
+        expected_index=["i1", "i2"],
+        expected_cols=["c0", "c2"],
+    ),
 )
 
 
 @pytest.mark.parametrize("fixture", FROM_RECIPES_CONFIGURATIONS, ids=str)
 def test_frame_from_recipes_labels(row_col_frame, fixture):
-    inputs = tuple(
+    inputs = [
         FromFunction(function=lambda x=row_col_frame[x]: x) for x in fixture.col_select
-    )
+    ]
+    inputs.extend(fixture.extra)
+
     recipe = FrameFromRecipes(
-        recipes=inputs, labels=Object(payload=fixture.labels), axis=1
+        recipes=tuple(inputs), labels=Object(payload=fixture.labels), axis=1
     )
     f = Factory()
     result = f.process_recipe(recipe)
@@ -175,7 +185,6 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
     # axis 1,0
     # Columns/index None, series, autofactory, multiindex. Surprisingly a frame works too.
     # Missing
-    assert 0
 
 
 def test_frame_from_recipes_missing(sample_frame):
