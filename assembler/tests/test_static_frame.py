@@ -11,7 +11,7 @@ from assembler.recipes.static_frame import (
     SeriesFromDelimited,
     FrameFromRecipes,
 )
-from assembler.recipes.general import FromFunction
+from assembler.recipes.general import FromFunction, Object
 from assembler.factory import Factory
 from assembler import util
 
@@ -128,7 +128,7 @@ def test_frame_from_recipes(sample_frame):
 # row/col select, labels, axis, expected
 class FRFixture(tp.NamedTuple):
     name: str
-    row_col_select: sf.GetItemKeyType
+    col_select: sf.GetItemKeyType
     expected_index: str | list[str]
     expected_cols: str | list[str]
     extra: tuple[util.MissingPlaceholder] = ()
@@ -142,8 +142,8 @@ class FRFixture(tp.NamedTuple):
 FROM_RECIPES_CONFIGURATIONS = (
     FRFixture(
         name="simple",
-        row_col_select=["c0", "c2"],
-        labels=["i1", "i2"],
+        col_select=[["c0"], "c2"],
+        labels=("i1", "i2"),
         expected_index=["i1", "i2"],
         expected_cols=["c0", "c2"],
     ),
@@ -152,6 +152,16 @@ FROM_RECIPES_CONFIGURATIONS = (
 
 @pytest.mark.parametrize("fixture", FROM_RECIPES_CONFIGURATIONS, ids=str)
 def test_frame_from_recipes_labels(row_col_frame, fixture):
+    inputs = tuple(
+        FromFunction(function=lambda x=row_col_frame[x]: x) for x in fixture.col_select
+    )
+    recipe = FrameFromRecipes(
+        recipes=inputs, labels=Object(payload=fixture.labels), axis=1
+    )
+    f = Factory()
+    result = f.process_recipe(recipe)
+    assert (result.columns == fixture.expected_cols).all()
+    assert (result.index == fixture.expected_index).all()
 
     # test all combinations of these
     # combining frame and columns
@@ -159,6 +169,7 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
     # Labels
     # Labels multiindex
     # Axis
+    # Union index/Columns
 
     # Don't forget fill value.
     # axis 1,0
