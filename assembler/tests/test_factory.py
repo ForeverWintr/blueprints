@@ -17,7 +17,7 @@ from assembler.tests.conftest import (
 from assembler.blueprint import Blueprint
 from assembler import exceptions
 from assembler import util
-from assembler import constants
+from assembler.recipes.general import Object
 
 FACTORY_TYPES = (Factory, FactoryMP)
 
@@ -106,6 +106,14 @@ def test_missing_skip(factory_constructor):
     f = factory_constructor()
     will_be_skipped = MultiColumn(columns=(Raiser(),), allow_missing=True)
     will_be_skipped_also = MultiColumn(columns=(will_be_skipped,), allow_missing=True)
+
+    manual_missing = Object(payload=util.MissingPlaceholder("test", "test"))
+    dummy = Object(payload=5)
+    will_be_skipped_too = MultiColumn(
+        columns=(manual_missing, dummy), allow_missing=True
+    )
+
+    assert f.process_recipe(will_be_skipped_too) == manual_missing.payload
     assert f.process_recipe(will_be_skipped_also) == util.MissingPlaceholder(
         reason="RuntimeError()", fill_value="fill_value"
     )

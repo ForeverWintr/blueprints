@@ -199,12 +199,14 @@ class Blueprint:
     ) -> set[Recipe]:
         """Update internal state based on the result of building a recipe."""
         instantiated[result.recipe] = result.output
-        if result.status is BuildStatus.BUILT:
-            self.mark_built(result.recipe)
-            unbuildable = set()
-        elif result.status is BuildStatus.MISSING:
+        if result.status is BuildStatus.MISSING or isinstance(
+            result.output, util.MissingPlaceholder
+        ):
             # Mark all downstream recipes that skip missing as missing too. Return any that cannot be built.
             unbuildable = self.mark_missing(result.recipe, instantiated)
+        elif result.status is BuildStatus.BUILT:
+            self.mark_built(result.recipe)
+            unbuildable = set()
         return unbuildable
 
     def buildable_recipes(self) -> frozenset[Recipe]:
