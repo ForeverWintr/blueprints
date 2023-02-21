@@ -166,7 +166,10 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
     inputs.extend(fixture.extra)
 
     recipe = FrameFromRecipes(
-        recipes=tuple(inputs), labels=Object(payload=fixture.labels), axis=1
+        recipes=tuple(inputs),
+        labels=Object(payload=fixture.labels),
+        axis=1,
+        allow_missing=True,
     )
     f = Factory()
     result = f.process_recipe(recipe)
