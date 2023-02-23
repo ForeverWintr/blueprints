@@ -30,6 +30,11 @@ def row_col_frame() -> sf.Frame:
     )
 
 
+@pytest.fixture(scope="module")
+def date_index_frame(row_col_frame) -> sf.Frame:
+    return
+
+
 @pytest.fixture
 def sample_tsv(sample_frame, tmp_path) -> Path:
     fp = tmp_path / "frame.tsv"
@@ -150,9 +155,25 @@ FROM_RECIPES_CONFIGURATIONS = (
     FRFixture(
         name="missing",
         col_select=[["c0"], "c2"],
-        extra=(Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),),
+        extra=(
+            Object(
+                payload=util.MissingPlaceholder("missing", reason="test", fill_value=-1)
+            ),
+        ),
         labels=("i1", "i2"),
         expected_index=["i1", "i2"],
+        expected_cols=["c0", "c2", "missing"],
+    ),
+    FRFixture(
+        name="indexdate",
+        col_select=[["c0"], "c2"],
+        extra=(
+            Object(
+                payload=util.MissingPlaceholder("missing", reason="test", fill_value=-1)
+            ),
+        ),
+        labels=sf.IndexDate.from_date_range("2022-01-01", "2022-01-03"),
+        expected_index=sf.IndexDate.from_date_range("2022-01-01", "2022-01-03"),
         expected_cols=["c0", "c2"],
     ),
 )
@@ -181,6 +202,7 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
     # Missing placeholder
     # Labels
     # Labels multiindex
+    # Labels IndexDate
     # Axis
     # Union index/Columns
 
@@ -188,6 +210,16 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
     # axis 1,0
     # Columns/index None, series, autofactory, multiindex. Surprisingly a frame works too.
     # Missing
+
+
+def test_frame_from_recipe_index_date(date_index_frame) -> None:
+    recipe = FrameFromRecipes(
+        recipes=(FromFunction(function=lambda: date_index_frame)),
+        axis=1,
+    )
+    f = Factory()
+    result = f.process_recipe(recipe)
+    assert 0
 
 
 def test_frame_from_recipes_missing(sample_frame):

@@ -5,6 +5,7 @@ from assembler.constants import BuildStatus
 
 
 class MissingPlaceholder(tp.NamedTuple):
+    label: str
     reason: str
     fill_value: tp.Any
 

@@ -1,5 +1,6 @@
 import typing as tp
 from pathlib import Path
+import functools
 
 import static_frame as sf
 import numpy as np
@@ -7,6 +8,7 @@ from frozendict import frozendict
 
 from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
 from assembler.constants import MissingDependencyBehavior
+from assembler import util
 
 
 class _FromDelimited(Recipe):
@@ -120,9 +122,24 @@ class FrameFromRecipes(Recipe):
     def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
         """Missing dependencies become series using the final index. Missing index
         propogates."""
-        return sf.Frame.from_concat(
-            dependencies.args, index=dependencies.kwargs["labels"], axis=self.axis
-        )
+
+        not_missing = [
+            x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
+        ]
+        index = dependencies.kwargs["labels"]
+        if index is None:
+            index = functools.reduce(sf.Index.union, (x.index for x in not_missing))
+        elif not isinstance(index, sf.Index):
+            index = sf.IndexAutoConstructorFactory(name=None)(index)
+
+        to_concat = []
+        for d in dependencies.args:
+            if isinstance(d, util.MissingPlaceholder):
+                d = sf.Series.from_element(d.fill_value, index=index, name=d.label)
+
+            to_concat.append(d)
+
+        return sf.Frame.from_concat(to_concat, index=index, axis=self.axis)
 
 
 # Series from frame needs to provide args
