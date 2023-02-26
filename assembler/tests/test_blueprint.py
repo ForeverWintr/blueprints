@@ -184,6 +184,8 @@ def test_dependency_request():
     assert d.recipe_to_result == frozendict({1: "1", 2: "2", 3: "3", 5: "5"})
     assert d.recipe_to_result[d.request.args[0]] == "1"
     assert d.recipe_to_result[d.request.kwargs["foo"]] == "5"
+    assert d.arg(1) == "2"
+    assert d.kwarg("foo") == "5"
 
 
 def test_outputs(basic_blueprint):

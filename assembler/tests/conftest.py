@@ -30,7 +30,7 @@ class TestColumn(Recipe):
         )
 
     def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
-        table = dependencies.args[0]
+        table = dependencies.arg(0)
         return table[self.key]
 
 
@@ -42,7 +42,7 @@ class MultiColumn(Recipe):
         return DependencyRequest(*self.columns)
 
     def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
-        columns = dependencies.args
+        columns = tuple(dependencies.recipe_to_result[c] for c in self.columns)
         return columns
 
 

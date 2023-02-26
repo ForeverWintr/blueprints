@@ -155,11 +155,7 @@ FROM_RECIPES_CONFIGURATIONS = (
     FRFixture(
         name="missing",
         col_select=[["c0"], "c2"],
-        extra=(
-            Object(
-                payload=util.MissingPlaceholder("missing", reason="test", fill_value=-1)
-            ),
-        ),
+        extra=(Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),),
         labels=("i1", "i2"),
         expected_index=["i1", "i2"],
         expected_cols=["c0", "c2", "missing"],
@@ -167,11 +163,7 @@ FROM_RECIPES_CONFIGURATIONS = (
     FRFixture(
         name="indexdate",
         col_select=[["c0"], "c2"],
-        extra=(
-            Object(
-                payload=util.MissingPlaceholder("missing", reason="test", fill_value=-1)
-            ),
-        ),
+        extra=(Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),),
         labels=sf.IndexDate.from_date_range("2022-01-01", "2022-01-03"),
         expected_index=sf.IndexDate.from_date_range("2022-01-01", "2022-01-03"),
         expected_cols=["c0", "c2"],

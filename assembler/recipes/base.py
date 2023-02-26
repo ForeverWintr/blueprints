@@ -59,6 +59,14 @@ class Dependencies:
             metadata=metadata,
         )
 
+    def arg(self, arg: int) -> tp.Any:
+        """Return the result for the requested positional arg."""
+        return self.recipe_to_result[self.request.args[arg]]
+
+    def kwarg(self, kwarg: str) -> tp.Any:
+        """Return the result for the requested kwarg."""
+        return self.recipe_to_result[self.request.kwargs[kwarg]]
+
 
 @dataclasses.dataclass(frozen=True, repr=False, kw_only=True)
 class Recipe(ABC):
