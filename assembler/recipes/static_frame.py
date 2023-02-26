@@ -136,9 +136,15 @@ class FrameFromRecipes(Recipe):
             index = sf.IndexAutoConstructorFactory(name=None)(index)
 
         to_concat = []
-        for d in dependencies.args:
+        for r in self.recipes:
+            d = dependencies.recipe_to_result[r]
             if isinstance(d, util.MissingPlaceholder):
-                d = sf.Series.from_element(d.fill_value, index=index, name=d.label)
+                try:
+                    label = r.label
+                except AttributeError:
+                    # Not all recipes have labels.
+                    label = d.reason
+                d = sf.Series.from_element(d.fill_value, index=index, name=label)
 
             to_concat.append(d)
 

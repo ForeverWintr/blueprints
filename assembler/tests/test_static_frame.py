@@ -158,7 +158,7 @@ FROM_RECIPES_CONFIGURATIONS = (
         extra=(Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),),
         labels=("i1", "i2"),
         expected_index=["i1", "i2"],
-        expected_cols=["c0", "c2", "missing"],
+        expected_cols=["c0", "c2", "test"],
     ),
     FRFixture(
         name="indexdate",
@@ -166,7 +166,7 @@ FROM_RECIPES_CONFIGURATIONS = (
         extra=(Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),),
         labels=sf.IndexDate.from_date_range("2022-01-01", "2022-01-03"),
         expected_index=sf.IndexDate.from_date_range("2022-01-01", "2022-01-03"),
-        expected_cols=["c0", "c2"],
+        expected_cols=["c0", "c2", "test"],
     ),
 )
 
@@ -197,6 +197,7 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
     # Labels IndexDate
     # Axis
     # Union index/Columns
+    # recipe is missing and has and doesn't have label
 
     # Don't forget fill value.
     # axis 1,0
@@ -206,7 +207,7 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
 
 def test_frame_from_recipe_index_date(date_index_frame) -> None:
     recipe = FrameFromRecipes(
-        recipes=(FromFunction(function=lambda: date_index_frame)),
+        recipes=(FromFunction(function=lambda: date_index_frame),),
         axis=1,
     )
     f = Factory()
