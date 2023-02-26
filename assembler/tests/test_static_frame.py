@@ -180,7 +180,7 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
 
     recipe = FrameFromRecipes(
         recipes=tuple(inputs),
-        labels=Object(payload=fixture.labels),
+        labels=FromFunction(function=lambda: fixture.labels),
         axis=1,
         allow_missing=True,
     )
