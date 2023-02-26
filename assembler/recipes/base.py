@@ -32,7 +32,7 @@ class Dependencies:
     def __init__(
         self,
         request: DependencyRequest,
-        recipe_to_result: dict[Recipe, tp.Any],
+        recipe_to_result: frozendict[Recipe, tp.Any],
         metadata: Parameters,
     ):
         """Holder for instantiated dependencies. Passed to recipes'
@@ -40,6 +40,10 @@ class Dependencies:
         self.request = request
         self.recipe_to_result = recipe_to_result
         self.metadata = metadata
+        self.args = tuple(recipe_to_result[a] for a in request.args)
+        self.kwargs = frozendict(
+            (k, recipe_to_result[v]) for k, v in request.kwargs.items() if v is not None
+        )
 
     @classmethod
     def from_request(
@@ -58,14 +62,6 @@ class Dependencies:
             recipe_to_result=relevant_deps,
             metadata=metadata,
         )
-
-    def arg(self, arg: int) -> tp.Any:
-        """Return the result for the requested positional arg."""
-        return self.recipe_to_result[self.request.args[arg]]
-
-    def kwarg(self, kwarg: str) -> tp.Any:
-        """Return the result for the requested kwarg."""
-        return self.recipe_to_result[self.request.kwargs[kwarg]]
 
 
 @dataclasses.dataclass(frozen=True, repr=False, kw_only=True)

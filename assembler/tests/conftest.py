@@ -30,7 +30,7 @@ class TestColumn(Recipe):
         )
 
     def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
-        table = dependencies.arg(0)
+        table = dependencies.args[0]
         return table[self.key]
 
 

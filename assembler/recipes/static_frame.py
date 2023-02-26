@@ -117,7 +117,10 @@ class FrameFromRecipes(Recipe):
     ] = MissingDependencyBehavior.BIND
 
     def get_dependencies(self) -> DependencyRequest:
-        return DependencyRequest(*self.recipes, labels=self.labels)
+        r = DependencyRequest(*self.recipes)
+        if self.labels is not None:
+            r.kwargs["labels"] = self.labels
+        return r
 
     def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
         """Missing dependencies become series using the final index. Missing index
@@ -126,7 +129,7 @@ class FrameFromRecipes(Recipe):
         not_missing = [
             x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
         ]
-        index = dependencies.kwargs["labels"]
+        index = dependencies.kwargs.get("labels")
         if index is None:
             index = functools.reduce(sf.Index.union, (x.index for x in not_missing))
         elif not isinstance(index, sf.Index):
