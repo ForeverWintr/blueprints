@@ -2,6 +2,7 @@ from __future__ import annotations
 import typing as tp
 
 import pytest
+from frozendict import frozendict
 
 from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
 from assembler.blueprint import (
@@ -177,11 +178,12 @@ def test_dependency_request():
     c = DependencyRequest(1, 2, 3, foo=5)
     assert tuple(c.recipes()) == (1, 2, 3, 5)
 
-    recipe_to_dependency = {x: str(x) for x in (1, 2, 3, 5)}
+    recipe_to_dependency = {x: str(x) for x in (1, 2, 3, 5, 7)}
     d = Dependencies.from_request(c, recipe_to_dependency, metadata=None)
 
-    assert d.args == ("1", "2", "3")
-    assert d.kwargs == {"foo": "5"}
+    assert d.recipe_to_result == frozendict({1: "1", 2: "2", 3: "3", 5: "5"})
+    assert d.recipe_to_result[d.request.args[0]] == "1"
+    assert d.recipe_to_result[d.request.kwargs["foo"]] == "5"
 
 
 def test_outputs(basic_blueprint):

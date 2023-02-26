@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 import dataclasses
 import itertools
 
+from frozendict import frozendict
+
 from assembler.constants import MissingDependencyBehavior
 
 
@@ -29,15 +31,14 @@ class DependencyRequest:
 class Dependencies:
     def __init__(
         self,
-        args: tp.Tuple[tp.Any, ...],
-        kwargs: tp.Dict[str, tp.Any],
+        request: DependencyRequest,
+        recipe_to_result: dict[Recipe, tp.Any],
         metadata: Parameters,
     ):
-        """Passed to recipes' extract_from_dependencies method. Has the same signature
-        as the `DependencyRequest` produced by the recipe, but with recipes replaced by
-        the data they describe."""
-        self.args = args
-        self.kwargs = kwargs
+        """Holder for instantiated dependencies. Passed to recipes'
+        extract_from_dependencies method."""
+        self.request = request
+        self.recipe_to_result = recipe_to_result
         self.metadata = metadata
 
     @classmethod
@@ -47,14 +48,16 @@ class Dependencies:
         recipe_to_dependency: dict[Recipe | None, tp.Any],
         metadata: Parameters,
     ) -> Dependencies:
-        new_args = tuple(recipe_to_dependency[r] for r in dependency_request.args)
 
-        # Note: get is used here in case a dependency request had a recipe explicitly
-        # set to None.
-        new_kwargs = {
-            k: recipe_to_dependency.get(v) for k, v in dependency_request.kwargs.items()
-        }
-        return cls(new_args, new_kwargs, metadata)
+        relevant_deps = frozendict(
+            {r: recipe_to_dependency[r] for r in dependency_request.recipes()}
+        )
+
+        return cls(
+            request=dependency_request,
+            recipe_to_result=relevant_deps,
+            metadata=metadata,
+        )
 
 
 @dataclasses.dataclass(frozen=True, repr=False, kw_only=True)
