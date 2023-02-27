@@ -31,35 +31,38 @@ class DependencyRequest:
 class Dependencies:
     def __init__(
         self,
-        request: DependencyRequest,
+        args: tuple,
+        kwargs: frozendict[Recipe, tp.Any],
         recipe_to_result: frozendict[Recipe, tp.Any],
         metadata: Parameters,
     ):
         """Holder for instantiated dependencies. Passed to recipes'
         extract_from_dependencies method."""
-        self.request = request
         self.recipe_to_result = recipe_to_result
         self.metadata = metadata
-        self.args = tuple(recipe_to_result[a] for a in request.args)
-        self.kwargs = frozendict(
-            (k, recipe_to_result[v]) for k, v in request.kwargs.items() if v is not None
-        )
+        self.args = args
+        self.kwargs = kwargs
 
     @classmethod
     def from_request(
         cls,
-        dependency_request: DependencyRequest,
+        request: DependencyRequest,
         recipe_to_dependency: dict[Recipe | None, tp.Any],
         metadata: Parameters,
     ) -> Dependencies:
 
-        relevant_deps = frozendict(
-            {r: recipe_to_dependency[r] for r in dependency_request.recipes()}
+        recipe_to_result = frozendict(
+            {r: recipe_to_dependency[r] for r in request.recipes()}
+        )
+        args = tuple(recipe_to_result[a] for a in request.args)
+        kwargs = frozendict(
+            (k, recipe_to_result[v]) for k, v in request.kwargs.items() if v is not None
         )
 
         return cls(
-            request=dependency_request,
-            recipe_to_result=relevant_deps,
+            args=args,
+            kwargs=kwargs,
+            recipe_to_result=recipe_to_result,
             metadata=metadata,
         )
 

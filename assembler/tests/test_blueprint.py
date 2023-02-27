@@ -182,8 +182,6 @@ def test_dependency_request():
     d = Dependencies.from_request(c, recipe_to_dependency, metadata=None)
 
     assert d.recipe_to_result == frozendict({1: "1", 2: "2", 3: "3", 5: "5"})
-    assert d.recipe_to_result[d.request.args[0]] == "1"
-    assert d.recipe_to_result[d.request.kwargs["foo"]] == "5"
     assert d.args[1] == "2"
     assert d.kwargs["foo"] == "5"
 
