@@ -1,6 +1,7 @@
 from pathlib import Path
 import typing as tp
 import itertools
+import datetime
 
 import static_frame as sf
 import frame_fixtures as ff
@@ -31,8 +32,13 @@ def row_col_frame() -> sf.Frame:
 
 
 @pytest.fixture(scope="module")
-def date_index_frame(row_col_frame) -> sf.Frame:
-    return
+def date_index_frame() -> sf.Frame:
+    return sf.Frame.from_element(
+        0,
+        index=[datetime.date(2022, 1, x) for x in range(1, 4)],
+        columns=[f"c{x}" for x in range(3)],
+        index_constructor=sf.IndexDate,
+    )
 
 
 @pytest.fixture
@@ -207,12 +213,29 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
 
 def test_frame_from_recipe_index_date(date_index_frame) -> None:
     recipe = FrameFromRecipes(
-        recipes=(FromFunction(function=lambda: date_index_frame),),
+        recipes=(
+            FromFunction(function=lambda: date_index_frame),
+            FromFunction(
+                function=lambda: date_index_frame.relabel(
+                    index=date_index_frame.index + datetime.timedelta(2),
+                    index_constructor=sf.IndexDate,
+                    columns=["c3", "c4", "c5"],
+                )
+            ),
+        ),
         axis=1,
     )
     f = Factory()
     result = f.process_recipe(recipe)
-    assert 0
+    assert result.to_markdown() == (
+        "|           |c0  |c1  |c2  |c3  |c4  |c5 |\n"
+        "|-----------|----|----|----|----|----|---|\n"
+        "|2022-01-01 |0.0 |0.0 |0.0 |nan |nan |nan|\n"
+        "|2022-01-02 |0.0 |0.0 |0.0 |nan |nan |nan|\n"
+        "|2022-01-03 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0|\n"
+        "|2022-01-04 |nan |nan |nan |0.0 |0.0 |0.0|\n"
+        "|2022-01-05 |nan |nan |nan |0.0 |0.0 |0.0|"
+    )
 
 
 def test_frame_from_recipes_missing(sample_frame):
