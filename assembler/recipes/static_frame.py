@@ -122,7 +122,9 @@ class FrameFromRecipes(Recipe):
             r.kwargs["labels"] = self.labels
         return r
 
-    def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
+    def extract_from_dependencies(
+        self, dependencies: Dependencies
+    ) -> sf.Frame | util.MissingPlaceholder:
         """Missing dependencies become series using the final index. Missing index
         propogates."""
 
@@ -132,6 +134,9 @@ class FrameFromRecipes(Recipe):
         index = dependencies.kwargs.get("labels")
         if index is None:
             index = functools.reduce(sf.Index.union, (x.index for x in not_missing))
+        elif isinstance(index, util.MissingPlaceholder):
+            # The frame can't be built without an index. Propagate missing.
+            return index
         elif not isinstance(index, sf.Index):
             index = sf.IndexAutoConstructorFactory(name=None)(index)
 
@@ -149,7 +154,3 @@ class FrameFromRecipes(Recipe):
             to_concat.append(d)
 
         return sf.Frame.from_concat(to_concat, index=index, axis=self.axis)
-
-
-# Series from frame needs to provide args
-# Series and frame from FS, with extractor function and args?

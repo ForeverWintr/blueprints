@@ -238,8 +238,18 @@ def test_frame_from_recipe_index_date(date_index_frame) -> None:
     )
 
 
-def test_frame_from_recipes_missing(sample_frame):
-    assert 0
+def test_frame_from_recipes_missing_index(sample_frame):
+    recipe = FrameFromRecipes(
+        recipes=(FromFunction(function=lambda: sample_frame),),
+        labels=Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),
+        axis=1,
+        allow_missing=True,
+    )
+    f = Factory()
+    result = f.process_recipe(recipe)
+
+    # I've decided that it's ok for process_recipe to return missing, at least for now.
+    assert isinstance(result, util.MissingPlaceholder)
 
 
 def test_frame_from_recipes_different_index():
