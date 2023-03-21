@@ -20,12 +20,6 @@ class _FromDelimited(Recipe):
     frame_extract_kwargs: frozendict = frozendict()
 
 
-# From Delimited?
-# Multiindex?
-# Just pass from_tsv args?
-# Series from function? No because I want a frame recipe.
-# Series from frame? Frame recipe and column/index? Seems a lot of work to create a frame recipe.
-# Maybe that's fine given how early this is.
 class SeriesFromDelimited(_FromDelimited):
     """A recipe for a series from a file"""
 
@@ -71,25 +65,6 @@ class FrameFromDelimited(_FromDelimited):
         if self.index_column:
             f = f.set_index(self.index_column, drop=True)
         return f
-
-
-# FrameFromVerticalConcat
-# FrameVertical
-# FrameHorizontal
-# FrameFromConcatH
-# FrameFromConcatV
-# FrameFromHConcat
-
-# FrameFromRecipes
-# concat = Vertical/Horizontal
-
-
-# Do I still need index? Could call it 'filter'. But is it better to filter in the
-# recipe itself? Doing so would let us apply a
-# 'reindex_fill_value'/'missing_fill_value'. Also, an index allows you to expand missing values. In fact we might want it to ALWAYS be index. Or always allow both index and columns?
-# Hconcat with series and columns would be weird. Would need to select series by label. You might also have missing data with no missing fill value. That's too complicate.
-
-# Labels? Applied to index for vcat and columns for hcat.
 
 
 class FrameFromRecipes(Recipe):
@@ -156,7 +131,3 @@ class FrameFromRecipes(Recipe):
 
         label_kwarg = {direction: labels}
         return sf.Frame.from_concat(to_concat, axis=self.axis, **label_kwarg)
-
-
-# Series from frame needs to provide args
-# Series and frame from FS, with extractor function and args?

@@ -183,7 +183,7 @@ class Blueprint:
                 if successor.on_missing_dependency is MissingDependencyBehavior.SKIP:
                     # Mark this child recipe missing as well.
                     instantiated[successor] = instantiated[recipe]
-                    # We must now update it's successors too.
+                    # We must now update its successors too.
                     self.mark_missing(successor, instantiated)
                 elif successor.on_missing_dependency is MissingDependencyBehavior.BIND:
                     # The successor is buildable. It will receive a missing placeholder.
