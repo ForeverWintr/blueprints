@@ -48,4 +48,5 @@ BUILD_STATUS_TO_COLOR = {
     BuildStatus.BUILDING: "#f4d03f",
     BuildStatus.BUILT: "#2ecc71",
     BuildStatus.MISSING: "#e74c3c",
+    BuildStatus.BUILDABLE: "#e70000",
 }

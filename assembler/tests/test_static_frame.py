@@ -249,6 +249,7 @@ def test_frame_from_recipes_missing_index(sample_frame):
     result = f.process_recipe(recipe)
 
     # I've decided that it's ok for process_recipe to return missing, at least for now.
+    # See https://github.com/ForeverWintr/assembler/issues/3
     assert isinstance(result, util.MissingPlaceholder)
 
 
