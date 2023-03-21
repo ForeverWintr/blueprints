@@ -208,21 +208,6 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
         assert (result.columns == fixture.expected_cols).all()
         assert (result.index == fixture.expected_index).all()
 
-    # test all combinations of these
-    # combining frame and columns
-    # Missing placeholder
-    # Labels
-    # Labels multiindex
-    # Labels IndexDate
-    # Axis
-    # Union index/Columns
-    # recipe is missing and has and doesn't have label
-
-    # Don't forget fill value.
-    # axis 1,0
-    # Columns/index None, series, autofactory, multiindex. Surprisingly a frame works too.
-    # Missing
-
 
 def test_frame_from_recipe_index_date(date_index_frame) -> None:
     recipe = FrameFromRecipes(
@@ -262,8 +247,3 @@ def test_frame_from_recipe_index_date(date_index_frame) -> None:
         "|2023-01-02 |0.0 |0.0|\n"
         "|2023-01-03 |nan |0.0|"
     )
-
-
-def test_reindex_fill_value():
-    # How to specify? This is difficult because frames could be reindexed multiple times.
-    assert 0
