@@ -2,6 +2,7 @@ from pathlib import Path
 import typing as tp
 import itertools
 import datetime
+from functools import partial
 
 import static_frame as sf
 import frame_fixtures as ff
@@ -181,16 +182,13 @@ FROM_RECIPES_CONFIGURATIONS.extend(
 
 @pytest.mark.parametrize("fixture", FROM_RECIPES_CONFIGURATIONS, ids=str)
 def test_frame_from_recipes_labels(row_col_frame, fixture):
-
-    if fixture.axis == 0:
-        getter = "loc"
-        row_col_frame = row_col_frame.T
-    else:
-        getter = "__getitem__"
+    def selector(select):
+        if fixture.axis == 0:
+            return row_col_frame[select].T
+        return row_col_frame[select]
 
     inputs = [
-        FromFunction(function=lambda x=getattr(row_col_frame, getter)[x]: x)
-        for x in fixture.col_select
+        FromFunction(function=partial(selector, select=x)) for x in fixture.col_select
     ]
     inputs.extend(fixture.extra)
 
@@ -202,8 +200,13 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
     )
     f = Factory()
     result = f.process_recipe(recipe)
-    assert (result.columns == fixture.expected_cols).all()
-    assert (result.index == fixture.expected_index).all()
+
+    if fixture.axis == 0:
+        assert (result.index == fixture.expected_cols).all()
+        assert (result.columns == fixture.expected_index).all()
+    else:
+        assert (result.columns == fixture.expected_cols).all()
+        assert (result.index == fixture.expected_index).all()
 
     # test all combinations of these
     # combining frame and columns
