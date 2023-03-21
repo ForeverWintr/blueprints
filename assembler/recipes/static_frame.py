@@ -126,14 +126,20 @@ class FrameFromRecipes(Recipe):
         """Missing dependencies become series using the final index. Missing index
         propogates."""
 
+        direction = "columns"
+        if self.axis:
+            direction = "index"
+
         not_missing = [
             x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
         ]
-        index = dependencies.kwargs.get("labels")
-        if index is None:
-            index = functools.reduce(sf.Index.union, (x.index for x in not_missing))
-        elif not isinstance(index, sf.Index):
-            index = sf.IndexAutoConstructorFactory(name=None)(index)
+        labels = dependencies.kwargs.get("labels")
+        if labels is None:
+            labels = functools.reduce(
+                sf.Index.union, (getattr(x, direction) for x in not_missing)
+            )
+        elif not isinstance(labels, sf.Index):
+            labels = sf.IndexAutoConstructorFactory(name=None)(labels)
 
         to_concat = []
         for r in self.recipes:
@@ -144,11 +150,12 @@ class FrameFromRecipes(Recipe):
                 except AttributeError:
                     # Not all recipes have labels.
                     label = d.reason
-                d = sf.Series.from_element(d.fill_value, index=index, name=label)
+                d = sf.Series.from_element(d.fill_value, name=label, index=labels)
 
             to_concat.append(d)
 
-        return sf.Frame.from_concat(to_concat, index=index, axis=self.axis)
+        label_kwarg = {direction: labels}
+        return sf.Frame.from_concat(to_concat, axis=self.axis, **label_kwarg)
 
 
 # Series from frame needs to provide args

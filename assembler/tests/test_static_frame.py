@@ -1,6 +1,7 @@
 from pathlib import Path
 import typing as tp
 import itertools
+import datetime
 
 import static_frame as sf
 import frame_fixtures as ff
@@ -32,7 +33,11 @@ def row_col_frame() -> sf.Frame:
 
 @pytest.fixture(scope="module")
 def date_index_frame(row_col_frame) -> sf.Frame:
-    return
+    return row_col_frame.relabel(
+        index=sf.IndexDate.from_date_range(
+            datetime.date(2023, 1, 1), datetime.date(2023, 1, 3)
+        )
+    )
 
 
 @pytest.fixture
@@ -141,10 +146,10 @@ class FRFixture(tp.NamedTuple):
     axis: int = 0
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.name}_axis_{self.axis}"
 
 
-FROM_RECIPES_CONFIGURATIONS = (
+FROM_RECIPES_CONFIGURATIONS = [
     FRFixture(
         name="simple",
         col_select=[["c0"], "c2"],
@@ -168,20 +173,31 @@ FROM_RECIPES_CONFIGURATIONS = (
         expected_index=sf.IndexDate.from_date_range("2022-01-01", "2022-01-03"),
         expected_cols=["c0", "c2", "test"],
     ),
+]
+FROM_RECIPES_CONFIGURATIONS.extend(
+    [f._replace(axis=1) for f in FROM_RECIPES_CONFIGURATIONS]
 )
 
 
 @pytest.mark.parametrize("fixture", FROM_RECIPES_CONFIGURATIONS, ids=str)
 def test_frame_from_recipes_labels(row_col_frame, fixture):
+
+    if fixture.axis == 0:
+        getter = "loc"
+        row_col_frame = row_col_frame.T
+    else:
+        getter = "__getitem__"
+
     inputs = [
-        FromFunction(function=lambda x=row_col_frame[x]: x) for x in fixture.col_select
+        FromFunction(function=lambda x=getattr(row_col_frame, getter)[x]: x)
+        for x in fixture.col_select
     ]
     inputs.extend(fixture.extra)
 
     recipe = FrameFromRecipes(
         recipes=tuple(inputs),
         labels=FromFunction(function=lambda: fixture.labels),
-        axis=1,
+        axis=fixture.axis,
         allow_missing=True,
     )
     f = Factory()
@@ -212,12 +228,39 @@ def test_frame_from_recipe_index_date(date_index_frame) -> None:
     )
     f = Factory()
     result = f.process_recipe(recipe)
-    assert 0
+    assert result.equals(date_index_frame)
+
+    labeled = FrameFromRecipes(
+        recipes=(FromFunction(function=lambda: date_index_frame),),
+        axis=1,
+        labels=FromFunction(function=lambda: result.index[:2]),
+    )
+    result = f.process_recipe(labeled)
+
+    assert result.to_markdown() == (
+        "|           |c0 |c1 |c2|\n"
+        "|-----------|---|---|--|\n"
+        "|2023-01-01 |0  |0  |0 |\n"
+        "|2023-01-02 |0  |0  |0 |"
+    )
+
+    different_indexes = FrameFromRecipes(
+        recipes=(
+            FromFunction(function=lambda: date_index_frame.iloc[:2, 0]),
+            FromFunction(function=lambda: date_index_frame.iloc[1:, -1]),
+        ),
+        axis=1,
+    )
+    result = f.process_recipe(different_indexes)
+    assert result.to_markdown() == (
+        "|           |c0  |c2 |\n"
+        "|-----------|----|---|\n"
+        "|2023-01-01 |0.0 |nan|\n"
+        "|2023-01-02 |0.0 |0.0|\n"
+        "|2023-01-03 |nan |0.0|"
+    )
 
 
-def test_frame_from_recipes_missing(sample_frame):
-    assert 0
-
-
-def test_frame_from_recipes_different_index():
+def test_reindex_fill_value():
+    # How to specify? This is difficult because frames could be reindexed multiple times.
     assert 0
