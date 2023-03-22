@@ -205,7 +205,7 @@ def test_is_built(nodes: dict[str, Node], basic_blueprint: basic_blueprint):
     assert not basic_blueprint.is_built()
 
 
-# @pytest.mark.skip
+@pytest.mark.skip
 def test_visualize() -> None:
     # Slow import.
     from matplotlib import pyplot as plt

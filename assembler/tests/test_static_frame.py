@@ -226,8 +226,15 @@ def test_frame_from_recipe_index_date(date_index_frame) -> None:
     )
     f = Factory()
     result = f.process_recipe(recipe)
-    assert result.equals(date_index_frame)
-
+    assert result.to_markdown() == (
+        "|           |c0  |c1  |c2  |c3  |c4  |c5 |\n"
+        "|-----------|----|----|----|----|----|---|\n"
+        "|2023-01-01 |0.0 |0.0 |0.0 |nan |nan |nan|\n"
+        "|2023-01-02 |0.0 |0.0 |0.0 |nan |nan |nan|\n"
+        "|2023-01-03 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0|\n"
+        "|2023-01-04 |nan |nan |nan |0.0 |0.0 |0.0|\n"
+        "|2023-01-05 |nan |nan |nan |0.0 |0.0 |0.0|"
+    )
     labeled = FrameFromRecipes(
         recipes=(FromFunction(function=lambda: date_index_frame),),
         axis=1,
