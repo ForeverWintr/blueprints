@@ -4,6 +4,7 @@ import itertools
 import datetime
 from functools import partial
 
+
 import static_frame as sf
 import frame_fixtures as ff
 import pytest
@@ -211,13 +212,29 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
 
 def test_frame_from_recipe_index_date(date_index_frame) -> None:
     recipe = FrameFromRecipes(
-        recipes=(FromFunction(function=lambda: date_index_frame),),
+        recipes=(
+            FromFunction(function=lambda: date_index_frame),
+            FromFunction(
+                function=lambda: date_index_frame.relabel(
+                    index=date_index_frame.index + datetime.timedelta(2),
+                    index_constructor=sf.IndexDate,
+                    columns=["c3", "c4", "c5"],
+                )
+            ),
+        ),
         axis=1,
     )
     f = Factory()
     result = f.process_recipe(recipe)
-    assert result.equals(date_index_frame)
-
+    assert result.to_markdown() == (
+        "|           |c0  |c1  |c2  |c3  |c4  |c5 |\n"
+        "|-----------|----|----|----|----|----|---|\n"
+        "|2023-01-01 |0.0 |0.0 |0.0 |nan |nan |nan|\n"
+        "|2023-01-02 |0.0 |0.0 |0.0 |nan |nan |nan|\n"
+        "|2023-01-03 |0.0 |0.0 |0.0 |0.0 |0.0 |0.0|\n"
+        "|2023-01-04 |nan |nan |nan |0.0 |0.0 |0.0|\n"
+        "|2023-01-05 |nan |nan |nan |0.0 |0.0 |0.0|"
+    )
     labeled = FrameFromRecipes(
         recipes=(FromFunction(function=lambda: date_index_frame),),
         axis=1,
@@ -247,3 +264,18 @@ def test_frame_from_recipe_index_date(date_index_frame) -> None:
         "|2023-01-02 |0.0 |0.0|\n"
         "|2023-01-03 |nan |0.0|"
     )
+
+
+def test_frame_from_recipes_missing_index(sample_frame):
+    recipe = FrameFromRecipes(
+        recipes=(FromFunction(function=lambda: sample_frame),),
+        labels=Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),
+        axis=1,
+        allow_missing=True,
+    )
+    f = Factory()
+    result = f.process_recipe(recipe)
+
+    # I've decided that it's ok for process_recipe to return missing, at least for now.
+    # See https://github.com/ForeverWintr/assembler/issues/3
+    assert isinstance(result, util.MissingPlaceholder)

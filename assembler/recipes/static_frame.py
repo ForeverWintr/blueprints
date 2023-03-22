@@ -97,7 +97,9 @@ class FrameFromRecipes(Recipe):
             r.kwargs["labels"] = self.labels
         return r
 
-    def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
+    def extract_from_dependencies(
+        self, dependencies: Dependencies
+    ) -> sf.Frame | util.MissingPlaceholder:
         """Missing dependencies become series using the final index. Missing index
         propogates."""
 
@@ -113,6 +115,9 @@ class FrameFromRecipes(Recipe):
             labels = functools.reduce(
                 sf.Index.union, (getattr(x, direction) for x in not_missing)
             )
+        elif isinstance(labels, util.MissingPlaceholder):
+            # The frame can't be built without labels. Propagate missing.
+            return labels
         elif not isinstance(labels, sf.Index):
             labels = sf.IndexAutoConstructorFactory(name=None)(labels)
 
