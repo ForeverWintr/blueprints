@@ -50,7 +50,6 @@ class Dependencies:
         recipe_to_dependency: dict[Recipe | None, tp.Any],
         metadata: Parameters,
     ) -> Dependencies:
-
         recipe_to_result = frozendict(
             {r: recipe_to_dependency[r] for r in request.recipes()}
         )

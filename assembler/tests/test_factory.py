@@ -162,17 +162,14 @@ def test_missing_bind(factory_constructor):
 
 @pytest.mark.skip
 def test_mp_timeout():
-
     assert 0
 
 
 @pytest.mark.skip
 def test_mp_error():
-
     assert 0
 
 
 @pytest.mark.skip
 def test_get_buildable_recipes():
-
     assert 0

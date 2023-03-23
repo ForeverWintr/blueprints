@@ -125,7 +125,6 @@ def test_allow_missing(missing_configurations, sample_frame):
 
 
 def test_frame_from_recipes(sample_frame):
-
     # I'm using FromFunction as an easy way to get a recipe that generates Frame/Series.
     series = FromFunction(function=lambda: sample_frame[sf.ILoc[1]])
     frame = FromFunction(function=lambda: sample_frame[sf.ILoc[2:4]])
