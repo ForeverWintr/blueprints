@@ -172,12 +172,12 @@ def test_mp_timeout():
 
     f = FactoryMP(timeout=1)
     f.process_recipe(recipe)
+
     assert 0
 
 
 @pytest.mark.skip
 def test_mp_error():
-
     assert 0
 
 

@@ -146,7 +146,6 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
 
 
 def test_mark_buildable(nodes: dict[str, Node], basic_blueprint: Blueprint) -> None:
-
     assert basic_blueprint._buildable == {nodes["a"], nodes["d"]}
 
     # This is a way of awkwardly re-constructing a re
@@ -173,7 +172,6 @@ def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
 
 
 def test_dependency_request():
-
     # Here I'm pretending integers are recipes.
     c = DependencyRequest(1, 2, 3, foo=5)
     assert tuple(c.recipes()) == (1, 2, 3, 5)

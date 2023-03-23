@@ -148,7 +148,6 @@ class Blueprint:
         # What new recipes are now buildable?
         for successor in self._dependency_graph.successors(recipe):
             if self.get_build_state(successor) is BuildStatus.NOT_STARTED:
-
                 self._dependency_count[successor] -= 1
                 if self._dependency_count[successor] == 0:
                     # This successor is now buildable.
