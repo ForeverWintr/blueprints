@@ -3,29 +3,55 @@ from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, Futur
 import os
 import multiprocessing
 
-import networkx as nx
-
-from assembler.recipes import Recipe
+from assembler.recipes.base import Recipe, Parameters
 from assembler import util
 from assembler.blueprint import Blueprint
 from assembler import exceptions
 
 
 class Factory:
+    def __init__(self, allow_missing: bool = True):
+        """A factory controls the construction of recipes.
+
+        Args:
+            allow_missing: If False, individual recipes' allow_missing settings are ignored,
+        and any missing data errors are raised. If both the factory and recipe have
+        allow_missing set to true, missing data sentinels are returned instead.
+        """
+        self.allow_missing = allow_missing
+
+    @staticmethod
+    def recipes_to_build(
+        blueprint: Blueprint, building: tp.Optional[set[Recipe]] = None
+    ) -> frozenset[Recipe]:
+        buildable = blueprint.buildable_recipes()
+        if not buildable and not blueprint.is_built():
+            # This should not happen. If it does, it indicates an internal error in
+            # the factory.
+            raise exceptions.AssemblerError(
+                "Blueprint is not built but returned no buildable recipes."
+            )
+        if building:
+            buildable = buildable - building
+
+        return buildable
+
     def process_blueprint(self, blueprint: Blueprint) -> dict[Recipe, tp.Any]:
         instantiated: dict[Recipe, tp.Any] = {}
+        metadata = Parameters(factory_allow_missing=self.allow_missing)
 
         while len(instantiated) < len(blueprint):
-            buildable = blueprint.buildable_recipes()
-            if not buildable:
-                raise exceptions.AssemblerError(
-                    "Blueprint is not built but returned no buildable recipes."
+            for recipe in self.recipes_to_build(blueprint):
+                dependencies = blueprint.prepare_to_build(
+                    recipe, instantiated, metadata=metadata
                 )
-            for b in buildable:
-                args, kwargs = blueprint.get_args_kwargs(b, instantiated)
-                result = b.extract_from_dependencies(*args, **kwargs)
-                instantiated[b] = result
-                blueprint.mark_built(b)
+                result = util.process_recipe(recipe, dependencies=dependencies)
+
+                unbuildable = blueprint.update_result(result, instantiated)
+                if unbuildable:
+                    raise exceptions.MissingDependencyError(
+                        f"Unable to build {len(unbuildable)} recipes because {result.output.reason} from {recipe}"
+                    )
 
         return {r: instantiated[r] for r in blueprint.outputs}
 
@@ -43,8 +69,12 @@ class Factory:
 
 
 class FactoryMP(Factory):
-    def __init__(self, max_workers=None, timeout=60 * 5, mp_context=None):
+    def __init__(
+        self, allow_missing=True, max_workers=None, timeout=60 * 5, mp_context=None
+    ):
         """Basic multiprocessing of recipes using concurrent futures."""
+        super().__init__(allow_missing=allow_missing)
+
         if max_workers is None:
             max_workers = os.cpu_count()
         self.max_workers = max_workers
@@ -59,25 +89,24 @@ class FactoryMP(Factory):
         instantiated: dict[Recipe, tp.Any] = {}
         running_futures: set[Future] = set()
         building: set[Recipe] = set()
+        metadata = Parameters(factory_allow_missing=self.allow_missing)
 
         with ProcessPoolExecutor(
             max_workers=min(self.max_workers, len(blueprint)),
             mp_context=self.mp_context,
         ) as executor:
             while len(instantiated) < len(blueprint):
-
-                buildable = blueprint.buildable_recipes()
-                if not buildable:
-                    raise exceptions.AssemblerError(
-                        "Blueprint is not built but returned no buildable recipes."
+                for recipe in self.recipes_to_build(blueprint, building=building):
+                    dependencies = blueprint.prepare_to_build(
+                        recipe, instantiated, metadata=metadata
                     )
-
-                # Remove recipes that are currently in progress from buildable.
-                for b in buildable - building:
-                    args, kwargs = blueprint.get_args_kwargs(b, instantiated)
-                    future = executor.submit(util.process_recipe, b, *args, **kwargs)
+                    future = executor.submit(
+                        util.process_recipe,
+                        recipe=recipe,
+                        dependencies=dependencies,
+                    )
                     running_futures.add(future)
-                    building.add(b)
+                    building.add(recipe)
 
                 completed, running_futures = wait(
                     running_futures, timeout=self.timeout, return_when=FIRST_COMPLETED
@@ -86,9 +115,17 @@ class FactoryMP(Factory):
                 # At least one recipe has completed. Add the results.
                 for task in completed:
                     # If task failed, an exception is raised here.
-                    recipe, data = task.result()
-                    blueprint.mark_built(recipe)
-                    instantiated[recipe] = data
-                    building.remove(recipe)
+                    result = task.result()
+                    unbuildable = blueprint.update_result(result, instantiated)
+                    if unbuildable:
+                        # Cancel pending futures (those that haven't actually started
+                        # running yet). This does not stop futures that are already
+                        # running.
+                        for f in running_futures:
+                            f.cancel()
+                        raise exceptions.MissingDependencyError(
+                            f"Unable to build {len(unbuildable)} recipes because {result.output.reason} from {recipe}"
+                        )
+                    building.remove(result.recipe)
 
         return instantiated

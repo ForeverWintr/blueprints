@@ -2,8 +2,9 @@ from __future__ import annotations
 import typing as tp
 
 import pytest
+from frozendict import frozendict
 
-from assembler.recipes import Recipe, Call
+from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
 from assembler.blueprint import (
     Blueprint,
     get_blueprint_layout,
@@ -15,12 +16,22 @@ from assembler.tests.conftest import TestData, TestColumn
 
 
 @pytest.fixture
-def basic_blueprint() -> Blueprint:
+def nodes() -> dict[str, Node]:
     a = Node(name="a")
     d = Node(name="d")
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
-    return Blueprint.from_recipes([b, c])
+    return {
+        "a": a,
+        "d": d,
+        "b": b,
+        "c": c,
+    }
+
+
+@pytest.fixture
+def basic_blueprint(nodes) -> Blueprint:
+    return Blueprint.from_recipes([nodes["b"], nodes["c"]])
 
 
 class Node(Recipe):
@@ -29,8 +40,8 @@ class Node(Recipe):
     name: str
     dependencies: tuple[Node, ...] = ()
 
-    def get_dependencies(self) -> Call:
-        return Call(*self.dependencies)
+    def get_dependencies(self) -> DependencyRequest:
+        return DependencyRequest(*self.dependencies)
 
     def extract_from_dependencies(self, *args) -> tp.Any:
         pass
@@ -54,17 +65,17 @@ def test_from_recipes() -> None:
 
     assert set(b._dependency_graph[dep]) == {r1, r3}
     node = nodes[dep]
-    node.pop(NodeAttrs.call)
+    node.pop(NodeAttrs.dependency_request)
     assert node == {
-        NodeAttrs.output: False,
-        NodeAttrs.build_status: BuildStatus.NOT_STARTED,
+        NodeAttrs.is_output: False,
+        NodeAttrs.build_status: BuildStatus.BUILDABLE,
     }
 
     assert set(b._dependency_graph[TestData(table_name="b")]) == {r2}
     node = nodes[r1]
-    node.pop(NodeAttrs.call)
+    node.pop(NodeAttrs.dependency_request)
     assert nodes[r1] == {
-        NodeAttrs.output: True,
+        NodeAttrs.is_output: True,
         NodeAttrs.build_status: BuildStatus.NOT_STARTED,
     }
 
@@ -75,8 +86,8 @@ def test_from_recipes_no_cycles() -> None:
         name: str
         target: str
 
-        def get_dependencies(self) -> Call:
-            return Call(Bad(name=self.target, target=self.name))
+        def get_dependencies(self) -> DependencyRequest:
+            return DependencyRequest(Bad(name=self.target, target=self.name))
 
         def extract_from_dependencies(self, *args) -> tp.Any:
             pass
@@ -114,7 +125,12 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         r.name: basic_blueprint.get_build_state(r)
         for r in basic_blueprint._dependency_graph
     }
-    assert set(name_to_state.values()) == {BuildStatus.NOT_STARTED}
+    assert name_to_state == {
+        "b": BuildStatus.NOT_STARTED,
+        "a": BuildStatus.BUILDABLE,
+        "c": BuildStatus.NOT_STARTED,
+        "d": BuildStatus.BUILDABLE,
+    }
 
     basic_blueprint.mark_built(Node(name="a"))
     name_to_state = {
@@ -122,11 +138,25 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         for r in basic_blueprint._dependency_graph
     }
     assert name_to_state == {
-        "b": BuildStatus.NOT_STARTED,
+        "b": BuildStatus.BUILDABLE,
         "a": BuildStatus.BUILT,
         "c": BuildStatus.NOT_STARTED,
-        "d": BuildStatus.NOT_STARTED,
+        "d": BuildStatus.BUILDABLE,
     }
+
+
+def test_mark_buildable(nodes: dict[str, Node], basic_blueprint: Blueprint) -> None:
+    assert basic_blueprint._buildable == {nodes["a"], nodes["d"]}
+
+    # This is a way of awkwardly re-constructing a re
+    mark = nodes["c"]
+    basic_blueprint.mark_buildable(mark)
+
+    basic_blueprint.buildable_recipes() == {
+        n for k, n in nodes.items() if n.name in {"a", "d", "c"}
+    }
+    for r in basic_blueprint.buildable_recipes():
+        assert basic_blueprint.get_build_state(r) == BuildStatus.BUILDABLE
 
 
 def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
@@ -141,20 +171,36 @@ def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
     assert {n.name for n in bldbl2} == {"d", "b"}
 
 
-def test_call():
-
+def test_dependency_request():
     # Here I'm pretending integers are recipes.
-    c = Call(1, 2, 3, foo=5)
+    c = DependencyRequest(1, 2, 3, foo=5)
     assert tuple(c.recipes()) == (1, 2, 3, 5)
 
-    recipe_to_dependency = {x: str(x) for x in (1, 2, 3, 5)}
-    args, kwargs = c.get_args_kwargs(recipe_to_dependency)
-    assert args == ("1", "2", "3")
-    assert kwargs == {"foo": "5"}
+    recipe_to_dependency = {x: str(x) for x in (1, 2, 3, 5, 7)}
+    d = Dependencies.from_request(c, recipe_to_dependency, metadata=None)
+
+    assert d.recipe_to_result == frozendict({1: "1", 2: "2", 3: "3", 5: "5"})
+    assert d.args[1] == "2"
+    assert d.kwargs["foo"] == "5"
 
 
 def test_outputs(basic_blueprint):
     assert {n.name for n in basic_blueprint.outputs} == {"b", "c"}
+
+
+def test_is_built(nodes: dict[str, Node], basic_blueprint: basic_blueprint):
+    assert not basic_blueprint.is_built()
+
+    # mark everything built or missing:
+    for n in nodes.values():
+        basic_blueprint.mark_built(n)
+    assert basic_blueprint.is_built()
+
+    basic_blueprint.mark_missing(nodes["a"], instantiated={})
+    assert basic_blueprint.is_built()
+
+    basic_blueprint.mark_buildable(nodes["b"])
+    assert not basic_blueprint.is_built()
 
 
 @pytest.mark.skip

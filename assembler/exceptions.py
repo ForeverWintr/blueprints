@@ -4,3 +4,7 @@ class AssemblerError(Exception):
 
 class ConfigurationError(AssemblerError):
     """The specified configuration is invalid"""
+
+
+class MissingDependencyError(AssemblerError):
+    """An upstream dependency is missing and at least one dependency does not allow missing"""

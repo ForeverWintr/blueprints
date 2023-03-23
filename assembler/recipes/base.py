@@ -2,37 +2,85 @@ from __future__ import annotations
 import typing as tp
 from abc import ABC, abstractmethod
 import dataclasses
+import itertools
+
+from frozendict import frozendict
+
+from assembler.constants import MissingDependencyBehavior
 
 
-class Call:
-    """Container for holding args and kwargs. Returned from recipes' get_dependency, and used to
-    form the call to recipes' extract_from_dependencies
-    """
+class Parameters(tp.NamedTuple):
+    factory_allow_missing: bool
 
-    def __init__(self, *args: Recipe, **kwargs: Recipe):
+
+class DependencyRequest:
+    def __init__(self, *args: Recipe | None, **kwargs: Recipe | None):
+        """Returned from recipes' get_dependencies method. Used to indicate which other
+        recipes a recipe depends on."""
+        self.args: tuple = args
+        self.kwargs: dict = kwargs
+
+    def recipes(self) -> tp.Iterator[Recipe]:
+        """Return an iterator over all recipes. If an arg or kwarg was specifically
+        passed as None, it is skipped here."""
+        for item in itertools.chain(self.args, self.kwargs.values()):
+            if item is not None:
+                yield item
+
+
+class Dependencies:
+    def __init__(
+        self,
+        args: tuple,
+        kwargs: frozendict[Recipe, tp.Any],
+        recipe_to_result: frozendict[Recipe, tp.Any],
+        metadata: Parameters,
+    ):
+        """Holder for instantiated dependencies. Passed to recipes'
+        extract_from_dependencies method."""
+        self.recipe_to_result = recipe_to_result
+        self.metadata = metadata
         self.args = args
         self.kwargs = kwargs
 
-    def get_args_kwargs(
-        self, recipe_to_dependency: dict[Recipe, tp.Any]
-    ) -> tuple[tuple[tp.Any, ...], dict[str, tp.Any]]:
-        """Replace this Call's recipes with instantiated dependencies from the
-        `recipe_to_dependency` dictionary, and return args and kwargs."""
-        new_args = tuple(recipe_to_dependency[r] for r in self.args)
-        new_kwargs = {k: recipe_to_dependency[v] for k, v in self.kwargs.items()}
-        return new_args, new_kwargs
+    @classmethod
+    def from_request(
+        cls,
+        request: DependencyRequest,
+        recipe_to_dependency: dict[Recipe | None, tp.Any],
+        metadata: Parameters,
+    ) -> Dependencies:
+        recipe_to_result = frozendict(
+            {r: recipe_to_dependency[r] for r in request.recipes()}
+        )
+        args = tuple(recipe_to_result[a] for a in request.args)
+        kwargs = frozendict(
+            (k, recipe_to_result[v]) for k, v in request.kwargs.items() if v is not None
+        )
 
-    def recipes(self) -> tp.Iterator[Recipe]:
-        yield from self.args
-        yield from self.kwargs.values()
+        return cls(
+            args=args,
+            kwargs=kwargs,
+            recipe_to_result=recipe_to_result,
+            metadata=metadata,
+        )
 
 
+@dataclasses.dataclass(frozen=True, repr=False, kw_only=True)
 class Recipe(ABC):
     """Base class for recipes"""
 
-    def get_dependencies(self) -> Call:
-        """Return a Call specifiying recipes that this recipe depends on."""
-        return Call()
+    allow_missing: bool = False
+    missing_data_exceptions: tp.Type[Exception] | tp.Tuple[tp.Type[Exception], ...] = ()
+
+    ## Class level configuration
+    on_missing_dependency: tp.ClassVar[
+        MissingDependencyBehavior
+    ] = MissingDependencyBehavior.SKIP
+
+    def get_dependencies(self) -> DependencyRequest:
+        """Return a DependencyRequest specifiying recipes that this recipe depends on."""
+        return DependencyRequest()
 
     @abstractmethod
     def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:
@@ -42,6 +90,7 @@ class Recipe(ABC):
     ### Below this line, methods are internal and not intended to be overriden.
 
     def __init_subclass__(cls, **kwargs) -> None:
+        # Automatically make other recipes dataclasses.
         r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)  # type: ignore
         assert r is cls
 
