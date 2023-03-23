@@ -111,6 +111,12 @@ class FactoryMP(Factory):
                 completed, running_futures = wait(
                     running_futures, timeout=self.timeout, return_when=FIRST_COMPLETED
                 )
+                if not completed:
+                    # Because of the ProcessPoolExecutor context mananger, this doesn't
+                    # propagate until after all running futures finish.
+                    raise exceptions.TimeoutError(
+                        f"Timeout after {self.timeout}s while building recipes: {building}"
+                    )
 
                 # At least one recipe has completed. Add the results.
                 for task in completed:

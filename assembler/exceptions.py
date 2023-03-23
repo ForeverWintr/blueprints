@@ -8,3 +8,7 @@ class ConfigurationError(AssemblerError):
 
 class MissingDependencyError(AssemblerError):
     """An upstream dependency is missing and at least one dependency does not allow missing"""
+
+
+class TimeoutError(AssemblerError):
+    """A multiprocessed task timed out."""

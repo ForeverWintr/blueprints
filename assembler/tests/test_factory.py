@@ -1,7 +1,5 @@
 from __future__ import annotations
-import typing as tp
-
-import functools
+import time
 
 import pytest
 
@@ -17,7 +15,7 @@ from assembler.tests.conftest import (
 from assembler.blueprint import Blueprint
 from assembler import exceptions
 from assembler import util
-from assembler.recipes.general import Object
+from assembler.recipes.general import Object, FromFunction
 
 FACTORY_TYPES = (Factory, FactoryMP)
 
@@ -160,8 +158,21 @@ def test_missing_bind(factory_constructor):
     assert f.process_recipe(will_bind_also) == ((placeholder,),)
 
 
-@pytest.mark.skip
+def sleep():
+    time.sleep(10)
+    return 5
+
+
 def test_mp_timeout():
+    # Timeouts and errors seem to require manual intervention. Maybe sigint the process
+    # instead of failing?
+    # Then sigint everything on unrecoverable error.
+
+    recipe = FromFunction(function=sleep)
+
+    f = FactoryMP(timeout=1)
+    f.process_recipe(recipe)
+
     assert 0
 
 
@@ -170,6 +181,6 @@ def test_mp_error():
     assert 0
 
 
-@pytest.mark.skip
-def test_get_buildable_recipes():
+def test_mp_interrupt():
+    # If the parent process is interrupted (ctrl-c), exit cleanly.
     assert 0
