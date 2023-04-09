@@ -26,6 +26,7 @@ python = ">=3.10"
 networkx = "^2.8.6"
 static-frame = "^0.9.22"
 frozendict = "^2.3.4"
+dash = "^2.9.2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.971"
