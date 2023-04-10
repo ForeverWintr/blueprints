@@ -20,7 +20,8 @@ app = dash.Dash(__name__)
 app.layout = html.Div(
     [
         dcc.Graph(id="live-graph", animate=True),
-        # dcc.Interval(id="graph-update", interval=1000, n_intervals=0),
+        # The memory store reverts to the default on every page refresh
+        dcc.Store("step-index", data=1, storage_type="memory"),
         html.Button("Previous", id="btn-prev"),
         html.Button("Next", id="btn-next"),
     ]
@@ -46,27 +47,23 @@ def make_step():
 
 @app.callback(
     Output("live-graph", "figure"),
-    [
-        Input("btn-prev", "n_clicks"),
-        Input("btn-next", "n_clicks"),
-    ],
+    Output("step-index", "data"),
+    Input("step-index", "data"),
+    Input("btn-prev", "n_clicks"),
+    Input("btn-next", "n_clicks"),
 )
-def update_graph_scatter(btn_prev_clicks, btn_next_clicks):
+def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
     btn_clicked = ctx.triggered_id
-    print(btn_clicked)
-    n_steps = len(steps)
 
     if btn_clicked == "btn-next":
-        while btn_next_clicks > n_steps:
-            steps.append(make_step())
-            n_steps = len(steps)
-        return steps[btn_next_clicks - 1]
+        step_idx = step_idx + 1
     elif btn_clicked == "btn-prev":
-        return steps[btn_prev_clicks - 1]
-    else:
-        # startup
+        step_idx = step_idx - 1
+
+    while step_idx > len(steps):
         steps.append(make_step())
-        return steps[-1]
+
+    return steps[step_idx - 1], step_idx
 
 
 if __name__ == "__main__":
