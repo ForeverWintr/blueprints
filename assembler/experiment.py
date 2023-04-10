@@ -1,62 +1,45 @@
 import dash
-from dash import html
-from dash import dcc
-from dash.exceptions import PreventUpdate
-from dash.dependencies import Input, Output
+from dash.dependencies import Output, Input
+import dash_core_components as dcc
+import dash_html_components as html
+import plotly
+import random
+import plotly.graph_objs as go
+from collections import deque
 
-import networkx as nx
-from networkx.drawing.nx_agraph import to_agraph
+X = deque(maxlen=20)
+X.append(1)
+
+Y = deque(maxlen=20)
+Y.append(1)
 
 app = dash.Dash(__name__)
 
-# Define your DAG using the networkx library
-G = nx.DiGraph()
-G.add_edges_from([("A", "B"), ("A", "C"), ("B", "D"), ("C", "D")])
-
-# Convert the networkx graph to a graphviz Agraph object
-A = to_agraph(G)
-A.layout(prog="dot")
-
-# Define the layout of your app
 app.layout = html.Div(
     [
-        html.H1("Interactive DAG"),
-        dcc.Input(id="input", type="text", placeholder="Enter a node"),
-        html.Div(id="output"),
-        html.Iframe(
-            id="graph",
-            srcDoc=A.draw(format="svg").decode("utf-8"),
-            width="100%",
-            height="600",
-        ),
-        dcc.Tooltip(id="tooltip", target="graph", placeholder=""),
+        dcc.Graph(id="live-graph", animate=True),
+        dcc.Interval(id="graph-update", interval=1000, n_intervals=0),
     ]
 )
 
 
-# Define the callback that updates the output and tooltip when the input is changed
-@app.callback(
-    Output("output", "children"),
-    Output("tooltip", "children"),
-    Input("input", "value"),
-)
-def update_output(value):
-    if not value:
-        raise PreventUpdate
-    return f'You entered "{value}"', ""
+@app.callback(Output("live-graph", "figure"), [Input("graph-update", "n_intervals")])
+def update_graph_scatter(n):
+    X.append(X[-1] + 1)
+    Y.append(Y[-1] + Y[-1] * random.uniform(-0.1, 0.1))
 
+    data = plotly.graph_objs.Scatter(
+        x=list(X), y=list(Y), name="Scatter", mode="lines+markers"
+    )
 
-# Define the callback that updates the tooltip when a node is clicked
-@app.callback(
-    Output("tooltip", "children"),
-    Input("graph", "clickData"),
-)
-def update_tooltip(click_data):
-    if not click_data:
-        raise PreventUpdate
-    node_id = click_data["points"][0]["text"]
-    return f'The node you clicked on is "{node_id}"'
+    return {
+        "data": [data],
+        "layout": go.Layout(
+            xaxis=dict(range=[min(X), max(X)]),
+            yaxis=dict(range=[min(Y), max(Y)]),
+        ),
+    }
 
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server()
