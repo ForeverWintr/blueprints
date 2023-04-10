@@ -15,6 +15,7 @@ G.add_edges_from([("A", "B"), ("A", "C"), ("B", "D"), ("C", "D")])
 
 # Convert the networkx graph to a graphviz Agraph object
 A = to_agraph(G)
+A.layout(prog="dot")
 
 # Define the layout of your app
 app.layout = html.Div(
