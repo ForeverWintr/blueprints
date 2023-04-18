@@ -20,6 +20,7 @@ if tp.TYPE_CHECKING:
 def get_blueprint_layout(
     g: nx.DiGraph, vertical_increment: float = 0.2, horizontal_increment: float = 0.1
 ) -> dict[Recipe, tuple[float, float]]:
+    """Return a dictionary from each recipe in the graph to it's x,y position"""
     bottom_layer = {n for n, d in g.out_degree() if d == 0}
     x = 0.0
     positions = {}
