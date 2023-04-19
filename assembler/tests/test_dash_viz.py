@@ -64,5 +64,12 @@ def test_visualize() -> None:
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         ),
     )
-    fig.show()
+    # fig.show()
+    assert 0
+
+
+def test_cytoscape() -> None:
+    # https://dash.plotly.com/cytoscape
+    # SRSLY https://dash.plotly.com/cytoscape/callbacks
+
     assert 0
