@@ -67,4 +67,4 @@ def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
 
 
 if __name__ == "__main__":
-    app.run_server()
+    app.run()
