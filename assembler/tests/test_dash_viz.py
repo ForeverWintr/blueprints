@@ -71,5 +71,12 @@ def test_visualize() -> None:
 def test_cytoscape() -> None:
     # https://dash.plotly.com/cytoscape
     # SRSLY https://dash.plotly.com/cytoscape/callbacks
+    a = Node(name="a")
+    d = Node(name="d")
+    b = Node(name="b", dependencies=(a,))
+    c = Node(name="c", dependencies=(a, d))
 
+    bp = Blueprint.from_recipes([b, c])
+
+    g = bp._dependency_graph
     assert 0

@@ -3,36 +3,39 @@ from dash.dependencies import Input, Output, State
 import dash_cytoscape as cyto
 from dash import ctx
 
+from assembler.blueprint import Blueprint
+from assembler.tests.test_blueprint import Node
+
+s = Node(name="s")
+a = Node(name="a", dependencies=(s,))
+d = Node(name="d")
+b = Node(name="out_b", dependencies=(a,))
+c = Node(name="out_c", dependencies=(a, d))
+
+bp = Blueprint.from_recipes([b, c])
+
+g = bp._dependency_graph
+elements = []
+for edge in g.edges:
+    a, b = (str(x) for x in edge)
+    for n in (a, b):
+        element = {
+            "data": {"id": n, "label": n},
+            "grabbable": False,
+            "classes": "square",
+        }
+        elements.append(element)
+    elements.append({"data": {"source": a, "target": b}})
 
 cyto.load_extra_layouts()
 app = Dash(__name__)
+
 
 cytoscape = cyto.Cytoscape(
     id="cytoscape-two-nodes",
     layout={"name": "dagre"},
     style={"width": "100vw", "height": "90vh"},
-    elements=[
-        {
-            "data": {"id": "one", "label": "Node 1"},
-            # "position": {"x": 75, "y": 75},
-            "grabbable": False,
-            "classes": "red square",
-        },
-        {
-            "data": {"id": "two", "label": "Node 2"},
-            # "position": {"x": 200, "y": 200},
-            "grabbable": False,
-            "classes": "square",
-        },
-        {
-            "data": {"id": "three", "label": "Node 3"},
-            # "position": {"x": 200, "y": 200},
-            "grabbable": False,
-            "classes": "square",
-        },
-        {"data": {"source": "one", "target": "two"}},
-        {"data": {"source": "three", "target": "two"}},
-    ],
+    elements=elements,
     stylesheet=[  # Group selectors
         {"selector": "node", "style": {"content": "data(label)"}},
         # Class selectors
