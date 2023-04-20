@@ -7,7 +7,7 @@ app = Dash(__name__)
 cytoscape = cyto.Cytoscape(
     id="cytoscape-two-nodes",
     layout={"name": "dagre"},
-    style={"width": "90vw", "height": "90vh"},
+    style={"width": "100vw", "height": "100vh"},
     elements=[
         {
             "data": {"id": "one", "label": "Node 1"},
@@ -31,4 +31,4 @@ cytoscape = cyto.Cytoscape(
 )
 app.layout = html.Div([cytoscape])
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run(debug=True)
