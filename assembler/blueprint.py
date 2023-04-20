@@ -106,7 +106,7 @@ class Blueprint:
         g = make_dependency_graph(recipes)
         return cls(g, outputs=outputs)
 
-    def get_build_state(self, recipe: Recipe) -> BuildStatus:
+    def get_build_status(self, recipe: Recipe) -> BuildStatus:
         """Return the build state of the given recipe"""
         return self._node_view[recipe][NodeAttrs.build_status]
 
@@ -148,7 +148,7 @@ class Blueprint:
 
         # What new recipes are now buildable?
         for successor in self._dependency_graph.successors(recipe):
-            if self.get_build_state(successor) is BuildStatus.NOT_STARTED:
+            if self.get_build_status(successor) is BuildStatus.NOT_STARTED:
                 self._dependency_count[successor] -= 1
                 if self._dependency_count[successor] == 0:
                     # This successor is now buildable.

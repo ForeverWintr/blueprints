@@ -5,8 +5,14 @@ from dash import ctx
 
 from assembler.blueprint import Blueprint
 from assembler.tests.test_blueprint import Node
+from assembler.constants import (
+    NodeAttrs,
+    BuildStatus,
+    BUILD_STATUS_TO_COLOR,
+    MissingDependencyBehavior,
+)
 
-s = Node(name="s")
+s = Node(name="source")
 a = Node(name="a", dependencies=(s,))
 d = Node(name="d")
 b = Node(name="out_b", dependencies=(a,))
@@ -56,13 +62,13 @@ app.layout = html.Div(
 )
 
 
-@app.callback(
-    Output("cytoscape-elements-callbacks", "elements"),
-    Output("step-index", "data"),
-    Input("step-index", "data"),
-    Input("btn-prev", "n_clicks"),
-    Input("btn-next", "n_clicks"),
-)
+# @app.callback(
+# Output("cytoscape-elements-callbacks", "elements"),
+# Output("step-index", "data"),
+# Input("step-index", "data"),
+# Input("btn-prev", "n_clicks"),
+# Input("btn-next", "n_clicks"),
+# )
 def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
     btn_clicked = ctx.triggered_id
 
