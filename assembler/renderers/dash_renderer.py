@@ -32,3 +32,7 @@ class DashRenderer:
                 html.Button("Next", id="btn-next"),
             ]
         )
+
+
+# Separate server with endpoint for updating graph. Renderer posts to server. Renderer
+# launches server with token?
