@@ -35,4 +35,7 @@ class DashRenderer:
 
 
 # Separate server with endpoint for updating graph. Renderer posts to server. Renderer
-# launches server with token?
+# launches server with token? - Not much benefit if we don't use https locally I think.
+
+# I don't think you can use a pipe or queue, as there's no way in flask to listen to
+# one. (AFAIK).
