@@ -70,6 +70,10 @@ def test_object():
     assert Factory().process_recipe(r) == 5
 
 
+def test_json():
+    assert 0
+
+
 @pytest.mark.skip
 def test_to_do():
     # Caching
