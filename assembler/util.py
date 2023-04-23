@@ -34,3 +34,10 @@ def process_recipe(recipe: Recipe, dependencies: Dependencies) -> ProcessResult:
         status = BuildStatus.BUILT
 
     return ProcessResult(recipe=recipe, status=status, output=result)
+
+
+def flatten_recipe(recipe: Recipe) -> set[Recipe]:
+    """Return a set containing this recipe and all of its dependencies"""
+    result = {recipe}
+    result.update(r for r in recipe.get_dependencies().recipes())
+    return result

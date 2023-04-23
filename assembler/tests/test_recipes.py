@@ -1,9 +1,9 @@
 import dataclasses
 import pytest
 
-from assembler.tests.conftest import TestData, TestColumn, TABLES
-from assembler.recipes import general
-from assembler.factory import Factory
+from assembler.tests.conftest import TestData, TestColumn, TABLES, Node
+from assembler.recipes import general, static_frame
+from assembler.factory import Factory, util
 
 
 def test_immutable():
@@ -70,8 +70,30 @@ def test_object():
     assert Factory().process_recipe(r) == 5
 
 
-def test_json():
+RECIPE_EXAMPLES = (
+    static_frame.FrameFromDelimited,
+    static_frame.SeriesFromDelimited,
+    static_frame.FrameFromRecipes,
+)
+
+
+def test_flatten_recipe():
+    d = Node(
+        name="dep",
+    )
+    r = Node(name="r", dependencies=(d,))
+    assert util.flatten_recipe(r) == {r, d}
+
+
+def test_recipe_registry():
     assert 0
+
+
+def test_json_roundtrip():
+    r = TestData(table_name="asdf")
+    j = r.to_json()
+
+    assert hash()
 
 
 @pytest.mark.skip

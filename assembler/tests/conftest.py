@@ -71,3 +71,22 @@ class Raiser(Recipe):
         if self.raise_in == "extract_from_dependencies":
             raise self.missing_data_exceptions()
         return columns
+
+
+class Node(Recipe):
+    """A simple recipe used for making dependency graphs"""
+
+    name: str
+    dependencies: tuple[Node, ...] = ()
+
+    def get_dependencies(self) -> DependencyRequest:
+        return DependencyRequest(*self.dependencies)
+
+    def extract_from_dependencies(self, *args) -> tp.Any:
+        pass
+
+    def __repr__(self):
+        return f"{(type(self).__name__)}({self.name!r})"
+
+    def __str__(self):
+        return self.name

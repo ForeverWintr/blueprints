@@ -3,6 +3,7 @@ import typing as tp
 from abc import ABC, abstractmethod
 import dataclasses
 import itertools
+import json
 
 from frozendict import frozendict
 
@@ -86,6 +87,13 @@ class Recipe(ABC):
     def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:
         """Given positional dependencies, extract the data that this recipe describes. args will be
         the results of instantiating the recipes returned by `get_dependencies` above"""
+
+    @classmethod
+    def from_json(cls, data: str) -> tp.Self:
+        return cls(**json.loads(data))
+
+    def to_json(self):
+        return json.dumps(dataclasses.asdict(self))
 
     ### Below this line, methods are internal and not intended to be overriden.
 

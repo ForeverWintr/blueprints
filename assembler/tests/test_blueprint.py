@@ -12,7 +12,7 @@ from assembler.blueprint import (
 )
 from assembler.constants import NodeAttrs, BuildStatus
 from assembler import exceptions
-from assembler.tests.conftest import TestData, TestColumn
+from assembler.tests.conftest import TestData, TestColumn, Node
 
 
 @pytest.fixture
@@ -32,25 +32,6 @@ def nodes() -> dict[str, Node]:
 @pytest.fixture
 def basic_blueprint(nodes) -> Blueprint:
     return Blueprint.from_recipes([nodes["b"], nodes["c"]])
-
-
-class Node(Recipe):
-    """A simple recipe used for making graphs"""
-
-    name: str
-    dependencies: tuple[Node, ...] = ()
-
-    def get_dependencies(self) -> DependencyRequest:
-        return DependencyRequest(*self.dependencies)
-
-    def extract_from_dependencies(self, *args) -> tp.Any:
-        pass
-
-    def __repr__(self):
-        return f"{(type(self).__name__)}({self.name!r})"
-
-    def __str__(self):
-        return self.name
 
 
 def test_from_recipes() -> None:
