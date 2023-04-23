@@ -29,6 +29,7 @@ frozendict = "^2.3.4"
 black = "^23.3.0"
 dash = "^2.9.2"
 dash-cytoscape = "^0.3.0"
+flask-caching = "^2.0.2"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.971"

@@ -2,6 +2,7 @@ from dash import Dash, html, dcc
 from dash.dependencies import Input, Output, State
 import dash_cytoscape as cyto
 from dash import ctx
+from flask import request
 
 
 cyto.load_extra_layouts()
@@ -19,6 +20,16 @@ cytoscape = cyto.Cytoscape(
         {"selector": ".red", "style": {"background-color": "red", "line-color": "red"}},
         {"selector": ".square", "style": {"shape": "square"}},
     ],
+)
+
+app.layout = html.Div(
+    [
+        cytoscape,
+        # The memory store reverts to the default on every page refresh
+        # dcc.Store("step-index", data=1, storage_type="memory"),
+        # html.Button("Previous", id="btn-prev"),
+        # html.Button("Next", id="btn-next"),
+    ]
 )
 
 
