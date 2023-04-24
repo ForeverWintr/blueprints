@@ -85,6 +85,15 @@ def test_flatten_recipe():
     assert util.flatten_recipe(r) == {r, d}
 
 
+def test_flatten_recipes():
+    d = Node(
+        name="dep",
+    )
+    r = Node(name="r", dependencies=(d,))
+    e = Node(name="e", dependencies=(d,))
+    assert util.flatten_recipes([r, e]) == {r, d, e}
+
+
 def test_recipe_registry():
     assert 0
 
