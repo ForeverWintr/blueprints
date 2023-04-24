@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import typing as tp
+import json
+import frozendict
 
 from assembler.constants import BuildStatus
 
@@ -55,3 +57,26 @@ def recipe_registry(recipes: tp.Iterable[Recipe]) -> dict[int, Recipe]:
     """Return a dictionary mapping recipe ids to recipes, for the provided recipes and
     all of their dependencies. For use in serialization"""
     return {id(r): r for r in flatten_recipes(recipes)}
+
+
+def _wrap_parse(
+    parse_method: tp.Callable, type_replacement: tp.Callable
+) -> tuple | frozendict:
+    def wrapper(*args, **kwargs):
+        obj, end = parse_method(*args, **kwargs)
+        return type_replacement(obj), end
+
+    return wrapper
+
+
+class ImmutableJson(json.JSONDecoder):
+    """Subclass of JSONDecoder that replaces lists with tuples and dicts with
+    frozendicts."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.parse_array = _wrap_parse(json.decoder.JSONArray, tuple)
+        self.parse_object = _wrap_parse(json.decoder.JSONObject, frozendict)
+
+    def parse_array(self):
+        asdf
