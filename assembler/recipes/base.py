@@ -68,6 +68,25 @@ class Dependencies:
         )
 
 
+class _RecipeTypeRegistry:
+    def __init__(self):
+        """Internal cache for tracking recipe subclasses. Intended to be instantiated
+        once globally. Used for serialization and deserialization."""
+        self._registry = {}
+
+    def add(self, recipe: tp.Type[Recipe]) -> None:
+        """Add a new recipe to the registry, asserting that it is not already there"""
+        key = (recipe.__module__, recipe.__qualname__)
+        assert key not in self._registry, f"{recipe!r} was defined twice!"
+        self._registry[key] = recipe
+
+    def get(self, key: tuple[str, str]) -> tp.Type[Recipe]:
+        return self._registry[key]
+
+
+_RECIPE_TYPE_REGISTRY = _RecipeTypeRegistry()
+
+
 @dataclasses.dataclass(frozen=True, repr=False, kw_only=True)
 class Recipe(ABC):
     """Base class for recipes"""
@@ -86,15 +105,19 @@ class Recipe(ABC):
 
     @abstractmethod
     def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:
-        """Given positional dependencies, extract the data that this recipe describes. args will be
-        the results of instantiating the recipes returned by `get_dependencies` above"""
+        """Given positional dependencies, extract the data that this recipe describes.
+        args will be the results of instantiating the recipes returned by
+        `get_dependencies` above"""
 
     @classmethod
-    def from_json(cls, data: str) -> tp.Self:
-        return cls(**json.loads(data))
+    def from_json(cls, serialized: str) -> tp.Self:
+        data = json.loads(serialized)
+        return cls(**data["attributes"])
 
     def _to_json(self, registry: dict[int, Recipe]) -> str:
-        asdf
+        d = dataclasses.asdict(self)
+        data = {"type_name": type(self).__qualname__, "attributes": d}
+        return json.dumps(data)
 
     def to_json(self) -> str:
         """Convert this recipe to json. Dependent recipes are replaced with keys into a registry."""
@@ -106,7 +129,12 @@ class Recipe(ABC):
     def __init_subclass__(cls, **kwargs) -> None:
         # Automatically make other recipes dataclasses.
         r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)  # type: ignore
+
+        # Assert that this only added attributes, rather than creating a new class.
         assert r is cls
+
+        # Add to the global registry of recipe classes.
+        _RECIPE_TYPE_REGISTRY.add(r)
 
     def _is_not_default(
         self, attribute: str, fields: tp.Dict[str, dataclasses.Field]

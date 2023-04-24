@@ -2,7 +2,7 @@ import dataclasses
 import pytest
 
 from assembler.tests.conftest import TestData, TestColumn, TABLES, Node
-from assembler.recipes import general, static_frame
+from assembler.recipes import general, static_frame, base
 from assembler.factory import Factory, util
 
 
@@ -105,8 +105,9 @@ def test_recipe_registry():
 
 
 def test_json_roundtrip():
-    r = TestData(table_name="asdf")
-    j = r.to_json()
+    source = TestData(table_name="asdf")
+    j = source.to_json()
+    deserialized = base.Recipe.from_json(j)
 
     assert hash()
 
