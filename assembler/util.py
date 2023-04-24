@@ -50,3 +50,4 @@ def flatten_recipes(recipes: tp.Iterable[Recipe]) -> set[Recipe]:
 def recipe_registry(recipes: tp.Iterable[Recipe]) -> dict[int, Recipe]:
     """Return a dictionary mapping recipe ids to recipes, for the provided recipes and
     all of their dependencies. For use in serialization"""
+    return {id(r): r for r in flatten_recipes(recipes)}

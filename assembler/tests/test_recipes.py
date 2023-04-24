@@ -95,7 +95,13 @@ def test_flatten_recipes():
 
 
 def test_recipe_registry():
-    assert 0
+    d = Node(
+        name="dep",
+    )
+    r = Node(name="r", dependencies=(d,))
+    e = Node(name="e", dependencies=(d,))
+    reg = util.recipe_registry([r, e])
+    assert reg == {id(x): x for x in (d, e, r)}
 
 
 def test_json_roundtrip():
