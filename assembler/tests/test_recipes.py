@@ -112,6 +112,25 @@ def test_json_roundtrip():
     assert hash()
 
 
+def test_recipe_type_registry():
+    class FakeRecipe:
+        pass
+
+    reg = base._RecipeTypeRegistry()
+    key = reg.key(FakeRecipe)
+    assert key == (
+        "assembler.tests.test_recipes",
+        "test_recipe_type_registry.<locals>.FakeRecipe",
+    )
+
+    reg.add(FakeRecipe)
+
+    with pytest.raises(AssertionError):
+        reg.add(FakeRecipe)
+
+    assert reg.get(key) is FakeRecipe
+
+
 @pytest.mark.skip
 def test_to_do():
     # Caching

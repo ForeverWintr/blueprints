@@ -74,9 +74,13 @@ class _RecipeTypeRegistry:
         once globally. Used for serialization and deserialization."""
         self._registry = {}
 
+    @staticmethod
+    def key(recipe: tp.Type[Recipe]) -> tuple[str, str]:
+        return (recipe.__module__, recipe.__qualname__)
+
     def add(self, recipe: tp.Type[Recipe]) -> None:
         """Add a new recipe to the registry, asserting that it is not already there"""
-        key = (recipe.__module__, recipe.__qualname__)
+        key = self.key(recipe)
         assert key not in self._registry, f"{recipe!r} was defined twice!"
         self._registry[key] = recipe
 
