@@ -1,7 +1,11 @@
+from __future__ import annotations
+
 import typing as tp
 
-from assembler.recipes.base import Recipe, Dependencies
 from assembler.constants import BuildStatus
+
+if tp.TYPE_CHECKING:
+    from assembler.recipes.base import Recipe, Dependencies
 
 
 class MissingPlaceholder(tp.NamedTuple):

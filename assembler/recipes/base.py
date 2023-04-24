@@ -8,6 +8,7 @@ import json
 from frozendict import frozendict
 
 from assembler.constants import MissingDependencyBehavior
+from assembler import util
 
 
 class Parameters(tp.NamedTuple):
@@ -92,8 +93,13 @@ class Recipe(ABC):
     def from_json(cls, data: str) -> tp.Self:
         return cls(**json.loads(data))
 
-    def to_json(self):
-        return json.dumps(dataclasses.asdict(self))
+    def _to_json(self, registry: dict[int, Recipe]) -> str:
+        asdf
+
+    def to_json(self) -> str:
+        """Convert this recipe to json. Dependent recipes are replaced with keys into a registry."""
+        dependency_registry = util.recipe_registry(self.get_dependencies().recipes())
+        return self._to_json(dependency_registry)
 
     ### Below this line, methods are internal and not intended to be overriden.
 
