@@ -30,7 +30,7 @@ def test_json(case):
     j = source.to_json()
 
     # Each name should appear exactly once.
-    source.get_dependencies()
+    source.get_dependency_request()
 
     deserialized = base.Recipe.from_json(j)
 

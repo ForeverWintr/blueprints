@@ -67,7 +67,7 @@ def test_from_recipes_no_cycles() -> None:
         name: str
         target: str
 
-        def get_dependencies(self) -> DependencyRequest:
+        def get_dependency_request(self) -> DependencyRequest:
             return DependencyRequest(Bad(name=self.target, target=self.name))
 
         def extract_from_dependencies(self, *args) -> tp.Any:

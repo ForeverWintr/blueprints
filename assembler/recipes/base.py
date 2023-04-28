@@ -17,7 +17,7 @@ class Parameters(tp.NamedTuple):
 
 class DependencyRequest:
     def __init__(self, *args: Recipe | None, **kwargs: Recipe | None):
-        """Returned from recipes' get_dependencies method. Used to indicate which other
+        """Returned from recipes' get_dependency_request method. Used to indicate which other
         recipes a recipe depends on."""
         self.args: tuple = args
         self.kwargs: dict = kwargs
@@ -103,7 +103,7 @@ class Recipe(ABC):
         MissingDependencyBehavior
     ] = MissingDependencyBehavior.SKIP
 
-    def get_dependencies(self) -> DependencyRequest:
+    def get_dependency_request(self) -> DependencyRequest:
         """Return a DependencyRequest specifiying recipes that this recipe depends on."""
         return DependencyRequest()
 
@@ -111,7 +111,7 @@ class Recipe(ABC):
     def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:
         """Given positional dependencies, extract the data that this recipe describes.
         args will be the results of instantiating the recipes returned by
-        `get_dependencies` above"""
+        `get_dependency_request` above"""
 
     @classmethod
     def from_json(cls, serialized: str) -> tp.Self:
@@ -129,7 +129,9 @@ class Recipe(ABC):
 
     def to_json(self) -> str:
         """Convert this recipe to json. Dependent recipes are replaced with keys into a registry."""
-        dependency_registry = util.recipe_registry(self.get_dependencies().recipes())
+        dependency_registry = util.recipe_registry(
+            self.get_dependency_request().recipes()
+        )
         return self._to_json(dependency_registry)
 
     ### Below this line, methods are internal and not intended to be overriden.

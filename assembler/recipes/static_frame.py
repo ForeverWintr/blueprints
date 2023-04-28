@@ -26,7 +26,7 @@ class SeriesFromDelimited(_FromDelimited):
     column_name: str
     missing_data_fill_value: tp.Any = np.nan
 
-    def get_dependencies(self) -> DependencyRequest:
+    def get_dependency_request(self) -> DependencyRequest:
         """Depends on seriesfromfile"""
         frame_recipe = FrameFromDelimited(
             file_path=self.file_path,
@@ -91,7 +91,7 @@ class FrameFromRecipes(Recipe):
         MissingDependencyBehavior
     ] = MissingDependencyBehavior.BIND
 
-    def get_dependencies(self) -> DependencyRequest:
+    def get_dependency_request(self) -> DependencyRequest:
         r = DependencyRequest(*self.recipes)
         if self.labels is not None:
             r.kwargs["labels"] = self.labels

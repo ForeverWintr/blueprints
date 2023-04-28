@@ -51,7 +51,7 @@ def recipes_and_dependencies(
     seen = set()
     while to_process:
         r = to_process.pop()
-        depends_on = r.get_dependencies()
+        depends_on = r.get_dependency_request()
 
         yield r, depends_on
 

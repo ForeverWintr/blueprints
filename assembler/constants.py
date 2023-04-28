@@ -11,7 +11,7 @@ class NodeAttrs:
 
     build_status: The current state of the recipe. See BuildStatus enum.
 
-    dependency_request: The DependencyRequest returned by the recipe's get_dependencies
+    dependency_request: The DependencyRequest returned by the recipe's get_dependency_request
     method.
     """
 
