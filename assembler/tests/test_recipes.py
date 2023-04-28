@@ -77,24 +77,6 @@ RECIPE_EXAMPLES = (
 )
 
 
-def test_flatten_recipe():
-    d = Node(
-        name="dep",
-    )
-    r = Node(name="r", dependencies=(d,))
-    a = Node(name="a", dependencies=(r,))
-    assert util.flatten_recipe(a) == {r, a, d}
-
-
-def test_flatten_recipes():
-    d = Node(
-        name="dep",
-    )
-    r = Node(name="r", dependencies=(d,))
-    e = Node(name="e", dependencies=(d,))
-    assert util.flatten_recipes([r, e]) == {r, d, e}
-
-
 def test_recipe_registry():
     d = Node(name="dep")
     r = Node(name="r", dependencies=(d,))

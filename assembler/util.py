@@ -62,17 +62,6 @@ def recipes_and_dependencies(
         seen.add(r)
 
 
-def flatten_recipe(recipe: Recipe) -> set[Recipe]:
-    """Return a set containing this recipe and all of its dependencies"""
-    result = {recipe}
-    result.update(r for r in recipe.get_dependencies().recipes())
-    return result
-
-
-def flatten_recipes(recipes: tp.Iterable[Recipe]) -> set[Recipe]:
-    return {r for root in recipes for r in flatten_recipe(root)}
-
-
 def recipe_registry(recipes: tp.Iterable[Recipe]) -> dict[int, Recipe]:
     """Return a dictionary mapping recipe ids to recipes, for the provided recipes and
     all of their dependencies. For use in serialization"""
