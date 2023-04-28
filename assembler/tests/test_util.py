@@ -2,6 +2,7 @@ import typing as tp
 import dataclasses
 
 import pytest
+from frozendict import frozendict
 
 from assembler import util
 from assembler.recipes.base import Recipe, Dependencies, Parameters
@@ -59,3 +60,18 @@ def test_process_recipe_raises():
     deps2 = Dependencies((), {}, {}, metadata=Parameters(factory_allow_missing=False))
     with pytest.raises(ZeroDivisionError):
         util.process_recipe(r2, dependencies=deps2)
+
+
+def test_make_immutable():
+    assert util.make_immutable({1: 1}) == frozendict({1: 1})
+    assert util.make_immutable([1, 1]) == (1, 1)
+
+    assert util.make_immutable([1, [2]]) == (1, (2,))
+    assert util.make_immutable({1: {1: 2}}) == frozendict({1: frozendict({1: 2})})
+
+    assert util.make_immutable({1: [2, {3: 4, 5: []}, []], 2: {}}) == frozendict(
+        {
+            1: (2, frozendict({3: 4, 5: ()}), ()),
+            2: frozendict({}),
+        }
+    )
