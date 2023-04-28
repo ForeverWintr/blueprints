@@ -42,6 +42,26 @@ def process_recipe(recipe: Recipe, dependencies: Dependencies) -> ProcessResult:
     return ProcessResult(recipe=recipe, status=status, output=result)
 
 
+def recipes_and_dependencies(
+    recipes: tp.Iterable[Recipe],
+) -> tp.Iterator[tuple[Recipe, Dependencies]]:
+    """Yield pairs of Recipe, Dependencies for the given recipe and all recipes they
+    depend on."""
+    to_process: list[Recipe] = list(recipes)
+    seen = set()
+    while to_process:
+        r = to_process.pop()
+        depends_on = r.get_dependencies()
+
+        yield r, depends_on
+
+        for d in depends_on.recipes():
+            if d not in seen:
+                to_process.append(d)
+                seen.add(d)
+        seen.add(r)
+
+
 def flatten_recipe(recipe: Recipe) -> set[Recipe]:
     """Return a set containing this recipe and all of its dependencies"""
     result = {recipe}
