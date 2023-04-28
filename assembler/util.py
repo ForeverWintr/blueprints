@@ -7,7 +7,7 @@ from frozendict import frozendict
 from assembler.constants import BuildStatus
 
 if tp.TYPE_CHECKING:
-    from assembler.recipes.base import Recipe, Dependencies
+    from assembler.recipes.base import Recipe, Dependencies, DependencyRequest
 
 
 class MissingPlaceholder(tp.NamedTuple):
@@ -44,7 +44,7 @@ def process_recipe(recipe: Recipe, dependencies: Dependencies) -> ProcessResult:
 
 def recipes_and_dependencies(
     recipes: tp.Iterable[Recipe],
-) -> tp.Iterator[tuple[Recipe, Dependencies]]:
+) -> tp.Iterator[tuple[Recipe, DependencyRequest]]:
     """Yield pairs of Recipe, Dependencies for the given recipe and all recipes they
     depend on."""
     to_process: list[Recipe] = list(recipes)
@@ -65,7 +65,7 @@ def recipes_and_dependencies(
 def recipe_registry(recipes: tp.Iterable[Recipe]) -> dict[int, Recipe]:
     """Return a dictionary mapping recipe ids to recipes, for the provided recipes and
     all of their dependencies. For use in serialization"""
-    return {id(r): r for r in flatten_recipes(recipes)}
+    return {id(r): r for r, _ in recipes_and_dependencies(recipes)}
 
 
 def make_immutable(obj: list | dict) -> tuple | frozendict:

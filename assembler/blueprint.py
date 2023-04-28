@@ -41,11 +41,7 @@ def get_blueprint_layout(
 def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
     g = nx.DiGraph()
     outputs = set(recipes)
-    to_process: list[Recipe] = list(outputs)
-    processed = set()
-    while to_process:
-        r = to_process.pop()
-        depends_on = r.get_dependencies()
+    for r, depends_on in util.recipes_and_dependencies(outputs):
         g.add_node(
             r,
             **{
@@ -56,11 +52,6 @@ def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
         )
         for d in depends_on.recipes():
             g.add_edge(d, r)
-
-            if d not in processed:
-                to_process.append(d)
-
-        processed.add(r)
 
     if nx.dag.has_cycle(g):
         cycles = nx.find_cycle(g)
