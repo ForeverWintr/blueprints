@@ -108,10 +108,10 @@ class Recipe(ABC):
         return DependencyRequest()
 
     @abstractmethod
-    def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:
-        """Given positional dependencies, extract the data that this recipe describes.
-        args will be the results of instantiating the recipes returned by
-        `get_dependency_request` above"""
+    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
+        """Given a Dependencies object corresponding to the DependencyRequest returned
+        by `get_dependency_request` above, extract the data that this recipe
+        describes."""
 
     @classmethod
     def from_json(cls, serialized: str) -> tp.Self:
