@@ -82,7 +82,8 @@ def test_flatten_recipe():
         name="dep",
     )
     r = Node(name="r", dependencies=(d,))
-    assert util.flatten_recipe(r) == {r, d}
+    a = Node(name="a", dependencies=(r,))
+    assert util.flatten_recipe(a) == {r, a, d}
 
 
 def test_flatten_recipes():
@@ -95,9 +96,7 @@ def test_flatten_recipes():
 
 
 def test_recipe_registry():
-    d = Node(
-        name="dep",
-    )
+    d = Node(name="dep")
     r = Node(name="r", dependencies=(d,))
     e = Node(name="e", dependencies=(d,))
     reg = util.recipe_registry([r, e])
@@ -109,7 +108,8 @@ def test_json_roundtrip():
     j = source.to_json()
     deserialized = base.Recipe.from_json(j)
 
-    assert hash()
+    assert deserialized == source
+    assert hash(deserialized) == hash(source)
 
 
 def test_recipe_type_registry():

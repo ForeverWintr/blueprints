@@ -116,12 +116,15 @@ class Recipe(ABC):
     @classmethod
     def from_json(cls, serialized: str) -> tp.Self:
         data = json.loads(serialized, cls=util.ImmutableJsonDecoder)
-        subclass = _RECIPE_TYPE_REGISTRY.get(data["registry_key"])
-        return cls(**data["attributes"])
+        subclass = _RECIPE_TYPE_REGISTRY.get(data["type_registry_key"])
+        return subclass(**data["attributes"])
 
     def _to_json(self, registry: dict[int, Recipe]) -> str:
         d = dataclasses.asdict(self)
-        data = {"registry_key": _RECIPE_TYPE_REGISTRY.key(type(self)), "attributes": d}
+        data = {
+            "type_registry_key": _RECIPE_TYPE_REGISTRY.key(type(self)),
+            "attributes": d,
+        }
         return json.dumps(data)
 
     def to_json(self) -> str:
