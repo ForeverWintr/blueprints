@@ -76,7 +76,7 @@ def make_immutable(obj: list | dict) -> tuple | frozendict:
     return constructor(obj)
 
 
-class ImmutableJson(json.JSONDecoder):
+class ImmutableJsonDecoder(json.JSONDecoder):
     """Subclass of JSONDecoder that replaces lists with tuples and dicts with
     frozendicts."""
 
