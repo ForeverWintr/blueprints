@@ -114,5 +114,11 @@ def recipe_to_json(recipe: Recipe) -> str:
     # How to handle arbitrary iterables?
     # Skip string, check for mapping and iterable? Then need to know what type to use.
     # I think it's best to assume only tuples and frozendicts.
+
+    # TODO:
+    # Need to hook into recipes so that they can serialize custom objects.
+    # json_hook? to_serializable_dict?
+    # Need to encode type along with dict data.
+    # Need to handle functions.
     r = registry.to_dict()
     asdf
