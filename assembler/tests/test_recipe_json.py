@@ -7,6 +7,7 @@ import json
 from assembler.tests.conftest import TestData, TestColumn, TABLES, Node
 from assembler.recipes import general, static_frame, base
 from assembler.factory import Factory, util
+from assembler import serialization
 
 
 class Case(tp.NamedTuple):
@@ -27,7 +28,7 @@ def make_examples() -> tp.Iterable[Case]:
 def test_json(case):
     source = case.recipe
 
-    j = source.to_json()
+    j = serialization.recipe_to_json(source)
 
     # Each name should appear exactly once.
     source.get_dependency_request()

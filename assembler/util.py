@@ -60,35 +60,3 @@ def recipes_and_dependencies(
                 to_process.append(d)
                 seen.add(d)
         seen.add(r)
-
-
-def recipe_registry(recipes: tp.Iterable[Recipe]) -> dict[int, Recipe]:
-    """Return a dictionary mapping recipe ids to recipes, for the provided recipes and
-    all of their dependencies. For use in serialization"""
-    return {id(r): r for r, _ in recipes_and_dependencies(recipes)}
-
-
-def make_immutable(obj: list | dict) -> tuple | frozendict:
-    """Recurse through an arbitrarily nested structure of dicts and lists, and replace
-    them with frozendicts and tuples. Intended to be called on the result of
-    json.decode, so assumes no cycles and immutable keys."""
-    constructor = frozendict
-    try:
-        items = obj.items()
-    except AttributeError:
-        items = enumerate(obj)
-        constructor = tuple
-
-    for k, v in items:
-        if isinstance(v, (list, dict)):
-            obj[k] = make_immutable(v)
-    return constructor(obj)
-
-
-class ImmutableJsonDecoder(json.JSONDecoder):
-    """Subclass of JSONDecoder that replaces lists with tuples and dicts with
-    frozendicts."""
-
-    def decode(self, string: str):
-        obj = super().decode(string)
-        return make_immutable(obj)
