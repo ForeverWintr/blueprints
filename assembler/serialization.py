@@ -40,13 +40,32 @@ class RecipeRegistry:
             self._key_to_recipe[key] = recipe
             self._recipe_to_key[recipe] = key
 
-    def get_key(self, recipe: Recipe, default: tp.Any = Sentinel.NOT_SET) -> str:
-        if default is Sentinel.NOT_SET:
-            return self._recipe_to_key[recipe]
-        return self._recipe_to_key.get(recipe, default)
+    def to_dict(self) -> dict[dict]:
+        """Convert to a dictionary that can be serialized"""
+        result = {}
+        getk = self._recipe_to_key.get
 
-    def iter_recipes(self) -> tp.Iterator[Recipe]:
-        return iter(self._recipe_to_key)
+        for r in self._recipe_to_key:
+            to_replace = {}
+            for f in dataclasses.fields(r):
+                val = getattr(r, f.name)
+
+                if isinstance(val, Recipe):
+                    to_replace[f.name] = getk(val)
+
+                elif isinstance(val, tuple) and any(isinstance(x, Recipe) for x in val):
+                    to_replace[f.name] = tuple(getk(x, x) for x in val)
+
+                elif isinstance(val, frozendict) and any(
+                    isinstance(x, Recipe) for x in _flat(val.items())
+                ):
+                    to_replace[f.name] = frozendict(
+                        (getk(k, k), getk(v, v)) for k, v in val.items()
+                    )
+            to_serialize = dataclasses.asdict(r)
+            to_serialize.update(to_replace)
+            result[self._recipe_to_key[r]] = to_serialize
+        return result
 
 
 class ImmutableJsonDecoder(json.JSONDecoder):
@@ -95,24 +114,5 @@ def recipe_to_json(recipe: Recipe) -> str:
     # How to handle arbitrary iterables?
     # Skip string, check for mapping and iterable? Then need to know what type to use.
     # I think it's best to assume only tuples and frozendicts.
-    gk = registry.get_key
-    for r in registry.iter_recipes():
-        to_replace = {}
-        for f in dataclasses.fields(r):
-            val = getattr(r, f.name)
-
-            if isinstance(val, Recipe):
-                to_replace[f.name] = gk(recipe)
-
-            elif isinstance(val, tuple) and any(isinstance(x, Recipe) for x in val):
-                to_replace[f.name] = tuple(gk(x, x) for x in val)
-
-            elif isinstance(val, frozendict) and any(
-                isinstance(x, Recipe) for x in _flat(val.items())
-            ):
-                to_replace[f.name] = frozendict(
-                    (gk(k, k), gk(v, v)) for k, v in val.items()
-                )
-        to_serialize = dataclasses.asdict(r)
-        to_serialize.update(to_replace)
-        asdf
+    r = registry.to_dict()
+    asdf
