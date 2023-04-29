@@ -43,6 +43,10 @@ class MissingDependencyBehavior(Enum):
     BIND = auto()
 
 
+class Sentinel(Enum):
+    NOT_SET = auto()
+
+
 BUILD_STATUS_TO_COLOR = {
     BuildStatus.NOT_STARTED: "#eaecee",
     BuildStatus.BUILDING: "#f4d03f",
