@@ -132,11 +132,11 @@ class Recipe(ABC):
 
     def to_serializable_dict(self, registry: RecipeRegistry) -> dict:
         """Return a dictionary that can be serialized (e.g. with json). To do this,
-        convert any complex types types that are json serializable (e.g. strings/ints),
-        and replace any recipes with their keys in the provided `registry` (which should
-        already contain all recipes that this recipe depends on). This method handles
-        known subclasses but can be overridden to enable serialization of custom
-        attributes.
+        convert any complex types types that are json serializable (e.g.
+        strings/ints/tuples), and replace any recipes with their keys in the provided
+        `registry` (which should already contain all recipes that this recipe depends
+        on). This method handles known subclasses but can be overridden to enable
+        serialization of custom attributes.
 
         For example, if your recipe is:
 
@@ -145,8 +145,27 @@ class Recipe(ABC):
 
         This method would return
 
-        {'depends_on': registry[self.depends_on]}
+        {'depends_on': registry.get(self.depends_on)}
         """
+        to_replace = {}
+        for f in dataclasses.fields(self):
+            val = getattr(self, f.name)
+
+            if isinstance(val, Recipe):
+                to_replace[f.name] = registry.get(val)
+
+            elif isinstance(val, tuple) and any(isinstance(x, Recipe) for x in val):
+                to_replace[f.name] = tuple(registry.get(x, x) for x in val)
+
+            elif isinstance(val, frozendict) and any(
+                isinstance(x, Recipe) for x in util.flatten(val.items())
+            ):
+                to_replace[f.name] = frozendict(
+                    (registry.get(k, k), registry.get(v, v)) for k, v in val.items()
+                )
+        result = dataclasses.asdict(self)
+        result.update(to_replace)
+        return result
 
     ### Below this line, methods are internal and not intended to be overriden.
 

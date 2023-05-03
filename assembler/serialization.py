@@ -34,38 +34,11 @@ class RecipeRegistry:
             }
         )
 
-    def add(self, recipe: Recipe) -> None:
-        if recipe not in self._recipe_to_key:
-            key = f"{self.KEY_PREFIX}_{id(recipe)}"
-            self._key_to_recipe[key] = recipe
-            self._recipe_to_key[recipe] = key
+    def recipes(self) -> tp.Iterator[Recipe]:
+        yield from self._recipe_to_key
 
-    def to_dict(self) -> dict[dict]:
-        """Convert to a dictionary that can be serialized"""
-        result = {}
-        getk = self._recipe_to_key.get
-
-        for r in self._recipe_to_key:
-            to_replace = {}
-            for f in dataclasses.fields(r):
-                val = getattr(r, f.name)
-
-                if isinstance(val, Recipe):
-                    to_replace[f.name] = getk(val)
-
-                elif isinstance(val, tuple) and any(isinstance(x, Recipe) for x in val):
-                    to_replace[f.name] = tuple(getk(x, x) for x in val)
-
-                elif isinstance(val, frozendict) and any(
-                    isinstance(x, Recipe) for x in _flat(val.items())
-                ):
-                    to_replace[f.name] = frozendict(
-                        (getk(k, k), getk(v, v)) for k, v in val.items()
-                    )
-            to_serialize = dataclasses.asdict(r)
-            to_serialize.update(to_replace)
-            result[self._recipe_to_key[r]] = to_serialize
-        return result
+    def get(self, item: Recipe, default=None):
+        return self._recipe_to_key.get(item, default)
 
 
 class ImmutableJsonDecoder(json.JSONDecoder):
@@ -94,10 +67,6 @@ class ImmutableJsonDecoder(json.JSONDecoder):
         return self._make_immutable(obj)
 
 
-def _flat(items: tp.ItemsView) -> tp.Iterator:
-    return (x for item in items for x in item)
-
-
 def recipe_to_json(recipe: Recipe) -> str:
     """Convert to a json representation that does not duplicate recipes. A recipe's
     dependencies are replaced with IDs into a registry mapping."""
@@ -120,5 +89,7 @@ def recipe_to_json(recipe: Recipe) -> str:
     # json_hook? to_serializable_dict?
     # Need to encode type along with dict data.
     # Need to handle functions.
-    r = registry.to_dict()
-    asdf
+
+    for r in registry.recipes():
+        to_serialize = r.to_serializable_dict(registry)
+        asdf

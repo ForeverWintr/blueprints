@@ -60,3 +60,7 @@ def recipes_and_dependencies(
                 to_process.append(d)
                 seen.add(d)
         seen.add(r)
+
+
+def flatten(items: tp.ItemsView) -> tp.Iterator:
+    return (x for item in items for x in item)
