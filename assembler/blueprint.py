@@ -6,7 +6,6 @@ import networkx as nx
 from assembler.recipes.base import Recipe, DependencyRequest, Dependencies, Parameters
 from assembler import exceptions
 from assembler.constants import (
-    NodeAttrs,
     BuildStatus,
     BUILD_STATUS_TO_COLOR,
     MissingDependencyBehavior,
@@ -39,7 +38,14 @@ def get_blueprint_layout(
 
 
 class Blueprint:
-    def __init__(self, dependency_graph: nx.DiGraph, outputs: frozenset[Recipe]):
+    def __init__(
+        self,
+        *,
+        dependency_graph: nx.DiGraph,
+        outputs: frozenset[Recipe],
+        build_statuses: dict[Recipe, BuildStatus],
+        dependency_requests: dict[Recipe, DependencyRequest],
+    ):
         """A Blueprint describes how to construct recipes and their depenencies.
 
         Args:
@@ -48,13 +54,15 @@ class Blueprint:
         """
         self._dependency_graph = dependency_graph
         self.outputs = outputs
+        self._build_statuses = build_statuses
+        self._dependency_requests = dependency_requests
         self._node_view: nx.reportviews.NodeDataView = dependency_graph.nodes(data=True)
 
         # Recipes that are not yet finished processing.
         self._unbuilt = {
             r
-            for r, d in self._node_view
-            if d[NodeAttrs.build_status] not in {BuildStatus.BUILT, BuildStatus.MISSING}
+            for r in self._dependency_graph.nodes
+            if self._build_statuses[r] not in {BuildStatus.BUILT, BuildStatus.MISSING}
         }
 
         # Recipes that are currently buildable.
@@ -72,19 +80,25 @@ class Blueprint:
         """Create a blueprint from the given recipe."""
         outputs = frozenset(recipes)
         g = util.make_dependency_graph(recipes)
+        build_statuses = {}
+        dependency_requests = {}
         for recipe, data in g.nodes(data=True):
-            # data[NodeAttrs.is_output] = recipe in outputs
-            data[NodeAttrs.build_status] = BuildStatus.NOT_STARTED
-            data[NodeAttrs.dependency_request] = recipe.get_dependency_request()
-        return cls(g, outputs=outputs)
+            build_statuses[recipe] = BuildStatus.NOT_STARTED
+            dependency_requests[recipe] = recipe.get_dependency_request()
+        return cls(
+            dependency_graph=g,
+            outputs=outputs,
+            build_statuses=build_statuses,
+            dependency_requests=dependency_requests,
+        )
 
     def get_build_status(self, recipe: Recipe) -> BuildStatus:
         """Return the build state of the given recipe"""
-        return self._node_view[recipe][NodeAttrs.build_status]
+        return self._build_statuses[recipe]
 
     def get_dependency_request(self, recipe: Recipe) -> DependencyRequest:
         """Return the `DependencyRequest` object associated with the given recipe"""
-        return self._node_view[recipe][NodeAttrs.dependency_request]
+        return self._dependency_requests[recipe]
 
     def prepare_to_build(
         self, recipe: Recipe, instantiated: dict[Recipe, tp.Any], metadata: Parameters
@@ -102,7 +116,7 @@ class Blueprint:
         return dependencies
 
     def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
-        self._node_view[recipe][NodeAttrs.build_status] = state
+        self._build_statuses[recipe] = state
 
     def mark_buildable(self, recipe: Recipe) -> None:
         self._buildable.add(recipe)

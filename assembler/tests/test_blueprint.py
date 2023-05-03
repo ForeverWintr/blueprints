@@ -9,7 +9,7 @@ from assembler.blueprint import (
     Blueprint,
     get_blueprint_layout,
 )
-from assembler.constants import NodeAttrs, BuildStatus
+from assembler.constants import BuildStatus
 from assembler import exceptions
 from assembler.tests.conftest import TestData, TestColumn, Node
 from assembler import util
@@ -45,14 +45,10 @@ def test_from_recipes() -> None:
     nodes = b._dependency_graph.nodes(data=True)
 
     assert set(b._dependency_graph[dep]) == {r1, r3}
-    node = nodes[dep]
-    node.pop(NodeAttrs.dependency_request)
-    assert node == {NodeAttrs.build_status: BuildStatus.BUILDABLE}
+    assert b.get_build_status(dep) is BuildStatus.BUILDABLE
 
     assert set(b._dependency_graph[TestData(table_name="b")]) == {r2}
-    node = nodes[r1]
-    node.pop(NodeAttrs.dependency_request)
-    assert nodes[r1] == {NodeAttrs.build_status: BuildStatus.NOT_STARTED}
+    assert b.get_build_status(r1) is BuildStatus.NOT_STARTED
 
 
 def test_from_recipes_no_cycles() -> None:

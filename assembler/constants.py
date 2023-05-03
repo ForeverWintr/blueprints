@@ -2,21 +2,6 @@ from __future__ import annotations
 from enum import Enum, auto
 
 
-class NodeAttrs:
-    """Constants for attributes defined on blueprint nodes.
-
-    Meanings:
-
-    build_status: The current state of the recipe. See BuildStatus enum.
-
-    dependency_request: The DependencyRequest returned by the recipe's get_dependency_request
-    method.
-    """
-
-    build_status = "build_status"
-    dependency_request = "dependency_request"
-
-
 class BuildStatus(Enum):
     NOT_STARTED = auto()
     BUILDABLE = auto()
