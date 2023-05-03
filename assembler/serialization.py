@@ -7,7 +7,6 @@ from frozendict import frozendict
 import networkx as nx
 
 from assembler import util
-from assembler.constants import Sentinel
 
 from assembler.recipes.base import Recipe, RECIPE_TYPE_REGISTRY
 
