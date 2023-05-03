@@ -47,18 +47,12 @@ def test_from_recipes() -> None:
     assert set(b._dependency_graph[dep]) == {r1, r3}
     node = nodes[dep]
     node.pop(NodeAttrs.dependency_request)
-    assert node == {
-        NodeAttrs.is_output: False,
-        NodeAttrs.build_status: BuildStatus.BUILDABLE,
-    }
+    assert node == {NodeAttrs.build_status: BuildStatus.BUILDABLE}
 
     assert set(b._dependency_graph[TestData(table_name="b")]) == {r2}
     node = nodes[r1]
     node.pop(NodeAttrs.dependency_request)
-    assert nodes[r1] == {
-        NodeAttrs.is_output: True,
-        NodeAttrs.build_status: BuildStatus.NOT_STARTED,
-    }
+    assert nodes[r1] == {NodeAttrs.build_status: BuildStatus.NOT_STARTED}
 
 
 def test_from_recipes_no_cycles() -> None:

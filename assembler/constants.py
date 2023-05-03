@@ -7,15 +7,12 @@ class NodeAttrs:
 
     Meanings:
 
-    is_output: This recipe is an output (rather than an internal dependency).
-
     build_status: The current state of the recipe. See BuildStatus enum.
 
     dependency_request: The DependencyRequest returned by the recipe's get_dependency_request
     method.
     """
 
-    is_output = "is_output"
     build_status = "build_status"
     dependency_request = "dependency_request"
 
