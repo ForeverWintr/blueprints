@@ -83,15 +83,21 @@ def recipe_to_json(recipe: Recipe) -> str:
 
     registry = RecipeRegistry.from_recipes([recipe])
     dependency_graph = util.make_dependency_graph([recipe])
-    r = registry.replace_dependencies(dependency_graph)
 
-    result = {}
+    recipes = {}
     for r in registry.recipes():
         recipe_data = {
             "attributes": r.to_serializable_dict(registry),
             "type": RECIPE_TYPE_REGISTRY.key(type(r)),
         }
-        result[registry.get(r)] = recipe_data
+        recipes[registry.get(r)] = recipe_data
+
+    result = {
+        "dependency_graph": nx.json_graph.adjacency_data(
+            registry.replace_dependencies(dependency_graph)
+        ),
+        "recipe_data": recipes,
+    }
     return json.dumps(result)
 
 
