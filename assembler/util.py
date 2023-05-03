@@ -3,8 +3,11 @@ from __future__ import annotations
 import typing as tp
 import json
 from frozendict import frozendict
+import networkx as nx
 
 from assembler.constants import BuildStatus
+from assembler import constants
+from assembler import exceptions
 
 if tp.TYPE_CHECKING:
     from assembler.recipes.base import Recipe, Dependencies, DependencyRequest
@@ -64,3 +67,26 @@ def recipes_and_dependencies(
 
 def flatten(items: tp.ItemsView) -> tp.Iterator:
     return (x for item in items for x in item)
+
+
+def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
+    g = nx.DiGraph()
+    outputs = set(recipes)
+    for r, depends_on in recipes_and_dependencies(outputs):
+        g.add_node(
+            r,
+            **{
+                constants.NodeAttrs.is_output: r in outputs,
+                constants.NodeAttrs.build_status: BuildStatus.NOT_STARTED,
+                constants.NodeAttrs.dependency_request: depends_on,
+            },
+        )
+        for d in depends_on.recipes():
+            g.add_edge(d, r)
+
+    if nx.dag.has_cycle(g):
+        cycles = nx.find_cycle(g)
+        raise exceptions.ConfigurationError(
+            f"The given recipe produced dependency cycles: {cycles}"
+        )
+    return g

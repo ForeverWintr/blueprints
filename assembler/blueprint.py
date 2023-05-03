@@ -38,29 +38,6 @@ def get_blueprint_layout(
     return positions
 
 
-def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
-    g = nx.DiGraph()
-    outputs = set(recipes)
-    for r, depends_on in util.recipes_and_dependencies(outputs):
-        g.add_node(
-            r,
-            **{
-                NodeAttrs.is_output: r in outputs,
-                NodeAttrs.build_status: BuildStatus.NOT_STARTED,
-                NodeAttrs.dependency_request: depends_on,
-            },
-        )
-        for d in depends_on.recipes():
-            g.add_edge(d, r)
-
-    if nx.dag.has_cycle(g):
-        cycles = nx.find_cycle(g)
-        raise exceptions.ConfigurationError(
-            f"The given recipe produced dependency cycles: {cycles}"
-        )
-    return g
-
-
 class Blueprint:
     def __init__(self, dependency_graph: nx.DiGraph, outputs: frozenset[Recipe]):
         """A Blueprint describes how to construct recipes and their depenencies.
@@ -94,7 +71,7 @@ class Blueprint:
     def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> Blueprint:
         """Create a blueprint from the given recipe."""
         outputs = frozenset(recipes)
-        g = make_dependency_graph(recipes)
+        g = util.make_dependency_graph(recipes)
         return cls(g, outputs=outputs)
 
     def get_build_status(self, recipe: Recipe) -> BuildStatus:

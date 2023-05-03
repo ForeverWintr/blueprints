@@ -90,7 +90,7 @@ def recipe_from_json(json_str: str) -> Recipe:
 
     # Loaded dict needs to replace dependencies with recipes. It does not know what
     # fields contain recipes though. That means calling Recipe.from_serializable_dict
-    # and passing a registry. How to build the registry though? Can't call until all a
+    # and passing a registry. How to build the registry? Can't call until all a
     # recipes dependencies are in the registry. Need to process in order. But don't know
     # what fields indicate deps.
 

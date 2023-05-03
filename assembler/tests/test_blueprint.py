@@ -8,11 +8,11 @@ from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
 from assembler.blueprint import (
     Blueprint,
     get_blueprint_layout,
-    make_dependency_graph,
 )
 from assembler.constants import NodeAttrs, BuildStatus
 from assembler import exceptions
 from assembler.tests.conftest import TestData, TestColumn, Node
+from assembler import util
 
 
 @pytest.fixture
@@ -88,7 +88,7 @@ def test_get_blueprint_layout() -> None:
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
 
-    g = make_dependency_graph([b, c])
+    g = util.make_dependency_graph([b, c])
     layout = get_blueprint_layout(g)
     assert layout == {b: (0, 0), c: (0.1, 0), a: (0, 0.2), d: (0.1, 0.2)}
 
