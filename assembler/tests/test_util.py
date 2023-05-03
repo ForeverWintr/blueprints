@@ -6,7 +6,7 @@ from frozendict import frozendict
 
 from assembler import util
 from assembler.recipes.base import Recipe, Dependencies, Parameters
-from assembler.constants import BuildStatus
+from assembler.constants import BuildState
 from assembler.tests.conftest import Node
 
 
@@ -19,7 +19,7 @@ def test_process_recipe_success() -> None:
     deps = Dependencies((), {}, {}, metadata=Parameters(factory_allow_missing=True))
     result = util.process_recipe(r, dependencies=deps)
     assert result.recipe == r
-    assert result.status == BuildStatus.BUILT
+    assert result.status == BuildState.BUILT
     assert result.output == 1
 
 
@@ -35,7 +35,7 @@ def test_process_recipe_missing() -> None:
     deps = Dependencies((), {}, {}, metadata=Parameters(factory_allow_missing=True))
     result = util.process_recipe(r, dependencies=deps)
     assert result.recipe == r
-    assert result.status == BuildStatus.MISSING
+    assert result.status == BuildState.MISSING
     assert result.output == util.MissingPlaceholder(
         reason="ZeroDivisionError('division by zero')", fill_value=None
     )

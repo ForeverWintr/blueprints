@@ -5,7 +5,7 @@ import json
 from frozendict import frozendict
 import networkx as nx
 
-from assembler.constants import BuildStatus
+from assembler.constants import BuildState
 from assembler import constants
 from assembler import exceptions
 
@@ -20,7 +20,7 @@ class MissingPlaceholder(tp.NamedTuple):
 
 class ProcessResult(tp.NamedTuple):
     recipe: Recipe
-    status: BuildStatus
+    status: BuildState
     output: tp.Any
 
 
@@ -38,9 +38,9 @@ def process_recipe(recipe: Recipe, dependencies: Dependencies) -> ProcessResult:
                 reason=repr(e),
                 fill_value=getattr(recipe, "missing_data_fill_value", None),
             )
-            status = BuildStatus.MISSING
+            status = BuildState.MISSING
     else:
-        status = BuildStatus.BUILT
+        status = BuildState.BUILT
 
     return ProcessResult(recipe=recipe, status=status, output=result)
 

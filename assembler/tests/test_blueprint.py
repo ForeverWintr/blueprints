@@ -9,7 +9,7 @@ from assembler.blueprint import (
     Blueprint,
     get_blueprint_layout,
 )
-from assembler.constants import BuildStatus
+from assembler.constants import BuildState
 from assembler import exceptions
 from assembler.tests.conftest import TestData, TestColumn, Node
 from assembler import util
@@ -45,10 +45,10 @@ def test_from_recipes() -> None:
     nodes = b._dependency_graph.nodes(data=True)
 
     assert set(b._dependency_graph[dep]) == {r1, r3}
-    assert b.get_build_status(dep) is BuildStatus.BUILDABLE
+    assert b.get_build_state(dep) is BuildState.BUILDABLE
 
     assert set(b._dependency_graph[TestData(table_name="b")]) == {r2}
-    assert b.get_build_status(r1) is BuildStatus.NOT_STARTED
+    assert b.get_build_state(r1) is BuildState.NOT_STARTED
 
 
 def test_from_recipes_no_cycles() -> None:
@@ -85,26 +85,26 @@ def test_get_blueprint_layout() -> None:
 
 def test_mark_built(basic_blueprint: Blueprint) -> None:
     name_to_state = {
-        r.name: basic_blueprint.get_build_status(r)
+        r.name: basic_blueprint.get_build_state(r)
         for r in basic_blueprint._dependency_graph
     }
     assert name_to_state == {
-        "b": BuildStatus.NOT_STARTED,
-        "a": BuildStatus.BUILDABLE,
-        "c": BuildStatus.NOT_STARTED,
-        "d": BuildStatus.BUILDABLE,
+        "b": BuildState.NOT_STARTED,
+        "a": BuildState.BUILDABLE,
+        "c": BuildState.NOT_STARTED,
+        "d": BuildState.BUILDABLE,
     }
 
     basic_blueprint.mark_built(Node(name="a"))
     name_to_state = {
-        r.name: basic_blueprint.get_build_status(r)
+        r.name: basic_blueprint.get_build_state(r)
         for r in basic_blueprint._dependency_graph
     }
     assert name_to_state == {
-        "b": BuildStatus.BUILDABLE,
-        "a": BuildStatus.BUILT,
-        "c": BuildStatus.NOT_STARTED,
-        "d": BuildStatus.BUILDABLE,
+        "b": BuildState.BUILDABLE,
+        "a": BuildState.BUILT,
+        "c": BuildState.NOT_STARTED,
+        "d": BuildState.BUILDABLE,
     }
 
 
@@ -119,7 +119,7 @@ def test_mark_buildable(nodes: dict[str, Node], basic_blueprint: Blueprint) -> N
         n for k, n in nodes.items() if n.name in {"a", "d", "c"}
     }
     for r in basic_blueprint.buildable_recipes():
-        assert basic_blueprint.get_build_status(r) == BuildStatus.BUILDABLE
+        assert basic_blueprint.get_build_state(r) == BuildState.BUILDABLE
 
 
 def test_buildable_recipes(basic_blueprint: Blueprint) -> None:

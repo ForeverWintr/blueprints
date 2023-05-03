@@ -2,7 +2,7 @@ from __future__ import annotations
 from enum import Enum, auto
 
 
-class BuildStatus(Enum):
+class BuildState(Enum):
     NOT_STARTED = auto()
     BUILDABLE = auto()
     BUILDING = auto()
@@ -29,10 +29,10 @@ class Sentinel(Enum):
     NOT_SET = auto()
 
 
-BUILD_STATUS_TO_COLOR = {
-    BuildStatus.NOT_STARTED: "#eaecee",
-    BuildStatus.BUILDING: "#f4d03f",
-    BuildStatus.BUILT: "#2ecc71",
-    BuildStatus.MISSING: "#e74c3c",
-    BuildStatus.BUILDABLE: "#e70000",
+BUILD_STATE_TO_COLOR = {
+    BuildState.NOT_STARTED: "#eaecee",
+    BuildState.BUILDING: "#f4d03f",
+    BuildState.BUILT: "#2ecc71",
+    BuildState.MISSING: "#e74c3c",
+    BuildState.BUILDABLE: "#e70000",
 }

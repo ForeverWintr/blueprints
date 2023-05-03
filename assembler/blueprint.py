@@ -6,8 +6,8 @@ import networkx as nx
 from assembler.recipes.base import Recipe, DependencyRequest, Dependencies, Parameters
 from assembler import exceptions
 from assembler.constants import (
-    BuildStatus,
-    BUILD_STATUS_TO_COLOR,
+    BuildState,
+    BUILD_STATE_TO_COLOR,
     MissingDependencyBehavior,
 )
 from assembler import util
@@ -43,7 +43,7 @@ class Blueprint:
         *,
         dependency_graph: nx.DiGraph,
         outputs: frozenset[Recipe],
-        build_state: dict[Recipe, BuildStatus],
+        build_state: dict[Recipe, BuildState],
         dependency_requests: dict[Recipe, DependencyRequest],
     ):
         """A Blueprint describes how to construct recipes and their depenencies.
@@ -62,7 +62,7 @@ class Blueprint:
         self._unbuilt = {
             r
             for r in self._dependency_graph.nodes
-            if self._build_state[r] not in {BuildStatus.BUILT, BuildStatus.MISSING}
+            if self._build_state[r] not in {BuildState.BUILT, BuildState.MISSING}
         }
 
         # Recipes that are currently buildable.
@@ -83,7 +83,7 @@ class Blueprint:
         build_state = {}
         dependency_requests = {}
         for recipe, data in g.nodes(data=True):
-            build_state[recipe] = BuildStatus.NOT_STARTED
+            build_state[recipe] = BuildState.NOT_STARTED
             dependency_requests[recipe] = recipe.get_dependency_request()
         return cls(
             dependency_graph=g,
@@ -92,7 +92,7 @@ class Blueprint:
             dependency_requests=dependency_requests,
         )
 
-    def get_build_status(self, recipe: Recipe) -> BuildStatus:
+    def get_build_state(self, recipe: Recipe) -> BuildState:
         """Return the build state of the given recipe"""
         return self._build_state[recipe]
 
@@ -112,12 +112,12 @@ class Blueprint:
             instantiated,
             metadata=metadata,
         )
-        self._build_state[recipe] = BuildStatus.BUILDING
+        self._build_state[recipe] = BuildState.BUILDING
         return dependencies
 
     def mark_buildable(self, recipe: Recipe) -> None:
         self._buildable.add(recipe)
-        self._build_state[recipe] = BuildStatus.BUILDABLE
+        self._build_state[recipe] = BuildState.BUILDABLE
 
         # In practice the recipe should already be in this set, but for conceptual
         # consistency and testing, we add it again.
@@ -125,13 +125,13 @@ class Blueprint:
 
     def mark_built(self, recipe: Recipe) -> None:
         """Update the blueprint to reflect that the given node was built successfully"""
-        self._build_state[recipe] = BuildStatus.BUILT
+        self._build_state[recipe] = BuildState.BUILT
         self._buildable.discard(recipe)
         self._unbuilt.discard(recipe)
 
         # What new recipes are now buildable?
         for successor in self._dependency_graph.successors(recipe):
-            if self.get_build_status(successor) is BuildStatus.NOT_STARTED:
+            if self.get_build_state(successor) is BuildState.NOT_STARTED:
                 self._dependency_count[successor] -= 1
                 if self._dependency_count[successor] == 0:
                     # This successor is now buildable.
@@ -148,7 +148,7 @@ class Blueprint:
         Return any recipes that cannot be built (i.e. they do not allow_missing) as a
         result of this.
         """
-        self._build_state[recipe] = BuildStatus.MISSING
+        self._build_state[recipe] = BuildState.MISSING
         self._buildable.discard(recipe)
         self._unbuilt.discard(recipe)
 
@@ -182,12 +182,12 @@ class Blueprint:
     ) -> set[Recipe]:
         """Update internal state based on the result of building a recipe."""
         instantiated[result.recipe] = result.output
-        if result.status is BuildStatus.MISSING or isinstance(
+        if result.status is BuildState.MISSING or isinstance(
             result.output, util.MissingPlaceholder
         ):
             # Mark all downstream recipes that skip missing as missing too. Return any that cannot be built.
             unbuildable = self.mark_missing(result.recipe, instantiated)
-        elif result.status is BuildStatus.BUILT:
+        elif result.status is BuildState.BUILT:
             self.mark_built(result.recipe)
             unbuildable = set()
         return unbuildable
@@ -207,7 +207,7 @@ class Blueprint:
         nodes = sorted(self._dependency_graph, key=str)
         labels = {n: str(n) for n in nodes}
         colors = [
-            BUILD_STATUS_TO_COLOR[self._node_view[n][NodeAttrs.build_status]]
+            BUILD_STATE_TO_COLOR[self._node_view[n][NodeAttrs.build_status]]
             for n in nodes
         ]
 
