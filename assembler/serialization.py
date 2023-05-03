@@ -95,4 +95,8 @@ def recipe_from_json(json_str: str) -> Recipe:
     # what fields indicate deps.
 
     # create dep graph in to_json?
+    # Temporary blueprint? Then throw it away?
+
+    # Separate graph structure from blueprint data. Only store dependencies in graph? I
+    # don't want those for serialization though. Add in blueprint?
     asdf
