@@ -23,6 +23,9 @@ def make_examples() -> tp.Iterable[Case]:
     e = Node(name="e__", dependencies=(d,))
     yield Case("Shared Dependencies", Node(name="out", dependencies=(r, e)))
 
+    # Functions
+    yield Case("Function", general.FromFunction(lambda x: x))
+
 
 @pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)
 def test_json(case):

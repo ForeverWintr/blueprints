@@ -81,3 +81,8 @@ def recipe_to_json(recipe: Recipe) -> str:
         }
         result.append(recipe_data)
     return json.dumps(result)
+
+
+def recipe_from_json(json_str: str) -> Recipe:
+    """Deserialize Json-ified recipes"""
+    asdf
