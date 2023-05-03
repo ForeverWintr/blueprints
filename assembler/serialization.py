@@ -116,4 +116,6 @@ def recipe_from_json(json_str: str) -> Recipe:
 
     # Separate graph structure from blueprint data. Only store dependencies in graph? I
     # don't want those for serialization though. Add in blueprint?
+
+    # Now we parse the dependency graph twice, once for blueprint and once for graph. Fix that.
     asdf
