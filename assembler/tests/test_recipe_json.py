@@ -33,7 +33,10 @@ def test_json(case):
     j = serialization.recipe_to_json(source)
 
     # Each name should appear exactly once.
-    source.get_dependency_request()
+    names = [r.name for r, _ in util.recipes_and_dependencies([source])]
+
+    for n in names:
+        assert j.count(n) == 1
 
     deserialized = base.Recipe.from_json(j)
 
