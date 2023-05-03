@@ -10,6 +10,9 @@ from frozendict import frozendict
 from assembler.constants import MissingDependencyBehavior
 from assembler import util
 
+if tp.TYPE_CHECKING:
+    from assembler.serialization import RecipeRegistry
+
 
 class Parameters(tp.NamedTuple):
     factory_allow_missing: bool
@@ -127,12 +130,23 @@ class Recipe(ABC):
         }
         return json.dumps(data)
 
-    def to_json(self) -> str:
-        """Convert this recipe to json. Dependent recipes are replaced with keys into a registry."""
-        dependency_registry = util.recipe_registry(
-            self.get_dependency_request().recipes()
-        )
-        return self._to_json(dependency_registry)
+    def to_serializable_dict(self, registry: RecipeRegistry) -> dict:
+        """Return a dictionary that can be serialized (e.g. with json). To do this,
+        convert any complex types types that are json serializable (e.g. strings/ints),
+        and replace any recipes with their keys in the provided `registry` (which should
+        already contain all recipes that this recipe depends on). This method handles
+        known subclasses but can be overridden to enable serialization of custom
+        attributes.
+
+        For example, if your recipe is:
+
+        class MyRecipe(Recipe):
+            depends_on=other_recipe
+
+        This method would return
+
+        {'depends_on': registry[self.depends_on]}
+        """
 
     ### Below this line, methods are internal and not intended to be overriden.
 
