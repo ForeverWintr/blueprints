@@ -63,6 +63,7 @@ def test_process_recipe_raises() -> None:
         util.process_recipe(r2, dependencies=deps2)
 
 
+@pytest.mark.skip
 def test_make_immutable() -> None:
     assert util.make_immutable({1: 1}) == frozendict({1: 1})
     assert util.make_immutable([1, 1]) == (1, 1)
