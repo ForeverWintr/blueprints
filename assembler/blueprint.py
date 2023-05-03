@@ -112,15 +112,12 @@ class Blueprint:
             instantiated,
             metadata=metadata,
         )
-        self._set_build_state(recipe, BuildStatus.BUILDING)
+        self._build_state[recipe] = BuildStatus.BUILDING
         return dependencies
-
-    def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
-        self._build_state[recipe] = state
 
     def mark_buildable(self, recipe: Recipe) -> None:
         self._buildable.add(recipe)
-        self._set_build_state(recipe, BuildStatus.BUILDABLE)
+        self._build_state[recipe] = BuildStatus.BUILDABLE
 
         # In practice the recipe should already be in this set, but for conceptual
         # consistency and testing, we add it again.
@@ -128,7 +125,7 @@ class Blueprint:
 
     def mark_built(self, recipe: Recipe) -> None:
         """Update the blueprint to reflect that the given node was built successfully"""
-        self._set_build_state(recipe, BuildStatus.BUILT)
+        self._build_state[recipe] = BuildStatus.BUILT
         self._buildable.discard(recipe)
         self._unbuilt.discard(recipe)
 
@@ -151,7 +148,7 @@ class Blueprint:
         Return any recipes that cannot be built (i.e. they do not allow_missing) as a
         result of this.
         """
-        self._set_build_state(recipe, BuildStatus.MISSING)
+        self._build_state[recipe] = BuildStatus.MISSING
         self._buildable.discard(recipe)
         self._unbuilt.discard(recipe)
 

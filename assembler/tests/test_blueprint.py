@@ -83,14 +83,6 @@ def test_get_blueprint_layout() -> None:
     assert layout == {b: (0, 0), c: (0.1, 0), a: (0, 0.2), d: (0.1, 0.2)}
 
 
-def test_set_build_state(nodes: dict, basic_blueprint: Blueprint) -> None:
-    assert basic_blueprint.get_build_status(nodes["a"]) is BuildStatus.BUILDABLE
-    assert basic_blueprint.get_build_status(nodes["b"]) is BuildStatus.NOT_STARTED
-
-    basic_blueprint._set_build_state(nodes["b"], BuildStatus.BUILDING)
-    assert basic_blueprint.get_build_status(nodes["b"]) is BuildStatus.BUILDING
-
-
 def test_mark_built(basic_blueprint: Blueprint) -> None:
     name_to_state = {
         r.name: basic_blueprint.get_build_status(r)
