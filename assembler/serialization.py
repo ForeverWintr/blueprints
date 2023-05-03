@@ -4,6 +4,7 @@ import json
 import dataclasses
 
 from frozendict import frozendict
+import networkx as nx
 
 from assembler import util
 from assembler.constants import Sentinel
@@ -85,5 +86,13 @@ def recipe_to_json(recipe: Recipe) -> str:
 
 def recipe_from_json(json_str: str) -> Recipe:
     """Deserialize Json-ified recipes"""
-    loaded = json.loads(json_str)
+    loaded = json.loads(json_str)  # , cls=ImmutableJsonDecoder)
+
+    # Loaded dict needs to replace dependencies with recipes. It does not know what
+    # fields contain recipes though. That means calling Recipe.from_serializable_dict
+    # and passing a registry. How to build the registry though? Can't call until all a
+    # recipes dependencies are in the registry. Need to process in order. But don't know
+    # what fields indicate deps.
+
+    # create dep graph in to_json?
     asdf
