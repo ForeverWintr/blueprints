@@ -24,7 +24,7 @@ def make_examples() -> tp.Iterable[Case]:
     yield Case("Shared Dependencies", Node(name="out", dependencies=(r, e)))
 
     # Functions
-    yield Case("Function", general.FromFunction(lambda x: x))
+    yield Case("Function", general.FromFunction(function=lambda x: x))
 
 
 @pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)
@@ -41,7 +41,7 @@ def test_json(case):
     for n in names:
         assert j.count(n) == 1
 
-    deserialized = base.Recipe.from_json(j)
+    deserialized = serialization.recipe_from_json(j)
 
     assert deserialized == source
     assert hash(deserialized) == hash(source)

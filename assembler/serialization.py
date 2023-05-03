@@ -73,16 +73,17 @@ def recipe_to_json(recipe: Recipe) -> str:
 
     registry = RecipeRegistry.from_recipes([recipe])
 
-    result = []
+    result = {}
     for r in registry.recipes():
         recipe_data = {
             "attributes": r.to_serializable_dict(registry),
             "type": RECIPE_TYPE_REGISTRY.key(type(r)),
         }
-        result.append(recipe_data)
+        result[registry.get(r)] = recipe_data
     return json.dumps(result)
 
 
 def recipe_from_json(json_str: str) -> Recipe:
     """Deserialize Json-ified recipes"""
+    loaded = json.loads(json_str)
     asdf
