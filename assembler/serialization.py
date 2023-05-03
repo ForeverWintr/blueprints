@@ -40,6 +40,16 @@ class RecipeRegistry:
     def get(self, item: Recipe, default=None):
         return self._recipe_to_key.get(item, default)
 
+    def replace_dependencies(self, graph: nx.DiGraph) -> nx.DiGraph:
+        """Swap all nodes in the given graph of recipes for their keys in the registry"""
+        r2k = self._recipe_to_key
+        new = type(graph)()
+        for n in graph.nodes():
+            new.add_node(r2k[n])
+        for a, b in graph.edges():
+            new.add_edge(r2k[a], r2k[b])
+        return new
+
 
 class ImmutableJsonDecoder(json.JSONDecoder):
     """Subclass of JSONDecoder that replaces lists with tuples and dicts with
@@ -72,6 +82,8 @@ def recipe_to_json(recipe: Recipe) -> str:
     dependencies are replaced with IDs into a registry mapping."""
 
     registry = RecipeRegistry.from_recipes([recipe])
+    dependency_graph = util.make_dependency_graph([recipe])
+    r = registry.replace_dependencies(dependency_graph)
 
     result = {}
     for r in registry.recipes():
