@@ -8,7 +8,7 @@ from frozendict import frozendict
 from assembler import util
 from assembler.constants import Sentinel
 
-from assembler.recipes.base import Recipe
+from assembler.recipes.base import Recipe, RECIPE_TYPE_REGISTRY
 
 
 class RecipeRegistry:
@@ -71,25 +71,13 @@ def recipe_to_json(recipe: Recipe) -> str:
     """Convert to a json representation that does not duplicate recipes. A recipe's
     dependencies are replaced with IDs into a registry mapping."""
 
-    # registry that maps both ways
     registry = RecipeRegistry.from_recipes([recipe])
-    # for each recipe in registry, replace any recipe fields with references to registry.
-    # That doesn't work because I need to replace them.
-    # No, it does. The upper level just has to refer into the registry.
 
-    #:. We only need to look at each recipe's attributes and inside any iterables
-    # attached to it. We do not need to recurse.
-
-    # How to handle arbitrary iterables?
-    # Skip string, check for mapping and iterable? Then need to know what type to use.
-    # I think it's best to assume only tuples and frozendicts.
-
-    # TODO:
-    # Need to hook into recipes so that they can serialize custom objects.
-    # json_hook? to_serializable_dict?
-    # Need to encode type along with dict data.
-    # Need to handle functions.
-
+    result = []
     for r in registry.recipes():
-        to_serialize = r.to_serializable_dict(registry)
-        asdf
+        recipe_data = {
+            "attributes": r.to_serializable_dict(registry),
+            "type": RECIPE_TYPE_REGISTRY.key(type(r)),
+        }
+        result.append(recipe_data)
+    return json.dumps(result)

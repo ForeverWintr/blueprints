@@ -91,7 +91,7 @@ class _RecipeTypeRegistry:
         return self._registry[key]
 
 
-_RECIPE_TYPE_REGISTRY = _RecipeTypeRegistry()
+RECIPE_TYPE_REGISTRY = _RecipeTypeRegistry()
 
 
 @dataclasses.dataclass(frozen=True, repr=False, kw_only=True)
@@ -119,13 +119,13 @@ class Recipe(ABC):
     @classmethod
     def from_json(cls, serialized: str) -> tp.Self:
         data = json.loads(serialized, cls=util.ImmutableJsonDecoder)
-        subclass = _RECIPE_TYPE_REGISTRY.get(data["type_registry_key"])
+        subclass = RECIPE_TYPE_REGISTRY.get(data["type_registry_key"])
         return subclass(**data["attributes"])
 
     def _to_json(self, registry: dict[int, Recipe]) -> str:
         d = dataclasses.asdict(self)
         data = {
-            "type_registry_key": _RECIPE_TYPE_REGISTRY.key(type(self)),
+            "type_registry_key": RECIPE_TYPE_REGISTRY.key(type(self)),
             "attributes": d,
         }
         return json.dumps(data)
@@ -177,7 +177,7 @@ class Recipe(ABC):
         assert r is cls
 
         # Add to the global registry of recipe classes.
-        _RECIPE_TYPE_REGISTRY.add(r)
+        RECIPE_TYPE_REGISTRY.add(r)
 
     def _is_not_default(
         self, attribute: str, fields: tp.Dict[str, dataclasses.Field]

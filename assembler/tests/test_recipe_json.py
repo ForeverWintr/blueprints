@@ -26,6 +26,8 @@ def make_examples() -> tp.Iterable[Case]:
 
 @pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)
 def test_json(case):
+    # TODO:
+    # Need to handle functions.
     source = case.recipe
 
     j = serialization.recipe_to_json(source)
