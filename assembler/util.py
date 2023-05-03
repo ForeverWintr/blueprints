@@ -73,14 +73,7 @@ def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
     g = nx.DiGraph()
     outputs = set(recipes)
     for r, depends_on in recipes_and_dependencies(outputs):
-        g.add_node(
-            r,
-            **{
-                constants.NodeAttrs.is_output: r in outputs,
-                constants.NodeAttrs.build_status: BuildStatus.NOT_STARTED,
-                constants.NodeAttrs.dependency_request: depends_on,
-            },
-        )
+        g.add_node(r)
         for d in depends_on.recipes():
             g.add_edge(d, r)
 

@@ -72,6 +72,10 @@ class Blueprint:
         """Create a blueprint from the given recipe."""
         outputs = frozenset(recipes)
         g = util.make_dependency_graph(recipes)
+        for recipe, data in g.nodes(data=True):
+            data[NodeAttrs.is_output] = recipe in outputs
+            data[NodeAttrs.build_status] = BuildStatus.NOT_STARTED
+            data[NodeAttrs.dependency_request] = recipe.get_dependency_request()
         return cls(g, outputs=outputs)
 
     def get_build_status(self, recipe: Recipe) -> BuildStatus:
