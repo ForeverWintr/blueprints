@@ -42,7 +42,6 @@ def test_from_recipes() -> None:
     b = Blueprint.from_recipes((r1, r2, r3))
 
     dep = TestData(table_name="A")
-    nodes = b._dependency_graph.nodes(data=True)
 
     assert set(b._dependency_graph[dep]) == {r1, r3}
     assert b.get_build_state(dep) is BuildState.BUILDABLE
