@@ -173,6 +173,11 @@ class Recipe(ABC):
         to_replace = {}
         for f in dataclasses.fields(self):
             val = getattr(self, f.name)
+            new = util.replace(
+                val,
+                is_match=lambda item: isinstance(item, Recipe),
+                action=lambda r: recipe_to_key[r],
+            )
 
             if isinstance(val, Recipe):
                 to_replace[f.name] = recipe_to_key[val]

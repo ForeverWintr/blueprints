@@ -86,3 +86,8 @@ def test_recipes_and_dependencies() -> None:
     r = Node(name="r", dependencies=(d,))
     a = Node(name="a", dependencies=(r,))
     assert tuple(r for r, _ in util.recipes_and_dependencies([a])) == (a, r, d)
+
+
+def test_replace():
+    # TODO
+    assert 0

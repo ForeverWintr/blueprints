@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typing as tp
 import json
+import functools
+
 from frozendict import frozendict
 import networkx as nx
 
@@ -83,3 +85,33 @@ def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
             f"The given recipe produced dependency cycles: {cycles}"
         )
     return g
+
+
+def replace(
+    item: tp.Any,
+    is_match: tp.Callable[[tp.Any], bool],
+    action: tp.Callable[[tp.Any], tp.Any],
+    type_replace: dict[tp.Type, tp.Type] | None = None,
+) -> tp.Any:
+    """Look for entries where `is_match` returns true, and replace them with the output
+    of `action`.
+
+    - If item is a match, the result of `action` is returned.
+
+    - If item is an iterable or mapping and contains entries for which `is_match`
+    returns true, a copy is returned with all matches replaced by the result of
+    `action`.
+
+    - If neither of the above are true, the original item is returned"""
+    type_replace = type_replace or {}
+    if is_match(item):
+        return action(item)
+
+    recurse = functools.partial(
+        replace, is_match=is_match, action=action, type_replace=type_replace
+    )
+    if items := getattr(item, "items", None):
+        constructor = type_replace.get(type(item), type(item))
+        return constructor((recurse(k), recurse(v)) for k, v in items())
+
+    asdf
