@@ -16,9 +16,11 @@ class RecipeRegistry:
 
     def __init__(
         self,
-        key_to_recipe: dict[str, Recipe] | None = None,
+        key_to_recipe: dict[str, Recipe],
+        dependency_graph: nx.DiGraph,
     ):
         """Maps recipes to process-unique ids. For use in serializing."""
+        self.dependency_graph = dependency_graph
         self._recipe_to_key = {}
         self._key_to_recipe = {}
         if key_to_recipe:
@@ -26,13 +28,16 @@ class RecipeRegistry:
             self._recipe_to_key = {r: k for k, r in key_to_recipe.items()}
 
     @classmethod
-    def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> tp.Self:
+    def from_depencency_graph(cls, dependency_graph: nx.DiGraph) -> tp.Self:
         return cls(
-            {
-                f"{cls.KEY_PREFIX}_{id(r)}": r
-                for r, _ in util.recipes_and_dependencies(recipes)
-            }
+            key_to_recipe={f"{cls.KEY_PREFIX}_{id(r)}": r for r in dependency_graph},
+            dependency_graph=dependency_graph,
         )
+
+    @classmethod
+    def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> tp.Self:
+        dependency_graph = util.make_dependency_graph(recipes)
+        return cls.from_depencency_graph(dependency_graph)
 
     def recipes(self) -> tp.Iterator[Recipe]:
         yield from self._recipe_to_key
@@ -49,6 +54,26 @@ class RecipeRegistry:
         for a, b in graph.edges():
             new.add_edge(r2k[a], r2k[b])
         return new
+
+    def to_serializable_dict(self) -> dict:
+        """Convert the registry to a dict that can be serialized (e.g., with json)"""
+        # Make recipes serializable.
+        recipes = {}
+        for r in self.recipes():
+            recipe_data = {
+                "attributes": r.to_serializable_dict(self),
+                "type": RECIPE_TYPE_REGISTRY.key(type(r)),
+            }
+            recipes[self.get(r)] = recipe_data
+
+        # Make the dependency graph serializable.
+        result = {
+            "dependency_graph": nx.json_graph.adjacency_data(
+                self.replace_dependencies(self.dependency_graph)
+            ),
+            "recipe_data": recipes,
+        }
+        return result
 
 
 class ImmutableJsonDecoder(json.JSONDecoder):
@@ -80,25 +105,9 @@ class ImmutableJsonDecoder(json.JSONDecoder):
 def recipe_to_json(recipe: Recipe) -> str:
     """Convert to a json representation that does not duplicate recipes. A recipe's
     dependencies are replaced with IDs into a registry mapping."""
-
     registry = RecipeRegistry.from_recipes([recipe])
-    dependency_graph = util.make_dependency_graph([recipe])
-
-    recipes = {}
-    for r in registry.recipes():
-        recipe_data = {
-            "attributes": r.to_serializable_dict(registry),
-            "type": RECIPE_TYPE_REGISTRY.key(type(r)),
-        }
-        recipes[registry.get(r)] = recipe_data
-
-    result = {
-        "dependency_graph": nx.json_graph.adjacency_data(
-            registry.replace_dependencies(dependency_graph)
-        ),
-        "recipe_data": recipes,
-    }
-    return json.dumps(result)
+    data = registry.to_serializable_dict()
+    return json.dumps(data)
 
 
 def recipe_from_json(json_str: str) -> Recipe:
