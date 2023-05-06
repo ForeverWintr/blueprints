@@ -1,7 +1,6 @@
 from __future__ import annotations
 import typing as tp
 import json
-import dataclasses
 
 from frozendict import frozendict
 import networkx as nx
@@ -16,16 +15,13 @@ class RecipeRegistry:
 
     def __init__(
         self,
-        key_to_recipe: dict[str, Recipe],
+        key_to_recipe: frozendict[str, Recipe],
         dependency_graph: nx.DiGraph,
     ):
         """Maps recipes to process-unique ids. For use in serializing."""
         self.dependency_graph = dependency_graph
-        self._recipe_to_key = {}
-        self._key_to_recipe = {}
-        if key_to_recipe:
-            self._key_to_recipe = key_to_recipe
-            self._recipe_to_key = {r: k for k, r in key_to_recipe.items()}
+        self.key_to_recipe = key_to_recipe
+        self.recipe_to_key = frozendict((r, k) for k, r in key_to_recipe.items())
 
     @classmethod
     def from_depencency_graph(cls, dependency_graph: nx.DiGraph) -> tp.Self:
@@ -47,24 +43,30 @@ class RecipeRegistry:
         recipe_data = data["recipe_data"]
 
         instantiation_order = nx.dag.topological_sort(dependency_graph)
-        instantiated_recipes = {}
+        key_to_recipe = {}
         for recipe_id in instantiation_order:
             d = recipe_data[recipe_id]
             recipe_cls = RECIPE_TYPE_REGISTRY.get(tuple(d["type"]))
             recipe = recipe_cls.from_serializable_dict(
-                d["attributes"], registry=instantiated_recipes
+                d["attributes"],
+                key_to_recipe=key_to_recipe,
             )
-            asdf
+            key_to_recipe[recipe_id] = recipe
+
+        return cls(
+            key_to_recipe=frozendict(key_to_recipe),
+            dependency_graph=dependency_graph,
+        )
 
     def recipes(self) -> tp.Iterator[Recipe]:
-        yield from self._recipe_to_key
+        yield from self.recipe_to_key
 
     def get(self, item: Recipe, default=None):
-        return self._recipe_to_key.get(item, default)
+        return self.recipe_to_key.get(item, default)
 
     def replace_dependencies(self, graph: nx.DiGraph) -> nx.DiGraph:
         """Swap all nodes in the given graph of recipes for their keys in the registry"""
-        r2k = self._recipe_to_key
+        r2k = self.recipe_to_key
         new = type(graph)()
         for n in graph.nodes():
             new.add_node(r2k[n])
@@ -78,10 +80,10 @@ class RecipeRegistry:
         recipes = {}
         for r in self.recipes():
             recipe_data = {
-                "attributes": r.to_serializable_dict(self),
+                "attributes": r.to_serializable_dict(self.recipe_to_key),
                 "type": RECIPE_TYPE_REGISTRY.key(type(r)),
             }
-            recipes[self.get(r)] = recipe_data
+            recipes[self.recipe_to_key[r]] = recipe_data
 
         # Make the dependency graph serializable.
         result = {

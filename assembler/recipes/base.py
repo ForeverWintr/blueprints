@@ -123,8 +123,11 @@ class Recipe(ABC):
         return subclass(**data["attributes"])
 
     @classmethod
-    def from_serializable_dict(self, data: dict, registry: dict) -> tp.Self:
-        """Return an instance of this class, given a serializable dict as produced by cls.to_serializable_dict. All references to other recipes in the `data` received here have been replaced with entries into the provided registry. This method should look up the corresponding recipes there.
+    def from_serializable_dict(cls, data: dict, key_to_recipe: dict) -> tp.Self:
+        """Return an instance of this class, given a serializable dict as produced by
+        cls.to_serializable_dict. All references to other recipes in the `data` received
+        here have been replaced with entries into the provided `key_to_recipe` mapping.
+        This method should look up the corresponding recipes there.
 
         for example, if your recipe is:
 
@@ -137,15 +140,33 @@ class Recipe(ABC):
 
         and should return
 
-        cls(depends_on=registry[data['depends_on']])
+        cls(depends_on=key_to_recipe[data['depends_on']])
         """
-        asf
+        get = key_to_recipe.get
+        for f in dataclasses.fields(cls):
+            val = data[f.name]
 
-    def to_serializable_dict(self, registry: RecipeRegistry) -> dict:
+            if isinstance(val, str):
+                try:
+                    recipe = key_to_recipe[val]
+                except KeyError:
+                    pass
+                else:
+                    data[f.name] = recipe
+
+            elif isinstance(val, tp.Mapping):
+                data[f.name] = frozendict((get(k, k), get(v, v)) for k, v in val)
+
+            elif isinstance(val, tp.Iterable):
+                data[f.name] = tuple(get(x, x) for x in val)
+
+        return cls(**data)
+
+    def to_serializable_dict(self, recipe_to_key: frozendict) -> dict:
         """Return a dictionary that can be serialized (e.g. with json). To do this,
         convert any complex types types that are json serializable (e.g.
         strings/ints/tuples), and replace any recipes with their keys in the provided
-        `registry` (which should already contain all recipes that this recipe depends
+        `recipe_to_key` (which should already contain all recipes that this recipe depends
         on). This method handles known subclasses but can be overridden to enable
         serialization of custom attributes.
 
@@ -156,23 +177,24 @@ class Recipe(ABC):
 
         This method would return
 
-        {'depends_on': registry.get(self.depends_on)}
+        {'depends_on': recipe_to_key[self.depends_on]}
         """
         to_replace = {}
         for f in dataclasses.fields(self):
             val = getattr(self, f.name)
 
             if isinstance(val, Recipe):
-                to_replace[f.name] = registry.get(val)
+                to_replace[f.name] = recipe_to_key[val]
 
             elif isinstance(val, tuple) and any(isinstance(x, Recipe) for x in val):
-                to_replace[f.name] = tuple(registry.get(x, x) for x in val)
+                to_replace[f.name] = tuple(recipe_to_key.get(x, x) for x in val)
 
             elif isinstance(val, frozendict) and any(
                 isinstance(x, Recipe) for x in util.flatten(val.items())
             ):
                 to_replace[f.name] = frozendict(
-                    (registry.get(k, k), registry.get(v, v)) for k, v in val.items()
+                    (recipe_to_key.get(k, k), recipe_to_key.get(v, v))
+                    for k, v in val.items()
                 )
         result = dataclasses.asdict(self)
         result.update(to_replace)
