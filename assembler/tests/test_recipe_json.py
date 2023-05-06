@@ -12,7 +12,7 @@ from assembler import serialization
 
 class Case(tp.NamedTuple):
     name: str
-    recipe: base.Recipe
+    recipes: tuple[base.Recipe]
 
 
 def make_examples() -> tp.Iterable[Case]:
@@ -21,7 +21,7 @@ def make_examples() -> tp.Iterable[Case]:
     d = Node(name="dep__")
     r = Node(name="r__", dependencies=(d,))
     e = Node(name="e__", dependencies=(d,))
-    yield Case("Shared Dependencies", Node(name="out", dependencies=(r, e)))
+    yield Case("Shared Dependencies", (Node(name="out", dependencies=(r, e)),))
 
     # Functions
     yield Case("Function", general.FromFunction(function=lambda x: x))
@@ -31,17 +31,16 @@ def make_examples() -> tp.Iterable[Case]:
 def test_json(case):
     # TODO:
     # Need to handle functions.
-    source = case.recipe
+    source = case.recipes
 
-    j = serialization.recipe_to_json(source)
+    j = serialization.recipes_to_json(source)
 
     # Each name should appear exactly once.
-    names = [r.name for r, _ in util.recipes_and_dependencies([source])]
-
+    names = [r.name for r, _ in util.recipes_and_dependencies(source)]
     for n in names:
         assert j.count(n) == 1
 
-    deserialized = serialization.recipe_from_json(j)
+    deserialized = serialization.recipes_from_json(j)
 
     assert deserialized == source
     assert hash(deserialized) == hash(source)

@@ -121,15 +121,15 @@ class ImmutableJsonDecoder(json.JSONDecoder):
         return self._make_immutable(obj)
 
 
-def recipe_to_json(recipe: Recipe) -> str:
+def recipes_to_json(recipes: tp.Iterable[Recipe]) -> str:
     """Convert to a json representation that does not duplicate recipes. A recipe's
     dependencies are replaced with IDs into a registry mapping."""
-    registry = RecipeRegistry.from_recipes([recipe])
+    registry = RecipeRegistry.from_recipes(recipes)
     data = registry.to_serializable_dict()
     return json.dumps(data)
 
 
-def recipe_from_json(json_str: str) -> Recipe:
+def recipes_from_json(json_str: str) -> Recipe:
     """Deserialize Json-ified recipes"""
     data = json.loads(json_str)  # , cls=ImmutableJsonDecoder)
 
