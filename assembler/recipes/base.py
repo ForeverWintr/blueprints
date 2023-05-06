@@ -117,12 +117,6 @@ class Recipe(ABC):
         describes."""
 
     @classmethod
-    def from_json(cls, serialized: str) -> tp.Self:
-        data = json.loads(serialized, cls=util.ImmutableJsonDecoder)
-        subclass = RECIPE_TYPE_REGISTRY.get(data["type_registry_key"])
-        return subclass(**data["attributes"])
-
-    @classmethod
     def from_serializable_dict(cls, data: dict, key_to_recipe: dict) -> tp.Self:
         """Return an instance of this class, given a serializable dict as produced by
         cls.to_serializable_dict. All references to other recipes in the `data` received
