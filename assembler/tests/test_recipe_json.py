@@ -15,6 +15,10 @@ class Case(tp.NamedTuple):
     recipes: tuple[base.Recipe]
 
 
+def test_function():
+    """For testing serialization"""
+
+
 def make_examples() -> tp.Iterable[Case]:
     # Underscores in names so that I can test that each name only appears once in result
     # json.
@@ -24,7 +28,12 @@ def make_examples() -> tp.Iterable[Case]:
     yield Case("Shared Dependencies", (Node(name="out__", dependencies=(r, e)),))
 
     # Functions
-    yield Case("Function", general.FromFunction(function=lambda x: x))
+    # Registry or importlib?
+    # Registry lets you define functions in a loop/function/not module level if you want.
+    # Disallows redefinition.
+    # Requires the same code to be executed on the server, which could be difficult.
+    # So you can only define functions not at module level if you execute the same code on the server.
+    yield Case("Function", (general.FromFunction(function=test_function),))
 
 
 @pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)

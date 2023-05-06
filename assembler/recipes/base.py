@@ -10,9 +10,6 @@ from frozendict import frozendict
 from assembler.constants import MissingDependencyBehavior
 from assembler import util
 
-if tp.TYPE_CHECKING:
-    from assembler.serialization import RecipeRegistry
-
 
 class Parameters(tp.NamedTuple):
     factory_allow_missing: bool
