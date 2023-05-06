@@ -126,10 +126,11 @@ def recipes_to_json(recipes: tp.Iterable[Recipe]) -> str:
     dependencies are replaced with IDs into a registry mapping."""
     registry = RecipeRegistry.from_recipes(recipes)
     data = registry.to_serializable_dict()
+    data["outputs"] = tuple(registry.recipe_to_key[r] for r in recipes)
     return json.dumps(data)
 
 
-def recipes_from_json(json_str: str) -> Recipe:
+def recipes_from_json(json_str: str) -> tuple[Recipe]:
     """Deserialize Json-ified recipes"""
     data = json.loads(json_str)  # , cls=ImmutableJsonDecoder)
 
@@ -141,4 +142,4 @@ def recipes_from_json(json_str: str) -> Recipe:
 
     # Regristry contains a dependency graph.
     registry = RecipeRegistry.from_serializable_dict(data)
-    asdf
+    return tuple(registry.key_to_recipe[k] for k in data["outputs"])

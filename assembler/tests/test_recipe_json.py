@@ -21,7 +21,7 @@ def make_examples() -> tp.Iterable[Case]:
     d = Node(name="dep__")
     r = Node(name="r__", dependencies=(d,))
     e = Node(name="e__", dependencies=(d,))
-    yield Case("Shared Dependencies", (Node(name="out", dependencies=(r, e)),))
+    yield Case("Shared Dependencies", (Node(name="out__", dependencies=(r, e)),))
 
     # Functions
     yield Case("Function", general.FromFunction(function=lambda x: x))
