@@ -95,32 +95,6 @@ class RecipeRegistry:
         return result
 
 
-class ImmutableJsonDecoder(json.JSONDecoder):
-    """Subclass of JSONDecoder that replaces lists with tuples and dicts with
-    frozendicts."""
-
-    @classmethod
-    def _make_immutable(cls, obj: list | dict) -> tuple | frozendict:
-        """Recurse through an arbitrarily nested structure of dicts and lists, and replace
-        them with frozendicts and tuples. Intended to be called on the result of
-        json.decode, so assumes no cycles and immutable keys."""
-        constructor = frozendict
-        try:
-            items = obj.items()
-        except AttributeError:
-            items = enumerate(obj)
-            constructor = tuple
-
-        for k, v in items:
-            if isinstance(v, (list, dict)):
-                obj[k] = cls._make_immutable(v)
-        return constructor(obj)
-
-    def decode(self, string: str):
-        obj = super().decode(string)
-        return self._make_immutable(obj)
-
-
 def recipes_to_json(recipes: tp.Iterable[Recipe]) -> str:
     """Convert to a json representation that does not duplicate recipes. A recipe's
     dependencies are replaced with IDs into a registry mapping."""
