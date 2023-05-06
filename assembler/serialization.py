@@ -44,8 +44,17 @@ class RecipeRegistry:
         """Given a dict in the format produced by `to_serializable_dict`, create an
         instance of this class."""
         dependency_graph = nx.json_graph.adjacency_graph(data["dependency_graph"])
+        recipe_data = data["recipe_data"]
+
         instantiation_order = nx.dag.topological_sort(dependency_graph)
-        asdf
+        instantiated_recipes = {}
+        for recipe_id in instantiation_order:
+            d = recipe_data[recipe_id]
+            recipe_cls = RECIPE_TYPE_REGISTRY.get(tuple(d["type"]))
+            recipe = recipe_cls.from_serializable_dict(
+                d["attributes"], registry=instantiated_recipes
+            )
+            asdf
 
     def recipes(self) -> tp.Iterator[Recipe]:
         yield from self._recipe_to_key

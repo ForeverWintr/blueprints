@@ -122,13 +122,24 @@ class Recipe(ABC):
         subclass = RECIPE_TYPE_REGISTRY.get(data["type_registry_key"])
         return subclass(**data["attributes"])
 
-    def _to_json(self, registry: dict[int, Recipe]) -> str:
-        d = dataclasses.asdict(self)
-        data = {
-            "type_registry_key": RECIPE_TYPE_REGISTRY.key(type(self)),
-            "attributes": d,
-        }
-        return json.dumps(data)
+    @classmethod
+    def from_serializable_dict(self, data: dict, registry: dict) -> tp.Self:
+        """Return an instance of this class, given a serializable dict as produced by cls.to_serializable_dict. All references to other recipes in the `data` received here have been replaced with entries into the provided registry. This method should look up the corresponding recipes there.
+
+        for example, if your recipe is:
+
+        class MyRecipe(Recipe):
+            depends_on=other_recipe
+
+        this method will receive a dictionary similar to
+
+        data={'depends_on': 'RR_123412341234'}
+
+        and should return
+
+        cls(depends_on=registry[data['depends_on']])
+        """
+        asf
 
     def to_serializable_dict(self, registry: RecipeRegistry) -> dict:
         """Return a dictionary that can be serialized (e.g. with json). To do this,
