@@ -132,14 +132,6 @@ def recipes_to_json(recipes: tp.Iterable[Recipe]) -> str:
 
 def recipes_from_json(json_str: str) -> tuple[Recipe]:
     """Deserialize Json-ified recipes"""
-    data = json.loads(json_str)  # , cls=ImmutableJsonDecoder)
-
-    # Loaded dict needs to replace dependencies with recipes. It does not know what
-    # fields contain recipes though. That means calling Recipe.from_serializable_dict
-    # and passing a registry. How to build the registry? Can't call until all a
-    # recipes dependencies are in the registry. Need to process in order. But don't know
-    # what fields indicate deps.
-
-    # Regristry contains a dependency graph.
+    data = json.loads(json_str)
     registry = RecipeRegistry.from_serializable_dict(data)
     return tuple(registry.key_to_recipe[k] for k in data["outputs"])
