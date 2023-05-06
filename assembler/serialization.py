@@ -39,6 +39,14 @@ class RecipeRegistry:
         dependency_graph = util.make_dependency_graph(recipes)
         return cls.from_depencency_graph(dependency_graph)
 
+    @classmethod
+    def from_serializable_dict(cls, data: dict) -> tp.Self:
+        """Given a dict in the format produced by `to_serializable_dict`, create an
+        instance of this class."""
+        dependency_graph = nx.json_graph.adjacency_graph(data["dependency_graph"])
+        instantiation_order = nx.dag.topological_sort(dependency_graph)
+        asdf
+
     def recipes(self) -> tp.Iterator[Recipe]:
         yield from self._recipe_to_key
 
@@ -112,7 +120,7 @@ def recipe_to_json(recipe: Recipe) -> str:
 
 def recipe_from_json(json_str: str) -> Recipe:
     """Deserialize Json-ified recipes"""
-    loaded = json.loads(json_str)  # , cls=ImmutableJsonDecoder)
+    data = json.loads(json_str)  # , cls=ImmutableJsonDecoder)
 
     # Loaded dict needs to replace dependencies with recipes. It does not know what
     # fields contain recipes though. That means calling Recipe.from_serializable_dict
@@ -120,11 +128,6 @@ def recipe_from_json(json_str: str) -> Recipe:
     # recipes dependencies are in the registry. Need to process in order. But don't know
     # what fields indicate deps.
 
-    # create dep graph in to_json?
-    # Temporary blueprint? Then throw it away?
-
-    # Separate graph structure from blueprint data. Only store dependencies in graph? I
-    # don't want those for serialization though. Add in blueprint?
-
-    # Now we parse the dependency graph twice, once for blueprint and once for graph. Fix that.
+    # Regristry contains a dependency graph.
+    registry = RecipeRegistry.from_serializable_dict(data)
     asdf
