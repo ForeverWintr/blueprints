@@ -5,6 +5,8 @@ import pytest
 import json
 from pathlib import Path
 
+from frozendict import frozendict
+
 from assembler.tests.conftest import TestData, TestColumn, TABLES, Node
 from assembler.recipes import general, static_frame, base
 from assembler.factory import Factory, util
@@ -41,10 +43,16 @@ def make_examples() -> tp.Iterable[Case]:
 
     # Static frame
     series = static_frame.SeriesFromDelimited(
-        column_name="asdf", file_path=Path("a"), missing_data_fill_value=0
+        frame_extract_kwargs=frozendict({"a": "b"}),
+        column_name="asdf",
+        file_path=Path("a"),
+        missing_data_fill_value=0,
     )
     yield Case("SeriesFromDelimited", (series,))
-    frame = static_frame.FrameFromDelimited(file_path=Path("a"))
+    frame = static_frame.FrameFromDelimited(
+        file_path=Path("a"),
+        frame_extract_kwargs=frozendict({"a": "b"}),
+    )
     yield Case("FrameFromDelimited", (frame,))
 
     yield Case(
