@@ -131,6 +131,9 @@ def test_callable_from_key_qualname() -> None:
     assert c is QualnameTest.func
 
 
+_REPLACE_CASES = ""
+
+
 def test_replace():
-    # TODO
+    util.replace
     assert 0
