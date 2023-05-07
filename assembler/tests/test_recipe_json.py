@@ -3,6 +3,7 @@ import typing as tp
 import dataclasses
 import pytest
 import json
+from pathlib import Path
 
 from assembler.tests.conftest import TestData, TestColumn, TABLES, Node
 from assembler.recipes import general, static_frame, base
@@ -28,12 +29,18 @@ def make_examples() -> tp.Iterable[Case]:
     yield Case("Shared Dependencies", (Node(name="out__", dependencies=(r, e)),))
 
     # Functions
-    # Registry or importlib?
-    # Registry lets you define functions in a loop/function/not module level if you want.
-    # Disallows redefinition.
-    # Requires the same code to be executed on the server, which could be difficult.
-    # So you can only define functions not at module level if you execute the same code on the server.
-    yield Case("Function", (general.FromFunction(function=test_function),))
+    yield Case("SimpleFunction", (general.FromFunction(function=test_function),))
+
+    # Static frame
+    series = static_frame.SeriesFromDelimited(column_name="asdf", file_path=Path("a"))
+    yield Case("SeriesFromDelimited", (series,))
+    frame = static_frame.FrameFromDelimited(file_path=Path("a"))
+    yield Case("FrameFromDelimited", (frame,))
+
+    yield Case(
+        "FrameFromRecipes",
+        (static_frame.FrameFromRecipes(recipes=(series, frame)),),
+    )
 
 
 @pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)
