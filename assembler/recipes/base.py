@@ -170,7 +170,7 @@ class Recipe(ABC):
 
         {'depends_on': recipe_to_key[self.depends_on]}
         """
-        to_replace = {}
+        result = {}
         for f in dataclasses.fields(self):
             val = getattr(self, f.name)
             new = util.replace(
@@ -178,22 +178,8 @@ class Recipe(ABC):
                 is_match=lambda item: isinstance(item, Recipe),
                 action=lambda r: recipe_to_key[r],
             )
+            result[f.name] = new
 
-            if isinstance(val, Recipe):
-                to_replace[f.name] = recipe_to_key[val]
-
-            elif isinstance(val, tuple) and any(isinstance(x, Recipe) for x in val):
-                to_replace[f.name] = tuple(recipe_to_key.get(x, x) for x in val)
-
-            elif isinstance(val, frozendict) and any(
-                isinstance(x, Recipe) for x in util.flatten(val.items())
-            ):
-                to_replace[f.name] = frozendict(
-                    (recipe_to_key.get(k, k), recipe_to_key.get(v, v))
-                    for k, v in val.items()
-                )
-        result = dataclasses.asdict(self)
-        result.update(to_replace)
         return result
 
     ### Below this line, methods are internal and not intended to be overriden.

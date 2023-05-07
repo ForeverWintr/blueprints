@@ -106,12 +106,33 @@ def replace(
     type_replace = type_replace or {}
     if is_match(item):
         return action(item)
+    if isinstance(item, (str, bytes)):
+        # Assume we don't want to search within strings.
+        return item
 
-    recurse = functools.partial(
-        replace, is_match=is_match, action=action, type_replace=type_replace
-    )
+    original_type = type(item)
+    constructor = type_replace.get(original_type, original_type)
+    new_items = item
+    changes = not constructor is original_type
+
+    def recurse(x):
+        nonlocal changes
+        new = replace(x, is_match=is_match, action=action, type_replace=type_replace)
+        if not new is x:
+            changes = True
+        return new
+
     if items := getattr(item, "items", None):
-        constructor = type_replace.get(type(item), type(item))
-        return constructor((recurse(k), recurse(v)) for k, v in items())
+        new_items = tuple((recurse(k), recurse(v)) for k, v in items())
 
-    asdf
+    else:
+        try:
+            iterator = iter(item)
+        except TypeError:
+            pass
+        else:
+            new_items = tuple(recurse(x) for x in iterator)
+
+    if changes:
+        return constructor(new_items)
+    return item
