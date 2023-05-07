@@ -88,6 +88,26 @@ def test_recipes_and_dependencies() -> None:
     assert tuple(r for r, _ in util.recipes_and_dependencies([a])) == (a, r, d)
 
 
+def test_get_callable_key() -> None:
+    k = util.get_callable_key(test_recipes_and_dependencies)
+    assert k == ("assembler.tests.test_util", "test_recipes_and_dependencies")
+
+
+def test_callable_from_key() -> None:
+    c = util.callable_from_key(
+        ("assembler.tests.test_util", "test_recipes_and_dependencies")
+    )
+    assert c is test_recipes_and_dependencies
+
+
+def test_callable_from_key_module_not_loaded() -> None:
+    assert 0
+
+
+def test_callable_from_key_qualname() -> None:
+    assert 0
+
+
 def test_replace():
     # TODO
     assert 0

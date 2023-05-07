@@ -3,6 +3,7 @@ from __future__ import annotations
 import typing as tp
 import json
 import functools
+import sys
 
 from frozendict import frozendict
 import networkx as nx
@@ -138,9 +139,20 @@ def replace(
     return item
 
 
-def iten_in_dict_and_hashable(item: tp.Any, d: dict) -> bool:
+def item_in_dict_and_hashable(item: tp.Any, d: dict) -> bool:
     try:
         return item in d
     except TypeError:
         # e.g., unhashable item.
         return False
+
+
+def get_callable_key(callable_: tp.Callable) -> tuple[str, str]:
+    """Get a key used to represent the given callable. Used for serialization in conjunction with `callable_from_key`"""
+    return callable_.__module__, callable_.__qualname__
+
+
+def callable_from_key(key: tuple[str, str]) -> tp.Callable:
+    module_name, function_name = key
+    module = sys.modules[module_name]
+    return getattr(module, function_name)

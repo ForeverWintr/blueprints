@@ -140,7 +140,7 @@ class Recipe(ABC):
             new = util.replace(
                 val,
                 is_match=functools.partial(
-                    util.iten_in_dict_and_hashable, d=key_to_recipe
+                    util.item_in_dict_and_hashable, d=key_to_recipe
                 ),
                 action=lambda r: key_to_recipe[r],
                 type_replace={list: tuple, dict: frozendict},
