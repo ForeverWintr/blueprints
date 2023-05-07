@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import dataclasses
 import itertools
 import json
+import functools
 
 from frozendict import frozendict
 
@@ -133,25 +134,20 @@ class Recipe(ABC):
 
         cls(depends_on=key_to_recipe[data['depends_on']])
         """
-        get = key_to_recipe.get
+        result = {}
         for f in dataclasses.fields(cls):
             val = data[f.name]
+            new = util.replace(
+                val,
+                is_match=functools.partial(
+                    util.iten_in_dict_and_hashable, d=key_to_recipe
+                ),
+                action=lambda r: key_to_recipe[r],
+                type_replace={list: tuple, dict: frozendict},
+            )
+            result[f.name] = new
 
-            if isinstance(val, str):
-                try:
-                    recipe = key_to_recipe[val]
-                except KeyError:
-                    pass
-                else:
-                    data[f.name] = recipe
-
-            elif isinstance(val, tp.Mapping):
-                data[f.name] = frozendict((get(k, k), get(v, v)) for k, v in val)
-
-            elif isinstance(val, tp.Iterable):
-                data[f.name] = tuple(get(x, x) for x in val)
-
-        return cls(**data)
+        return cls(**result)
 
     def to_serializable_dict(self, recipe_to_key: frozendict) -> dict:
         """Return a dictionary that can be serialized (e.g. with json). To do this,

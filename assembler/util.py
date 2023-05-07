@@ -136,3 +136,11 @@ def replace(
     if changes:
         return constructor(new_items)
     return item
+
+
+def iten_in_dict_and_hashable(item: tp.Any, d: dict) -> bool:
+    try:
+        return item in d
+    except TypeError:
+        # e.g., unhashable item.
+        return False
