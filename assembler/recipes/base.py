@@ -140,7 +140,7 @@ class Recipe(ABC):
                 functools.partial(util.item_in_dict_and_hashable, d=key_to_recipe),
                 lambda r: key_to_recipe[r],
             ),
-            (lambda item: isinstance(item, tp.Callable), util.get_callable_key),
+            (util.is_callable_key, util.callable_from_key),
         )
         type_replace = {list: tuple, dict: frozendict}
 
@@ -192,6 +192,10 @@ class Recipe(ABC):
             result[f.name] = val
 
         return result
+
+    def short_name(self) -> str:
+        """Return a short string representing this recipe."""
+        return type(self).__name__
 
     ### Below this line, methods are internal and not intended to be overriden.
 

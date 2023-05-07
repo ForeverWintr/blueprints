@@ -45,7 +45,7 @@ def test_json(case):
     j = serialization.recipes_to_json(source)
 
     # Each name should appear exactly once.
-    names = [r.name for r, _ in util.recipes_and_dependencies(source)]
+    names = [r.short_name() for r, _ in util.recipes_and_dependencies(source)]
     for n in names:
         assert j.count(n) == 1
 
