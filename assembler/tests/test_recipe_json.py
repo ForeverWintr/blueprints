@@ -32,7 +32,9 @@ def make_examples() -> tp.Iterable[Case]:
     yield Case("SimpleFunction", (general.FromFunction(function=test_function),))
 
     # Static frame
-    series = static_frame.SeriesFromDelimited(column_name="asdf", file_path=Path("a"))
+    series = static_frame.SeriesFromDelimited(
+        column_name="asdf", file_path=Path("a"), missing_data_fill_value=0
+    )
     yield Case("SeriesFromDelimited", (series,))
     frame = static_frame.FrameFromDelimited(file_path=Path("a"))
     yield Case("FrameFromDelimited", (frame,))
