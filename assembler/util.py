@@ -149,7 +149,12 @@ def item_in_dict_and_hashable(item: tp.Any, d: dict) -> bool:
 
 def get_callable_key(callable_: tp.Callable) -> tuple[str, str]:
     """Get a key used to represent the given callable. Used for serialization in conjunction with `callable_from_key`"""
-    return callable_.__module__, callable_.__qualname__
+    return {
+        constants.CALLABLE_KEY_IDENTIFIER: (
+            callable_.__module__,
+            callable_.__qualname__,
+        )
+    }
 
 
 def callable_from_key(key: tuple[str, str]) -> tp.Callable:

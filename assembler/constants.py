@@ -32,3 +32,5 @@ BUILD_STATE_TO_COLOR = {
     BuildState.MISSING: "#e74c3c",
     BuildState.BUILDABLE: "#e70000",
 }
+
+CALLABLE_KEY_IDENTIFIER = "CALLABLE"

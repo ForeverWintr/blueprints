@@ -5,6 +5,7 @@ import dataclasses
 import itertools
 import json
 import functools
+import operator
 
 from frozendict import frozendict
 
@@ -134,18 +135,26 @@ class Recipe(ABC):
 
         cls(depends_on=key_to_recipe[data['depends_on']])
         """
+        is_match_action = (
+            (
+                functools.partial(util.item_in_dict_and_hashable, d=key_to_recipe),
+                lambda r: key_to_recipe[r],
+            ),
+            (lambda item: isinstance(item, tp.Callable), util.get_callable_key),
+        )
+        type_replace = {list: tuple, dict: frozendict}
+
         result = {}
         for f in dataclasses.fields(cls):
             val = data[f.name]
-            new = util.replace(
-                val,
-                is_match=functools.partial(
-                    util.item_in_dict_and_hashable, d=key_to_recipe
-                ),
-                action=lambda r: key_to_recipe[r],
-                type_replace={list: tuple, dict: frozendict},
-            )
-            result[f.name] = new
+            for is_match, action in is_match_action:
+                val = util.replace(
+                    val,
+                    is_match=is_match,
+                    action=action,
+                    type_replace=type_replace,
+                )
+            result[f.name] = val
 
         return cls(**result)
 
@@ -166,15 +175,21 @@ class Recipe(ABC):
 
         {'depends_on': recipe_to_key[self.depends_on]}
         """
+        is_match_action = (
+            (lambda item: isinstance(item, Recipe), lambda r: recipe_to_key[r]),
+            (lambda item: isinstance(item, tp.Callable), util.get_callable_key),
+        )
+
         result = {}
         for f in dataclasses.fields(self):
             val = getattr(self, f.name)
-            new = util.replace(
-                val,
-                is_match=lambda item: isinstance(item, Recipe),
-                action=lambda r: recipe_to_key[r],
-            )
-            result[f.name] = new
+            for is_match, action in is_match_action:
+                val = util.replace(
+                    val,
+                    is_match=is_match,
+                    action=action,
+                )
+            result[f.name] = val
 
         return result
 
