@@ -109,7 +109,14 @@ def test_callable_from_key() -> None:
 
 
 def test_callable_from_key_module_not_loaded() -> None:
-    assert 0
+    c = util.callable_from_key(
+        (
+            CALLABLE_KEY_IDENTIFIER,
+            "assembler.tests.unloaded_module_test",
+            "func",
+        )
+    )
+    assert c() == "imported"
 
 
 class QualnameTest:

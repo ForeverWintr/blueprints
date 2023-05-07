@@ -4,6 +4,7 @@ import typing as tp
 import json
 import functools
 import sys
+import importlib
 
 from frozendict import frozendict
 import networkx as nx
@@ -164,8 +165,16 @@ def is_callable_key(item: tp.Any) -> bool:
 
 
 def callable_from_key(key: tuple[str, str]) -> tp.Callable:
+    """Given a key identifying a callable, as returned by `get_callable_key`, locate and
+    return the corresponding callable. This imports modules if they aren't already
+    loaded."""
     _, module_name, function_qualname = key
-    obj = sys.modules[module_name]
+    try:
+        obj = sys.modules[module_name]
+    except KeyError:
+        # If this module isn't imported, try to import it. This adds it to sys.modules.
+        obj = importlib.import_module(module_name)
+
     for name in function_qualname.split("."):
         obj = getattr(obj, name)
     return obj
