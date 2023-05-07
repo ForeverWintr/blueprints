@@ -6,7 +6,7 @@ from frozendict import frozendict
 
 from assembler import util
 from assembler.recipes.base import Recipe, Dependencies, Parameters
-from assembler.constants import BuildState
+from assembler.constants import BuildState, CALLABLE_KEY_IDENTIFIER
 from assembler.tests.conftest import Node
 
 
@@ -90,12 +90,20 @@ def test_recipes_and_dependencies() -> None:
 
 def test_get_callable_key() -> None:
     k = util.get_callable_key(test_recipes_and_dependencies)
-    assert k == ("assembler.tests.test_util", "test_recipes_and_dependencies")
+    assert k == (
+        CALLABLE_KEY_IDENTIFIER,
+        "assembler.tests.test_util",
+        "test_recipes_and_dependencies",
+    )
 
 
 def test_callable_from_key() -> None:
     c = util.callable_from_key(
-        ("assembler.tests.test_util", "test_recipes_and_dependencies")
+        (
+            CALLABLE_KEY_IDENTIFIER,
+            "assembler.tests.test_util",
+            "test_recipes_and_dependencies",
+        )
     )
     assert c is test_recipes_and_dependencies
 
@@ -104,8 +112,16 @@ def test_callable_from_key_module_not_loaded() -> None:
     assert 0
 
 
+class QualnameTest:
+    def func():
+        pass
+
+
 def test_callable_from_key_qualname() -> None:
-    assert 0
+    c = util.callable_from_key(
+        (CALLABLE_KEY_IDENTIFIER, "assembler.tests.test_util", "QualnameTest.func")
+    )
+    assert c is QualnameTest.func
 
 
 def test_replace():
