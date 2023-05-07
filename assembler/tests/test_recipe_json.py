@@ -27,6 +27,14 @@ def make_examples() -> tp.Iterable[Case]:
     r = Node(name="r__", dependencies=(d,))
     e = Node(name="e__", dependencies=(d,))
     yield Case("Shared Dependencies", (Node(name="out__", dependencies=(r, e)),))
+    yield Case(
+        "Object",
+        (
+            general.Object(
+                payload=(5,),
+            ),
+        ),
+    )
 
     # Functions
     yield Case("SimpleFunction", (general.FromFunction(function=test_function),))
@@ -47,8 +55,6 @@ def make_examples() -> tp.Iterable[Case]:
 
 @pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)
 def test_json(case):
-    # TODO:
-    # Need to handle functions.
     source = case.recipes
 
     j = serialization.recipes_to_json(source)
