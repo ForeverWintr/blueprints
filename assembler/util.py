@@ -92,22 +92,22 @@ def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
 def replace(
     item: tp.Any,
     is_match: tp.Callable[[tp.Any], bool],
-    action: tp.Callable[[tp.Any], tp.Any],
+    get_replacement: tp.Callable[[tp.Any], tp.Any],
     type_replace: dict[tp.Type, tp.Type] | None = None,
 ) -> tp.Any:
     """Look for entries where `is_match` returns true, and replace them with the output
-    of `action`.
+    of `get_replacement`.
 
-    - If item is a match, the result of `action` is returned.
+    - If item is a match, the result of `get_replacement` is returned.
 
     - If item is an iterable or mapping and contains entries for which `is_match`
     returns true, a copy is returned with all matches replaced by the result of
-    `action`.
+    `get_replacement`.
 
     - If neither of the above are true, the original item is returned"""
     type_replace = type_replace or {}
     if is_match(item):
-        return action(item)
+        return get_replacement(item)
     if isinstance(item, (str, bytes)):
         # Assume we don't want to search within strings.
         return item
@@ -119,7 +119,12 @@ def replace(
 
     def recurse(x):
         nonlocal changes
-        new = replace(x, is_match=is_match, action=action, type_replace=type_replace)
+        new = replace(
+            x,
+            is_match=is_match,
+            get_replacement=get_replacement,
+            type_replace=type_replace,
+        )
         if not new is x:
             changes = True
         return new

@@ -3,6 +3,7 @@ import dataclasses
 
 import pytest
 from frozendict import frozendict
+from functools import partial
 
 from assembler import util
 from assembler.recipes.base import Recipe, Dependencies, Parameters
@@ -135,5 +136,24 @@ _REPLACE_CASES = ""
 
 
 def test_replace():
-    util.replace
-    assert 0
+    replacer = partial(
+        util.replace, is_match=lambda i: i == 5, get_replacement=lambda _: -1
+    )
+
+    assert replacer(5) == -1
+    assert replacer([5]) == [-1]
+    assert replacer([3, 5, 4]) == [3, -1, 4]
+    assert replacer([3, [5], [4]]) == [3, [-1], [4]]
+    assert replacer([3, {5}, [4]]) == [3, {-1}, [4]]
+    assert replacer("5555") == "5555"
+
+    a = [1, 2, 3]
+    assert replacer(a) is a
+
+    b = (1, 2, 3)
+    assert replacer(b) is b
+
+    c = ("a", "b", (1, 2, 3, 4, 5))
+    assert replacer(c) == ("a", "b", (1, 2, 3, 4, -1))
+
+    assert replacer({5: {2: {5: 5}}}) == {-1: {2: {-1: -1}}}
