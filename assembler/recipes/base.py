@@ -151,7 +151,7 @@ class Recipe(ABC):
                 val = util.replace(
                     val,
                     is_match=is_match,
-                    action=action,
+                    get_replacement=action,
                     type_replace=type_replace,
                 )
             result[f.name] = val
@@ -187,7 +187,7 @@ class Recipe(ABC):
                 val = util.replace(
                     val,
                     is_match=is_match,
-                    action=action,
+                    get_replacement=action,
                 )
             result[f.name] = val
 

@@ -58,12 +58,6 @@ class RecipeRegistry:
             dependency_graph=dependency_graph,
         )
 
-    def recipes(self) -> tp.Iterator[Recipe]:
-        yield from self.recipe_to_key
-
-    def get(self, item: Recipe, default=None):
-        return self.recipe_to_key.get(item, default)
-
     def replace_dependencies(self, graph: nx.DiGraph) -> nx.DiGraph:
         """Swap all nodes in the given graph of recipes for their keys in the registry"""
         r2k = self.recipe_to_key
@@ -78,7 +72,7 @@ class RecipeRegistry:
         """Convert the registry to a dict that can be serialized (e.g., with json)"""
         # Make recipes serializable.
         recipes = {}
-        for r in self.recipes():
+        for r in self.recipe_to_key:
             recipe_data = {
                 "attributes": r.to_serializable_dict(self.recipe_to_key),
                 "type": RECIPE_TYPE_REGISTRY.key(type(r)),
