@@ -152,6 +152,7 @@ def test_replace():
 
     b = (1, 2, 3)
     assert replacer(b) is b
+    assert replacer(b, type_replace={tuple: list}) == [1, 2, 3]
 
     c = ("a", "b", (1, 2, 3, 4, 5))
     assert replacer(c) == ("a", "b", (1, 2, 3, 4, -1))
