@@ -45,7 +45,6 @@ class Blueprint:
         dependency_graph: nx.DiGraph,
         outputs: frozenset[Recipe],
         build_state: dict[Recipe, BuildState],
-        dependency_requests: dict[Recipe, DependencyRequest],
     ):
         """A Blueprint describes how to construct recipes and their depenencies.
 
@@ -56,7 +55,6 @@ class Blueprint:
         self._dependency_graph = dependency_graph
         self.outputs = outputs
         self._build_state = build_state
-        self._dependency_requests = dependency_requests
         self._node_view: nx.reportviews.NodeDataView = dependency_graph.nodes(data=True)
 
         # Recipes that are not yet finished processing.
@@ -82,24 +80,17 @@ class Blueprint:
         outputs = frozenset(recipes)
         g = util.make_dependency_graph(recipes)
         build_state = {}
-        dependency_requests = {}
         for recipe, data in g.nodes(data=True):
             build_state[recipe] = BuildState.NOT_STARTED
-            dependency_requests[recipe] = recipe.get_dependency_request()
         return cls(
             dependency_graph=g,
             outputs=outputs,
             build_state=build_state,
-            dependency_requests=dependency_requests,
         )
 
     def get_build_state(self, recipe: Recipe) -> BuildState:
         """Return the build state of the given recipe"""
         return self._build_state[recipe]
-
-    def get_dependency_request(self, recipe: Recipe) -> DependencyRequest:
-        """Return the `DependencyRequest` object associated with the given recipe"""
-        return self._dependency_requests[recipe]
 
     def prepare_to_build(
         self, recipe: Recipe, instantiated: dict[Recipe, tp.Any], metadata: Parameters
@@ -107,9 +98,8 @@ class Blueprint:
         """Prepare to build the given recipe. Find its dependencies in the given
         `instantiated` dict and return a `Dependencies` object that can be passed to the
         recipe. Mark the recipe as `BUILDING`."""
-        request = self.get_dependency_request(recipe)
         dependencies = Dependencies.from_request(
-            request,
+            recipe.get_dependency_request(),
             instantiated,
             metadata=metadata,
         )
@@ -240,4 +230,5 @@ class Blueprint:
                 registry.recipe_to_key[r]: s.value for r, s in self._build_state.items()
             },
         }
+
         asdf
