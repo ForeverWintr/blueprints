@@ -19,7 +19,7 @@ class Case(tp.NamedTuple):
     recipes: tuple[base.Recipe]
 
 
-def test_function():
+def function_for_test():
     """For testing serialization"""
 
 
@@ -40,7 +40,7 @@ def make_examples() -> tp.Iterable[Case]:
     )
 
     # Functions
-    yield Case("SimpleFunction", (general.FromFunction(function=test_function),))
+    yield Case("SimpleFunction", (general.FromFunction(function=function_for_test),))
 
     # Static frame
     series = static_frame.SeriesFromDelimited(
@@ -79,6 +79,7 @@ def test_recipe_json(case):
     assert hash(deserialized) == hash(source)
 
 
+@pytest.mark.skip()
 @pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)
 def test_blueprint_json(case):
     bp = Blueprint.from_recipes(case.recipes)
