@@ -101,7 +101,7 @@ class Blueprint:
         }
         return cls(
             dependency_graph=registry.dependency_graph,
-            outputs=registry.outputs,
+            outputs=frozenset(registry.outputs),
             build_state=build_state,
         )
 

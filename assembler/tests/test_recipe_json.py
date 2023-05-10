@@ -6,10 +6,11 @@ import json
 from pathlib import Path
 
 from frozendict import frozendict
+import networkx as nx
 
-from assembler.tests.conftest import TestData, TestColumn, TABLES, Node
+from assembler.tests.conftest import Node
 from assembler.recipes import general, static_frame, base
-from assembler.factory import Factory, util
+from assembler.factory import util
 from assembler import serialization
 from assembler.blueprint import Blueprint
 
@@ -86,4 +87,9 @@ def test_blueprint_json(case):
     j = bp.to_json()
 
     new = Blueprint.from_json(j)
-    asds
+
+    assert new._buildable == bp._buildable
+    assert new.outputs == bp.outputs
+    assert new._build_state == bp._build_state
+    assert new._dependency_count == bp._dependency_count
+    assert nx.utils.graphs_equal(new._dependency_graph, bp._dependency_graph)
