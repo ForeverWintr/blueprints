@@ -15,25 +15,31 @@ class RecipeRegistry:
 
     def __init__(
         self,
+        outputs: tuple[Recipe],
         key_to_recipe: frozendict[str, Recipe],
         dependency_graph: nx.DiGraph,
     ):
         """Maps recipes to process-unique ids. For use in serializing."""
+        self.outputs = outputs
         self.dependency_graph = dependency_graph
         self.key_to_recipe = key_to_recipe
         self.recipe_to_key = frozendict((r, k) for k, r in key_to_recipe.items())
 
     @classmethod
-    def from_depencency_graph(cls, dependency_graph: nx.DiGraph) -> tp.Self:
+    def from_depencency_graph(
+        cls, dependency_graph: nx.DiGraph, outputs: tuple[Recipe]
+    ) -> tp.Self:
         return cls(
+            outputs=outputs,
             key_to_recipe={f"{cls.KEY_PREFIX}_{id(r)}": r for r in dependency_graph},
             dependency_graph=dependency_graph,
         )
 
     @classmethod
     def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> tp.Self:
+        recipes = tuple(recipes)
         dependency_graph = util.make_dependency_graph(recipes)
-        return cls.from_depencency_graph(dependency_graph)
+        return cls.from_depencency_graph(dependency_graph, outputs=recipes)
 
     @classmethod
     def from_serializable_dict(cls, data: dict) -> tp.Self:
@@ -54,6 +60,7 @@ class RecipeRegistry:
             key_to_recipe[recipe_id] = recipe
 
         return cls(
+            outputs=tuple(key_to_recipe[k] for k in data["outputs"]),
             key_to_recipe=frozendict(key_to_recipe),
             dependency_graph=dependency_graph,
         )
@@ -85,6 +92,7 @@ class RecipeRegistry:
                 self.replace_dependencies(self.dependency_graph)
             ),
             "recipe_data": recipes,
+            "output_keys": tuple(self.recipe_to_key[o] for o in self.outputs),
         }
         return result
 
