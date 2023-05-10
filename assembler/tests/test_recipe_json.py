@@ -11,6 +11,7 @@ from assembler.tests.conftest import TestData, TestColumn, TABLES, Node
 from assembler.recipes import general, static_frame, base
 from assembler.factory import Factory, util
 from assembler import serialization
+from assembler.blueprint import Blueprint
 
 
 class Case(tp.NamedTuple):
@@ -62,7 +63,7 @@ def make_examples() -> tp.Iterable[Case]:
 
 
 @pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)
-def test_json(case):
+def test_recipe_json(case):
     source = case.recipes
 
     j = serialization.recipes_to_json(source)
@@ -76,3 +77,11 @@ def test_json(case):
 
     assert deserialized == source
     assert hash(deserialized) == hash(source)
+
+
+@pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)
+def test_blueprint_json(case):
+    bp = Blueprint.from_recipes(case.recipes)
+
+    j = bp.to_json()
+    asds

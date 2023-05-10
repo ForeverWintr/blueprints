@@ -11,6 +11,7 @@ from assembler.constants import (
     MissingDependencyBehavior,
 )
 from assembler import util
+from assembler import serialization
 
 if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt
@@ -225,3 +226,18 @@ class Blueprint:
 
     def __len__(self):
         return len(self._dependency_graph)
+
+    def to_json(self) -> str:
+        """Serialize the blueprint to json"""
+        registry = serialization.RecipeRegistry.from_depencency_graph(
+            self._dependency_graph
+        )
+        data = {
+            "recipe_data": serialization.recipes_to_serializable_dict(
+                self.outputs, registry
+            ),
+            "build_state": {
+                registry.recipe_to_key[r]: s.value for r, s in self._build_state.items()
+            },
+        }
+        asdf
