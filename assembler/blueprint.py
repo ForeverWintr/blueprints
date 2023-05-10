@@ -1,10 +1,10 @@
 from __future__ import annotations
 import typing as tp
+import json
 
 import networkx as nx
 
-from assembler.recipes.base import Recipe, DependencyRequest, Dependencies, Parameters
-from assembler import exceptions
+from assembler.recipes.base import Recipe, Dependencies, Parameters
 from assembler.constants import (
     BuildState,
     BUILD_STATE_TO_COLOR,
@@ -75,7 +75,7 @@ class Blueprint:
         }
 
     @classmethod
-    def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> Blueprint:
+    def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> tp.Self:
         """Create a blueprint from the given recipe."""
         outputs = frozenset(recipes)
         g = util.make_dependency_graph(recipes)
@@ -87,6 +87,14 @@ class Blueprint:
             outputs=outputs,
             build_state=build_state,
         )
+
+    @classmethod
+    def from_json(cls, json_str: str) -> tp.Self:
+        """Instantiate a blueprint from json. See `to_json`"""
+        data = json.loads(json_str)
+        registry = serialization.RecipeRegistry.from_serializable_dict(data["recipes"])
+
+        asdf
 
     def get_build_state(self, recipe: Recipe) -> BuildState:
         """Return the build state of the given recipe"""
@@ -223,7 +231,7 @@ class Blueprint:
             self._dependency_graph
         )
         data = {
-            "recipe_data": serialization.recipes_to_serializable_dict(
+            "recipes": serialization.recipes_to_serializable_dict(
                 self.outputs, registry
             ),
             "build_state": {
@@ -231,4 +239,4 @@ class Blueprint:
             },
         }
 
-        asdf
+        return json.dumps(data)

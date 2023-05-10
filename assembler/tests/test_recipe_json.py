@@ -84,4 +84,6 @@ def test_blueprint_json(case):
     bp = Blueprint.from_recipes(case.recipes)
 
     j = bp.to_json()
+
+    new = Blueprint.from_json(j)
     asds
