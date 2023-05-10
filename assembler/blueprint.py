@@ -92,9 +92,18 @@ class Blueprint:
     def from_json(cls, json_str: str) -> tp.Self:
         """Instantiate a blueprint from json. See `to_json`"""
         data = json.loads(json_str)
-        registry = serialization.RecipeRegistry.from_serializable_dict(data["recipes"])
-
-        asdf
+        registry = serialization.RecipeRegistry.from_serializable_dict(
+            data["recipe_registry"]
+        )
+        build_state = {
+            registry.key_to_recipe[k]: BuildState(v)
+            for k, v in data["build_state"].items()
+        }
+        return cls(
+            dependency_graph=registry.dependency_graph,
+            outputs=registry.outputs,
+            build_state=build_state,
+        )
 
     def get_build_state(self, recipe: Recipe) -> BuildState:
         """Return the build state of the given recipe"""
@@ -228,12 +237,10 @@ class Blueprint:
     def to_json(self) -> str:
         """Serialize the blueprint to json"""
         registry = serialization.RecipeRegistry.from_depencency_graph(
-            self._dependency_graph
+            self._dependency_graph, outputs=tuple(self.outputs)
         )
         data = {
-            "recipes": serialization.recipes_to_serializable_dict(
-                self.outputs, registry
-            ),
+            "recipe_registry": registry.to_serializable_dict(),
             "build_state": {
                 registry.recipe_to_key[r]: s.value for r, s in self._build_state.items()
             },

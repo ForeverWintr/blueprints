@@ -79,7 +79,6 @@ def test_recipe_json(case):
     assert hash(deserialized) == hash(source)
 
 
-@pytest.mark.skip()
 @pytest.mark.parametrize("case", make_examples(), ids=lambda c: c.name)
 def test_blueprint_json(case):
     bp = Blueprint.from_recipes(case.recipes)

@@ -62,17 +62,17 @@ class RecipeRegistry:
         return cls(
             outputs=tuple(key_to_recipe[k] for k in data["output_keys"]),
             key_to_recipe=frozendict(key_to_recipe),
-            dependency_graph=dependency_graph,
+            dependency_graph=cls._remap_nodes(dependency_graph, mapping=key_to_recipe),
         )
 
-    def replace_dependencies(self, graph: nx.DiGraph) -> nx.DiGraph:
-        """Swap all nodes in the given graph of recipes for their keys in the registry"""
-        r2k = self.recipe_to_key
+    @staticmethod
+    def _remap_nodes(graph: nx.DiGraph, mapping: dict[tp.Any, tp.Any]) -> nx.DiGraph:
+        """replace all nodes in the given graph with values from the given mapping."""
         new = type(graph)()
         for n in graph.nodes():
-            new.add_node(r2k[n])
+            new.add_node(mapping[n])
         for a, b in graph.edges():
-            new.add_edge(r2k[a], r2k[b])
+            new.add_edge(mapping[a], mapping[b])
         return new
 
     def to_serializable_dict(self) -> dict:
@@ -89,7 +89,7 @@ class RecipeRegistry:
         # Make the dependency graph serializable.
         result = {
             "dependency_graph": nx.json_graph.adjacency_data(
-                self.replace_dependencies(self.dependency_graph)
+                self._remap_nodes(self.dependency_graph, self.recipe_to_key)
             ),
             "recipe_data": recipes,
             "output_keys": tuple(self.recipe_to_key[o] for o in self.outputs),
