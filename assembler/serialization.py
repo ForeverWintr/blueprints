@@ -60,7 +60,7 @@ class RecipeRegistry:
             key_to_recipe[recipe_id] = recipe
 
         return cls(
-            outputs=tuple(key_to_recipe[k] for k in data["outputs"]),
+            outputs=tuple(key_to_recipe[k] for k in data["output_keys"]),
             key_to_recipe=frozendict(key_to_recipe),
             dependency_graph=dependency_graph,
         )
@@ -97,24 +97,15 @@ class RecipeRegistry:
         return result
 
 
-def recipes_to_serializable_dict(
-    recipes: tp.Iterable[Recipe], registry: RecipeRegistry
-) -> dict:
-    data = registry.to_serializable_dict()
-    data["outputs"] = tuple(registry.recipe_to_key[r] for r in recipes)
-    return data
-
-
 def recipes_to_json(recipes: tp.Iterable[Recipe]) -> str:
     """Convert to a json representation that does not duplicate recipes. A recipe's
     dependencies are replaced with IDs into a registry mapping."""
     registry = RecipeRegistry.from_recipes(recipes)
-    data = recipes_to_serializable_dict(recipes, registry)
-    return json.dumps(data)
+    return json.dumps(registry.to_serializable_dict())
 
 
 def recipes_from_json(json_str: str) -> tuple[Recipe]:
     """Deserialize Json-ified recipes"""
     data = json.loads(json_str)
     registry = RecipeRegistry.from_serializable_dict(data)
-    return tuple(registry.key_to_recipe[k] for k in data["outputs"])
+    return registry.outputs
