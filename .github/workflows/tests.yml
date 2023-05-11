@@ -24,7 +24,7 @@ jobs:
           version: "~= 23.0"
 
   test:
-    needs: [lint, get-python-versions]
+    needs: [lint]
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
