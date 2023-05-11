@@ -2,10 +2,14 @@ from __future__ import annotations
 
 import typing as tp
 import json
+import functools
+import sys
+import importlib
+
 from frozendict import frozendict
 import networkx as nx
 
-from assembler.constants import BuildStatus
+from assembler.constants import BuildState
 from assembler import constants
 from assembler import exceptions
 
@@ -20,7 +24,7 @@ class MissingPlaceholder(tp.NamedTuple):
 
 class ProcessResult(tp.NamedTuple):
     recipe: Recipe
-    status: BuildStatus
+    status: BuildState
     output: tp.Any
 
 
@@ -38,9 +42,9 @@ def process_recipe(recipe: Recipe, dependencies: Dependencies) -> ProcessResult:
                 reason=repr(e),
                 fill_value=getattr(recipe, "missing_data_fill_value", None),
             )
-            status = BuildStatus.MISSING
+            status = BuildState.MISSING
     else:
-        status = BuildStatus.BUILT
+        status = BuildState.BUILT
 
     return ProcessResult(recipe=recipe, status=status, output=result)
 
@@ -83,3 +87,99 @@ def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
             f"The given recipe produced dependency cycles: {cycles}"
         )
     return g
+
+
+def replace(
+    item: tp.Any,
+    is_match: tp.Callable[[tp.Any], bool],
+    get_replacement: tp.Callable[[tp.Any], tp.Any],
+    type_replace: dict[tp.Type, tp.Type] | None = None,
+) -> tp.Any:
+    """Look for entries where `is_match` returns true, and replace them with the output
+    of `get_replacement`.
+
+    - If item is a match, the result of `get_replacement` is returned.
+
+    - If item is an iterable or mapping and contains entries for which `is_match`
+    returns true, a copy is returned with all matches replaced by the result of
+    `get_replacement`.
+
+    - If neither of the above are true, the original item is returned"""
+    type_replace = type_replace or {}
+    if is_match(item):
+        return get_replacement(item)
+    if isinstance(item, (str, bytes)):
+        # Assume we don't want to search within strings.
+        return item
+
+    original_type = type(item)
+    constructor = type_replace.get(original_type, original_type)
+    new_items = item
+    changes = not constructor is original_type
+
+    def recurse(x):
+        nonlocal changes
+        new = replace(
+            x,
+            is_match=is_match,
+            get_replacement=get_replacement,
+            type_replace=type_replace,
+        )
+        if not new is x:
+            changes = True
+        return new
+
+    if items := getattr(item, "items", None):
+        new_items = tuple((recurse(k), recurse(v)) for k, v in items())
+
+    else:
+        try:
+            iterator = iter(item)
+        except TypeError:
+            pass
+        else:
+            new_items = tuple(recurse(x) for x in iterator)
+
+    if changes:
+        return constructor(new_items)
+    return item
+
+
+def item_in_dict_and_hashable(item: tp.Any, d: dict) -> bool:
+    try:
+        return item in d
+    except TypeError:
+        # e.g., unhashable item.
+        return False
+
+
+def get_callable_key(callable_: tp.Callable) -> tuple[str, str]:
+    """Get a key used to represent the given callable. Used for serialization in conjunction with `callable_from_key`"""
+    return (
+        constants.CALLABLE_KEY_IDENTIFIER,
+        callable_.__module__,
+        callable_.__qualname__,
+    )
+
+
+def is_callable_key(item: tp.Any) -> bool:
+    try:
+        return item[0] == constants.CALLABLE_KEY_IDENTIFIER
+    except (TypeError, IndexError, KeyError):
+        return False
+
+
+def callable_from_key(key: tuple[str, str]) -> tp.Callable:
+    """Given a key identifying a callable, as returned by `get_callable_key`, locate and
+    return the corresponding callable. This imports modules if they aren't already
+    loaded."""
+    _, module_name, function_qualname = key
+    try:
+        obj = sys.modules[module_name]
+    except KeyError:
+        # If this module isn't imported, try to import it. This adds it to sys.modules.
+        obj = importlib.import_module(module_name)
+
+    for name in function_qualname.split("."):
+        obj = getattr(obj, name)
+    return obj

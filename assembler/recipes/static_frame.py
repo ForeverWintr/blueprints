@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import typing as tp
 from pathlib import Path
 import functools
@@ -18,6 +20,16 @@ class _FromDelimited(Recipe):
     index_column: str | None = None
     frame_extract_function: tp.Callable[..., sf.Frame] = sf.Frame.from_tsv
     frame_extract_kwargs: frozendict = frozendict()
+
+    @classmethod
+    def from_serializable_dict(cls, data: dict, key_to_recipe: dict) -> tp.Self:
+        data["file_path"] = Path(data["file_path"])
+        return super().from_serializable_dict(data, key_to_recipe)
+
+    def to_serializable_dict(self, recipe_to_key: frozendict) -> dict:
+        d = super().to_serializable_dict(recipe_to_key)
+        d["file_path"] = str(d["file_path"])
+        return d
 
 
 class SeriesFromDelimited(_FromDelimited):

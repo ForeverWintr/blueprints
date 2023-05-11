@@ -90,3 +90,6 @@ class Node(Recipe):
 
     def __str__(self):
         return self.name
+
+    def short_name(self) -> str:
+        return self.name

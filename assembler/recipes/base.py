@@ -4,14 +4,13 @@ from abc import ABC, abstractmethod
 import dataclasses
 import itertools
 import json
+import functools
+import operator
 
 from frozendict import frozendict
 
 from assembler.constants import MissingDependencyBehavior
 from assembler import util
-
-if tp.TYPE_CHECKING:
-    from assembler.serialization import RecipeRegistry
 
 
 class Parameters(tp.NamedTuple):
@@ -117,24 +116,53 @@ class Recipe(ABC):
         describes."""
 
     @classmethod
-    def from_json(cls, serialized: str) -> tp.Self:
-        data = json.loads(serialized, cls=util.ImmutableJsonDecoder)
-        subclass = RECIPE_TYPE_REGISTRY.get(data["type_registry_key"])
-        return subclass(**data["attributes"])
+    def from_serializable_dict(cls, data: dict, key_to_recipe: dict) -> tp.Self:
+        """Return an instance of this class, given a serializable dict as produced by
+        cls.to_serializable_dict. All references to other recipes in the `data` received
+        here have been replaced with entries into the provided `key_to_recipe` mapping.
+        This method should look up the corresponding recipes there.
 
-    def _to_json(self, registry: dict[int, Recipe]) -> str:
-        d = dataclasses.asdict(self)
-        data = {
-            "type_registry_key": RECIPE_TYPE_REGISTRY.key(type(self)),
-            "attributes": d,
-        }
-        return json.dumps(data)
+        for example, if your recipe is:
 
-    def to_serializable_dict(self, registry: RecipeRegistry) -> dict:
+        class MyRecipe(Recipe):
+            depends_on=other_recipe
+
+        this method will receive a dictionary similar to
+
+        data={'depends_on': 'RR_123412341234'}
+
+        and should return
+
+        cls(depends_on=key_to_recipe[data['depends_on']])
+        """
+        is_match_action = (
+            (
+                functools.partial(util.item_in_dict_and_hashable, d=key_to_recipe),
+                lambda r: key_to_recipe[r],
+            ),
+            (util.is_callable_key, util.callable_from_key),
+        )
+        type_replace = {list: tuple, dict: frozendict}
+
+        result = {}
+        for f in dataclasses.fields(cls):
+            val = data[f.name]
+            for is_match, action in is_match_action:
+                val = util.replace(
+                    val,
+                    is_match=is_match,
+                    get_replacement=action,
+                    type_replace=type_replace,
+                )
+            result[f.name] = val
+
+        return cls(**result)
+
+    def to_serializable_dict(self, recipe_to_key: frozendict) -> dict:
         """Return a dictionary that can be serialized (e.g. with json). To do this,
         convert any complex types types that are json serializable (e.g.
         strings/ints/tuples), and replace any recipes with their keys in the provided
-        `registry` (which should already contain all recipes that this recipe depends
+        `recipe_to_key` (which should already contain all recipes that this recipe depends
         on). This method handles known subclasses but can be overridden to enable
         serialization of custom attributes.
 
@@ -145,27 +173,29 @@ class Recipe(ABC):
 
         This method would return
 
-        {'depends_on': registry.get(self.depends_on)}
+        {'depends_on': recipe_to_key[self.depends_on]}
         """
-        to_replace = {}
+        is_match_action = (
+            (lambda item: isinstance(item, Recipe), lambda r: recipe_to_key[r]),
+            (lambda item: isinstance(item, tp.Callable), util.get_callable_key),
+        )
+
+        result = {}
         for f in dataclasses.fields(self):
             val = getattr(self, f.name)
-
-            if isinstance(val, Recipe):
-                to_replace[f.name] = registry.get(val)
-
-            elif isinstance(val, tuple) and any(isinstance(x, Recipe) for x in val):
-                to_replace[f.name] = tuple(registry.get(x, x) for x in val)
-
-            elif isinstance(val, frozendict) and any(
-                isinstance(x, Recipe) for x in util.flatten(val.items())
-            ):
-                to_replace[f.name] = frozendict(
-                    (registry.get(k, k), registry.get(v, v)) for k, v in val.items()
+            for is_match, action in is_match_action:
+                val = util.replace(
+                    val,
+                    is_match=is_match,
+                    get_replacement=action,
                 )
-        result = dataclasses.asdict(self)
-        result.update(to_replace)
+            result[f.name] = val
+
         return result
+
+    def short_name(self) -> str:
+        """Return a short string representing this recipe."""
+        return type(self).__name__
 
     ### Below this line, methods are internal and not intended to be overriden.
 
