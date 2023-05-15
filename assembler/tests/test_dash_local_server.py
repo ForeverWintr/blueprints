@@ -1,8 +1,9 @@
-from assembler.renderers import dash_local_server
+from assembler.renderers.dash_renderer import flask_app
 
 
 def test_update():
-    client = dash_local_server.app.server.test_client()
+    app = flask_app.create_app()
+    client = app.test_client()
 
     client.post("/update", json={"test": 2})
 
