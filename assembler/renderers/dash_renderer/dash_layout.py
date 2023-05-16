@@ -6,7 +6,7 @@ from flask import request
 
 
 cyto.load_extra_layouts()
-app = Dash(__name__, server=False)
+dash_app = Dash(__name__, server=False)
 
 
 cytoscape = cyto.Cytoscape(
@@ -22,7 +22,7 @@ cytoscape = cyto.Cytoscape(
     ],
 )
 
-app.layout = html.Div(
+dash_app.layout = html.Div(
     [
         cytoscape,
         # The memory store reverts to the default on every page refresh
@@ -33,7 +33,7 @@ app.layout = html.Div(
 )
 
 
-@app.callback(
+@dash_app.callback(
     Output("cytoscape-elements-callbacks-2", "elements"),
     Output("step-index", "data"),
     Input("step-index", "data"),

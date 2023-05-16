@@ -1,6 +1,6 @@
 from flask import Flask
 
-from assembler.renderers.dash_renderer import models
+from assembler.renderers.dash_renderer import models, dash_layout
 
 
 def create_app():
@@ -19,6 +19,8 @@ def create_app():
         models.db.create_all()
 
     app.register_blueprint(models.view)
+
+    dash_layout.dash_app.init_app(app)
     return app
 
 
