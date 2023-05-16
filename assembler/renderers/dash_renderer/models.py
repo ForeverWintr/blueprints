@@ -5,24 +5,21 @@ from flask import request
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import orm
 
+from assembler.blueprint import Blueprint
 
 db = SQLAlchemy()
 view = FlaskBlueprint("view", __name__)
 
 
-class Blueprint(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    structure = db.Column(db.String)
-    states: orm.Mapped[list[State]] = orm.relationship(back_populates="parent")
-
-
-class State(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    blueprint: orm.Mapped[Blueprint] = orm.relationship(back_populates="states")
+class Frame(db.Model):
+    frame_id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
+    run_id: orm.Mapped[int] = orm.mapped_column(primary_key=True)
+    blueprint_data: orm.Mapped[str] = orm.mapped_column
 
 
 @view.post("/blueprint")
 def new_blueprint():
-    request.json
+    # Validate the received blueprint by loading it.
+    bp = Blueprint.from_serializable_dict(request.json)
 
     asdf
