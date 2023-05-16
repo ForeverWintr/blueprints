@@ -1,6 +1,6 @@
 from flask import Flask
 
-from assembler.renderers.dash_renderer.models import db
+from assembler.renderers.dash_renderer import models
 
 
 def create_app():
@@ -12,9 +12,11 @@ def create_app():
     # For debugging db in viewer:
     # app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:////tmp/project.db"
 
-    db.init_app(app)
+    models.db.init_app(app)
     with app.app_context():
-        db.create_all()
+        models.db.create_all()
+
+    app.register_blueprint(models.view)
     return app
 
 
