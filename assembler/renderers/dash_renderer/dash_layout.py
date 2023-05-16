@@ -6,7 +6,7 @@ from flask import request
 
 
 cyto.load_extra_layouts()
-dash_app = Dash(__name__, server=False)
+dash_app = Dash(__name__)
 
 
 cytoscape = cyto.Cytoscape(
@@ -26,21 +26,22 @@ dash_app.layout = html.Div(
     [
         cytoscape,
         # The memory store reverts to the default on every page refresh
-        # dcc.Store("step-index", data=1, storage_type="memory"),
-        # html.Button("Previous", id="btn-prev"),
-        # html.Button("Next", id="btn-next"),
+        dcc.Store("step-index", data=1, storage_type="memory"),
+        html.Button("Previous", id="btn-prev"),
+        html.Button("Next", id="btn-next"),
     ]
 )
 
 
 @dash_app.callback(
-    Output("cytoscape-elements-callbacks-2", "elements"),
+    # Output("cytoscape-elements-callbacks-2", "elements"),
     Output("step-index", "data"),
     Input("step-index", "data"),
     Input("btn-prev", "n_clicks"),
     Input("btn-next", "n_clicks"),
 )
 def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
+    print("here")
     btn_clicked = ctx.triggered_id
 
     if btn_clicked == "btn-next":
@@ -55,4 +56,4 @@ def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
 
 
 if __name__ == "__main__":
-    app.run()
+    dash_app.run(debug=True, use_reloader=False)
