@@ -23,4 +23,6 @@ class State(db.Model):
 
 @view.post("/blueprint")
 def new_blueprint():
+    request.json
+
     asdf

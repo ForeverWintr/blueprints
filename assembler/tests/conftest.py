@@ -1,8 +1,12 @@
 from __future__ import annotations
 import typing as tp
 
+import pytest
+
 from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
 from assembler import constants
+from assembler.blueprint import Blueprint
+
 
 #  Pretend these are tables
 TABLES = {
@@ -93,3 +97,22 @@ class Node(Recipe):
 
     def short_name(self) -> str:
         return self.name
+
+
+@pytest.fixture
+def nodes() -> dict[str, Node]:
+    a = Node(name="a")
+    d = Node(name="d")
+    b = Node(name="b", dependencies=(a,))
+    c = Node(name="c", dependencies=(a, d))
+    return {
+        "a": a,
+        "d": d,
+        "b": b,
+        "c": c,
+    }
+
+
+@pytest.fixture
+def basic_blueprint(nodes) -> Blueprint:
+    return Blueprint.from_recipes([nodes["b"], nodes["c"]])
