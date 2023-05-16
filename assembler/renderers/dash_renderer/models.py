@@ -6,7 +6,7 @@ import uuid
 from flask import Blueprint as FlaskBlueprint
 from flask import request, current_app, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import orm, Integer
+from sqlalchemy import orm
 import jwt
 
 from assembler.blueprint import Blueprint
