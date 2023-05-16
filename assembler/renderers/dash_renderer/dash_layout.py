@@ -6,7 +6,11 @@ from flask import request
 
 
 cyto.load_extra_layouts()
-dash_app = Dash(__name__)
+dash_app = Dash(
+    __name__,
+    server=False,
+    url_base_pathname="/visualize/",
+)
 
 
 cytoscape = cyto.Cytoscape(
@@ -29,19 +33,22 @@ dash_app.layout = html.Div(
         dcc.Store("step-index", data=1, storage_type="memory"),
         html.Button("Previous", id="btn-prev"),
         html.Button("Next", id="btn-next"),
+        dcc.Location(id="test-location", refresh=False),
     ]
 )
 
 
 @dash_app.callback(
-    # Output("cytoscape-elements-callbacks-2", "elements"),
+    Output("cytoscape-two-nodes", "elements"),
     Output("step-index", "data"),
+    Input("test-location", "pathname"),
     Input("step-index", "data"),
     Input("btn-prev", "n_clicks"),
     Input("btn-next", "n_clicks"),
 )
-def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
+def update_graph_scatter(loc, step_idx, btn_prev_clicks, btn_next_clicks):
     print("here")
+    # https://hackersandslackers.com/plotly-dash-with-flask/
     btn_clicked = ctx.triggered_id
 
     if btn_clicked == "btn-next":
@@ -56,4 +63,4 @@ def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
 
 
 if __name__ == "__main__":
-    dash_app.run(debug=True, use_reloader=False)
+    dash_app.run(debug=True, use_reloader=False, port=5000)
