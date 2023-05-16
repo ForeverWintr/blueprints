@@ -6,6 +6,8 @@ from assembler.renderers.dash_renderer import models
 def create_app():
     app = Flask(__name__)
 
+    app.config["SECRET_KEY"] = "insecure"
+
     # In memory db:
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite://"
 
