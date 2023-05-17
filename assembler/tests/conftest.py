@@ -23,7 +23,7 @@ class TestColumn(Recipe):
     table_name: str
     key: int = 1
 
-    def get_dependencies(self) -> DependencyRequest:
+    def get_dependency_request(self) -> DependencyRequest:
         """This depends on a table"""
         return DependencyRequest(
             TestData(table_name=self.table_name),
@@ -37,7 +37,7 @@ class TestColumn(Recipe):
 class MultiColumn(Recipe):
     columns: tuple[TestColumn, ...]
 
-    def get_dependencies(self) -> DependencyRequest:
+    def get_dependency_request(self) -> DependencyRequest:
         """This depends on a table"""
         return DependencyRequest(*self.columns)
 
@@ -62,8 +62,8 @@ class Raiser(Recipe):
     raise_in: str = "extract_from_dependencies"
     missing_data_fill_value = "fill_value"
 
-    def get_dependencies(self) -> DependencyRequest:
-        if self.raise_in == "get_dependencies":
+    def get_dependency_request(self) -> DependencyRequest:
+        if self.raise_in == "get_dependency_request":
             raise self.missing_data_exceptions()
         return DependencyRequest()
 
@@ -71,3 +71,25 @@ class Raiser(Recipe):
         if self.raise_in == "extract_from_dependencies":
             raise self.missing_data_exceptions()
         return columns
+
+
+class Node(Recipe):
+    """A simple recipe used for making dependency graphs"""
+
+    name: str
+    dependencies: tuple[Node, ...] = ()
+
+    def get_dependency_request(self) -> DependencyRequest:
+        return DependencyRequest(*self.dependencies)
+
+    def extract_from_dependencies(self, *args) -> tp.Any:
+        pass
+
+    def __repr__(self):
+        return f"{(type(self).__name__)}({self.name!r})"
+
+    def __str__(self):
+        return self.name
+
+    def short_name(self) -> str:
+        return self.name

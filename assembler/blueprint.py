@@ -1,17 +1,17 @@
 from __future__ import annotations
 import typing as tp
+import json
 
 import networkx as nx
 
-from assembler.recipes.base import Recipe, DependencyRequest, Dependencies, Parameters
-from assembler import exceptions
+from assembler.recipes.base import Recipe, Dependencies, Parameters
 from assembler.constants import (
-    NodeAttrs,
-    BuildStatus,
-    BUILD_STATUS_TO_COLOR,
+    BuildState,
+    BUILD_STATE_TO_COLOR,
     MissingDependencyBehavior,
 )
 from assembler import util
+from assembler import serialization
 
 if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt
@@ -20,6 +20,7 @@ if tp.TYPE_CHECKING:
 def get_blueprint_layout(
     g: nx.DiGraph, vertical_increment: float = 0.2, horizontal_increment: float = 0.1
 ) -> dict[Recipe, tuple[float, float]]:
+    """Return a dictionary from each recipe in the graph to it's x,y position"""
     bottom_layer = {n for n, d in g.out_degree() if d == 0}
     x = 0.0
     positions = {}
@@ -37,40 +38,14 @@ def get_blueprint_layout(
     return positions
 
 
-def make_dependency_graph(recipes: tp.Iterable[Recipe]) -> nx.DiGraph:
-    g = nx.DiGraph()
-    outputs = set(recipes)
-    to_process: list[Recipe] = list(outputs)
-    processed = set()
-    while to_process:
-        r = to_process.pop()
-        depends_on = r.get_dependencies()
-        g.add_node(
-            r,
-            **{
-                NodeAttrs.is_output: r in outputs,
-                NodeAttrs.build_status: BuildStatus.NOT_STARTED,
-                NodeAttrs.dependency_request: depends_on,
-            },
-        )
-        for d in depends_on.recipes():
-            g.add_edge(d, r)
-
-            if d not in processed:
-                to_process.append(d)
-
-        processed.add(r)
-
-    if nx.dag.has_cycle(g):
-        cycles = nx.find_cycle(g)
-        raise exceptions.ConfigurationError(
-            f"The given recipe produced dependency cycles: {cycles}"
-        )
-    return g
-
-
 class Blueprint:
-    def __init__(self, dependency_graph: nx.DiGraph, outputs: frozenset[Recipe]):
+    def __init__(
+        self,
+        *,
+        dependency_graph: nx.DiGraph,
+        outputs: frozenset[Recipe],
+        build_state: dict[Recipe, BuildState],
+    ):
         """A Blueprint describes how to construct recipes and their depenencies.
 
         Args:
@@ -79,13 +54,14 @@ class Blueprint:
         """
         self._dependency_graph = dependency_graph
         self.outputs = outputs
+        self._build_state = build_state
         self._node_view: nx.reportviews.NodeDataView = dependency_graph.nodes(data=True)
 
         # Recipes that are not yet finished processing.
         self._unbuilt = {
             r
-            for r, d in self._node_view
-            if d[NodeAttrs.build_status] not in {BuildStatus.BUILT, BuildStatus.MISSING}
+            for r in self._dependency_graph.nodes
+            if self._build_state[r] not in {BuildState.BUILT, BuildState.MISSING}
         }
 
         # Recipes that are currently buildable.
@@ -99,19 +75,43 @@ class Blueprint:
         }
 
     @classmethod
-    def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> Blueprint:
+    def from_recipes(cls, recipes: tp.Iterable[Recipe]) -> tp.Self:
         """Create a blueprint from the given recipe."""
         outputs = frozenset(recipes)
-        g = make_dependency_graph(recipes)
-        return cls(g, outputs=outputs)
+        g = util.make_dependency_graph(recipes)
+        build_state = {}
+        for recipe, data in g.nodes(data=True):
+            build_state[recipe] = BuildState.NOT_STARTED
+        return cls(
+            dependency_graph=g,
+            outputs=outputs,
+            build_state=build_state,
+        )
 
-    def get_build_state(self, recipe: Recipe) -> BuildStatus:
+    @classmethod
+    def from_serializable_dict(cls, data: dict) -> tp.Self:
+        """Instantiate a blueprint from a serializable dict, as is returned by `to_serializable_dict`"""
+        registry = serialization.RecipeRegistry.from_serializable_dict(
+            data["recipe_registry"]
+        )
+        build_state = {
+            registry.key_to_recipe[k]: BuildState(v)
+            for k, v in data["build_state"].items()
+        }
+        return cls(
+            dependency_graph=registry.dependency_graph,
+            outputs=frozenset(registry.outputs),
+            build_state=build_state,
+        )
+
+    @classmethod
+    def from_json(cls, json_str: str) -> tp.Self:
+        """Instantiate a blueprint from json. See `to_json`"""
+        return cls.from_serializable_dict(json.loads(json_str))
+
+    def get_build_state(self, recipe: Recipe) -> BuildState:
         """Return the build state of the given recipe"""
-        return self._node_view[recipe][NodeAttrs.build_status]
-
-    def get_dependency_request(self, recipe: Recipe) -> DependencyRequest:
-        """Return the `DependencyRequest` object associated with the given recipe"""
-        return self._node_view[recipe][NodeAttrs.dependency_request]
+        return self._build_state[recipe]
 
     def prepare_to_build(
         self, recipe: Recipe, instantiated: dict[Recipe, tp.Any], metadata: Parameters
@@ -119,21 +119,17 @@ class Blueprint:
         """Prepare to build the given recipe. Find its dependencies in the given
         `instantiated` dict and return a `Dependencies` object that can be passed to the
         recipe. Mark the recipe as `BUILDING`."""
-        request = self.get_dependency_request(recipe)
         dependencies = Dependencies.from_request(
-            request,
+            recipe.get_dependency_request(),
             instantiated,
             metadata=metadata,
         )
-        self._set_build_state(recipe, BuildStatus.BUILDING)
+        self._build_state[recipe] = BuildState.BUILDING
         return dependencies
-
-    def _set_build_state(self, recipe: Recipe, state: BuildStatus) -> None:
-        self._node_view[recipe][NodeAttrs.build_status] = state
 
     def mark_buildable(self, recipe: Recipe) -> None:
         self._buildable.add(recipe)
-        self._set_build_state(recipe, BuildStatus.BUILDABLE)
+        self._build_state[recipe] = BuildState.BUILDABLE
 
         # In practice the recipe should already be in this set, but for conceptual
         # consistency and testing, we add it again.
@@ -141,13 +137,13 @@ class Blueprint:
 
     def mark_built(self, recipe: Recipe) -> None:
         """Update the blueprint to reflect that the given node was built successfully"""
-        self._set_build_state(recipe, BuildStatus.BUILT)
+        self._build_state[recipe] = BuildState.BUILT
         self._buildable.discard(recipe)
         self._unbuilt.discard(recipe)
 
         # What new recipes are now buildable?
         for successor in self._dependency_graph.successors(recipe):
-            if self.get_build_state(successor) is BuildStatus.NOT_STARTED:
+            if self.get_build_state(successor) is BuildState.NOT_STARTED:
                 self._dependency_count[successor] -= 1
                 if self._dependency_count[successor] == 0:
                     # This successor is now buildable.
@@ -164,7 +160,7 @@ class Blueprint:
         Return any recipes that cannot be built (i.e. they do not allow_missing) as a
         result of this.
         """
-        self._set_build_state(recipe, BuildStatus.MISSING)
+        self._build_state[recipe] = BuildState.MISSING
         self._buildable.discard(recipe)
         self._unbuilt.discard(recipe)
 
@@ -198,12 +194,12 @@ class Blueprint:
     ) -> set[Recipe]:
         """Update internal state based on the result of building a recipe."""
         instantiated[result.recipe] = result.output
-        if result.status is BuildStatus.MISSING or isinstance(
+        if result.status is BuildState.MISSING or isinstance(
             result.output, util.MissingPlaceholder
         ):
             # Mark all downstream recipes that skip missing as missing too. Return any that cannot be built.
             unbuildable = self.mark_missing(result.recipe, instantiated)
-        elif result.status is BuildStatus.BUILT:
+        elif result.status is BuildState.BUILT:
             self.mark_built(result.recipe)
             unbuildable = set()
         return unbuildable
@@ -223,7 +219,7 @@ class Blueprint:
         nodes = sorted(self._dependency_graph, key=str)
         labels = {n: str(n) for n in nodes}
         colors = [
-            BUILD_STATUS_TO_COLOR[self._node_view[n][NodeAttrs.build_status]]
+            BUILD_STATE_TO_COLOR[self._node_view[n][NodeAttrs.build_status]]
             for n in nodes
         ]
 
@@ -241,3 +237,20 @@ class Blueprint:
 
     def __len__(self):
         return len(self._dependency_graph)
+
+    def to_serializable_dict(self) -> dict:
+        """Return a dict represention of this object that can be json serialized"""
+        registry = serialization.RecipeRegistry.from_depencency_graph(
+            self._dependency_graph, outputs=tuple(self.outputs)
+        )
+        data = {
+            "recipe_registry": registry.to_serializable_dict(),
+            "build_state": {
+                registry.recipe_to_key[r]: s.value for r, s in self._build_state.items()
+            },
+        }
+        return data
+
+    def to_json(self) -> str:
+        """Serialize the blueprint to json"""
+        return json.dumps(self.to_serializable_dict())

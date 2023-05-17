@@ -1,9 +1,9 @@
 import dataclasses
 import pytest
 
-from assembler.tests.conftest import TestData, TestColumn, TABLES
-from assembler.recipes import general
-from assembler.factory import Factory
+from assembler.tests.conftest import TestData, TestColumn, TABLES, Node
+from assembler.recipes import general, static_frame, base
+from assembler.factory import Factory, util
 
 
 def test_immutable():
@@ -68,6 +68,41 @@ def test_from_function():
 def test_object():
     r = general.Object(payload=5)
     assert Factory().process_recipe(r) == 5
+
+
+RECIPE_EXAMPLES = (
+    static_frame.FrameFromDelimited,
+    static_frame.SeriesFromDelimited,
+    static_frame.FrameFromRecipes,
+)
+
+
+@pytest.mark.skip
+def test_recipe_registry():
+    d = Node(name="dep")
+    r = Node(name="r", dependencies=(d,))
+    e = Node(name="e", dependencies=(d,))
+    reg = util.recipe_registry([r, e])
+    assert reg == {id(x): x for x in (d, e, r)}
+
+
+def test_recipe_type_registry():
+    class FakeRecipe:
+        pass
+
+    reg = base._RecipeTypeRegistry()
+    key = reg.key(FakeRecipe)
+    assert key == (
+        "assembler.tests.test_recipes",
+        "test_recipe_type_registry.<locals>.FakeRecipe",
+    )
+
+    reg.add(FakeRecipe)
+
+    with pytest.raises(AssertionError):
+        reg.add(FakeRecipe)
+
+    assert reg.get(key) is FakeRecipe
 
 
 @pytest.mark.skip

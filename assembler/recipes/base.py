@@ -3,10 +3,14 @@ import typing as tp
 from abc import ABC, abstractmethod
 import dataclasses
 import itertools
+import json
+import functools
+import operator
 
 from frozendict import frozendict
 
 from assembler.constants import MissingDependencyBehavior
+from assembler import util
 
 
 class Parameters(tp.NamedTuple):
@@ -15,7 +19,7 @@ class Parameters(tp.NamedTuple):
 
 class DependencyRequest:
     def __init__(self, *args: Recipe | None, **kwargs: Recipe | None):
-        """Returned from recipes' get_dependencies method. Used to indicate which other
+        """Returned from recipes' get_dependency_request method. Used to indicate which other
         recipes a recipe depends on."""
         self.args: tuple = args
         self.kwargs: dict = kwargs
@@ -66,6 +70,29 @@ class Dependencies:
         )
 
 
+class _RecipeTypeRegistry:
+    def __init__(self):
+        """Internal cache for tracking recipe subclasses. Intended to be instantiated
+        once globally. Used for serialization and deserialization."""
+        self._registry = {}
+
+    @staticmethod
+    def key(recipe: tp.Type[Recipe]) -> tuple[str, str]:
+        return (recipe.__module__, recipe.__qualname__)
+
+    def add(self, recipe: tp.Type[Recipe]) -> None:
+        """Add a new recipe to the registry, asserting that it is not already there"""
+        key = self.key(recipe)
+        assert key not in self._registry, f"{recipe!r} was defined twice!"
+        self._registry[key] = recipe
+
+    def get(self, key: tuple[str, str]) -> tp.Type[Recipe]:
+        return self._registry[key]
+
+
+RECIPE_TYPE_REGISTRY = _RecipeTypeRegistry()
+
+
 @dataclasses.dataclass(frozen=True, repr=False, kw_only=True)
 class Recipe(ABC):
     """Base class for recipes"""
@@ -78,21 +105,109 @@ class Recipe(ABC):
         MissingDependencyBehavior
     ] = MissingDependencyBehavior.SKIP
 
-    def get_dependencies(self) -> DependencyRequest:
+    def get_dependency_request(self) -> DependencyRequest:
         """Return a DependencyRequest specifiying recipes that this recipe depends on."""
         return DependencyRequest()
 
     @abstractmethod
-    def extract_from_dependencies(self, *args: tp.Any) -> tp.Any:
-        """Given positional dependencies, extract the data that this recipe describes. args will be
-        the results of instantiating the recipes returned by `get_dependencies` above"""
+    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
+        """Given a Dependencies object corresponding to the DependencyRequest returned
+        by `get_dependency_request` above, extract the data that this recipe
+        describes."""
+
+    @classmethod
+    def from_serializable_dict(cls, data: dict, key_to_recipe: dict) -> tp.Self:
+        """Return an instance of this class, given a serializable dict as produced by
+        cls.to_serializable_dict. All references to other recipes in the `data` received
+        here have been replaced with entries into the provided `key_to_recipe` mapping.
+        This method should look up the corresponding recipes there.
+
+        for example, if your recipe is:
+
+        class MyRecipe(Recipe):
+            depends_on=other_recipe
+
+        this method will receive a dictionary similar to
+
+        data={'depends_on': 'RR_123412341234'}
+
+        and should return
+
+        cls(depends_on=key_to_recipe[data['depends_on']])
+        """
+        is_match_action = (
+            (
+                functools.partial(util.item_in_dict_and_hashable, d=key_to_recipe),
+                lambda r: key_to_recipe[r],
+            ),
+            (util.is_callable_key, util.callable_from_key),
+        )
+        type_replace = {list: tuple, dict: frozendict}
+
+        result = {}
+        for f in dataclasses.fields(cls):
+            val = data[f.name]
+            for is_match, action in is_match_action:
+                val = util.replace(
+                    val,
+                    is_match=is_match,
+                    get_replacement=action,
+                    type_replace=type_replace,
+                )
+            result[f.name] = val
+
+        return cls(**result)
+
+    def to_serializable_dict(self, recipe_to_key: frozendict) -> dict:
+        """Return a dictionary that can be serialized (e.g. with json). To do this,
+        convert any complex types types that are json serializable (e.g.
+        strings/ints/tuples), and replace any recipes with their keys in the provided
+        `recipe_to_key` (which should already contain all recipes that this recipe depends
+        on). This method handles known subclasses but can be overridden to enable
+        serialization of custom attributes.
+
+        For example, if your recipe is:
+
+        class MyRecipe(Recipe):
+            depends_on=other_recipe
+
+        This method would return
+
+        {'depends_on': recipe_to_key[self.depends_on]}
+        """
+        is_match_action = (
+            (lambda item: isinstance(item, Recipe), lambda r: recipe_to_key[r]),
+            (lambda item: isinstance(item, tp.Callable), util.get_callable_key),
+        )
+
+        result = {}
+        for f in dataclasses.fields(self):
+            val = getattr(self, f.name)
+            for is_match, action in is_match_action:
+                val = util.replace(
+                    val,
+                    is_match=is_match,
+                    get_replacement=action,
+                )
+            result[f.name] = val
+
+        return result
+
+    def short_name(self) -> str:
+        """Return a short string representing this recipe."""
+        return type(self).__name__
 
     ### Below this line, methods are internal and not intended to be overriden.
 
     def __init_subclass__(cls, **kwargs) -> None:
         # Automatically make other recipes dataclasses.
         r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)  # type: ignore
+
+        # Assert that this only added attributes, rather than creating a new class.
         assert r is cls
+
+        # Add to the global registry of recipe classes.
+        RECIPE_TYPE_REGISTRY.add(r)
 
     def _is_not_default(
         self, attribute: str, fields: tp.Dict[str, dataclasses.Field]

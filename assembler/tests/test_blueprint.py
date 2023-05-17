@@ -8,11 +8,11 @@ from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
 from assembler.blueprint import (
     Blueprint,
     get_blueprint_layout,
-    make_dependency_graph,
 )
-from assembler.constants import NodeAttrs, BuildStatus
+from assembler.constants import BuildState
 from assembler import exceptions
-from assembler.tests.conftest import TestData, TestColumn
+from assembler.tests.conftest import TestData, TestColumn, Node
+from assembler import util
 
 
 @pytest.fixture
@@ -34,25 +34,6 @@ def basic_blueprint(nodes) -> Blueprint:
     return Blueprint.from_recipes([nodes["b"], nodes["c"]])
 
 
-class Node(Recipe):
-    """A simple recipe used for making graphs"""
-
-    name: str
-    dependencies: tuple[Node, ...] = ()
-
-    def get_dependencies(self) -> DependencyRequest:
-        return DependencyRequest(*self.dependencies)
-
-    def extract_from_dependencies(self, *args) -> tp.Any:
-        pass
-
-    def __repr__(self):
-        return f"{(type(self).__name__)}({self.name!r})"
-
-    def __str__(self):
-        return self.name
-
-
 def test_from_recipes() -> None:
     r1 = TestColumn(table_name="A", key=1)
     r2 = TestColumn(table_name="b", key=4)
@@ -61,23 +42,12 @@ def test_from_recipes() -> None:
     b = Blueprint.from_recipes((r1, r2, r3))
 
     dep = TestData(table_name="A")
-    nodes = b._dependency_graph.nodes(data=True)
 
     assert set(b._dependency_graph[dep]) == {r1, r3}
-    node = nodes[dep]
-    node.pop(NodeAttrs.dependency_request)
-    assert node == {
-        NodeAttrs.is_output: False,
-        NodeAttrs.build_status: BuildStatus.BUILDABLE,
-    }
+    assert b.get_build_state(dep) is BuildState.BUILDABLE
 
     assert set(b._dependency_graph[TestData(table_name="b")]) == {r2}
-    node = nodes[r1]
-    node.pop(NodeAttrs.dependency_request)
-    assert nodes[r1] == {
-        NodeAttrs.is_output: True,
-        NodeAttrs.build_status: BuildStatus.NOT_STARTED,
-    }
+    assert b.get_build_state(r1) is BuildState.NOT_STARTED
 
 
 def test_from_recipes_no_cycles() -> None:
@@ -86,7 +56,7 @@ def test_from_recipes_no_cycles() -> None:
         name: str
         target: str
 
-        def get_dependencies(self) -> DependencyRequest:
+        def get_dependency_request(self) -> DependencyRequest:
             return DependencyRequest(Bad(name=self.target, target=self.name))
 
         def extract_from_dependencies(self, *args) -> tp.Any:
@@ -107,17 +77,9 @@ def test_get_blueprint_layout() -> None:
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
 
-    g = make_dependency_graph([b, c])
+    g = util.make_dependency_graph([b, c])
     layout = get_blueprint_layout(g)
     assert layout == {b: (0, 0), c: (0.1, 0), a: (0, 0.2), d: (0.1, 0.2)}
-
-
-def test_set_build_state(basic_blueprint: Blueprint) -> None:
-    node = next(iter(basic_blueprint._dependency_graph))
-
-    assert basic_blueprint.get_build_state(node) is BuildStatus.NOT_STARTED
-    basic_blueprint._set_build_state(node, BuildStatus.BUILDING)
-    assert basic_blueprint.get_build_state(node) is BuildStatus.BUILDING
 
 
 def test_mark_built(basic_blueprint: Blueprint) -> None:
@@ -126,10 +88,10 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         for r in basic_blueprint._dependency_graph
     }
     assert name_to_state == {
-        "b": BuildStatus.NOT_STARTED,
-        "a": BuildStatus.BUILDABLE,
-        "c": BuildStatus.NOT_STARTED,
-        "d": BuildStatus.BUILDABLE,
+        "b": BuildState.NOT_STARTED,
+        "a": BuildState.BUILDABLE,
+        "c": BuildState.NOT_STARTED,
+        "d": BuildState.BUILDABLE,
     }
 
     basic_blueprint.mark_built(Node(name="a"))
@@ -138,10 +100,10 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         for r in basic_blueprint._dependency_graph
     }
     assert name_to_state == {
-        "b": BuildStatus.BUILDABLE,
-        "a": BuildStatus.BUILT,
-        "c": BuildStatus.NOT_STARTED,
-        "d": BuildStatus.BUILDABLE,
+        "b": BuildState.BUILDABLE,
+        "a": BuildState.BUILT,
+        "c": BuildState.NOT_STARTED,
+        "d": BuildState.BUILDABLE,
     }
 
 
@@ -156,7 +118,7 @@ def test_mark_buildable(nodes: dict[str, Node], basic_blueprint: Blueprint) -> N
         n for k, n in nodes.items() if n.name in {"a", "d", "c"}
     }
     for r in basic_blueprint.buildable_recipes():
-        assert basic_blueprint.get_build_state(r) == BuildStatus.BUILDABLE
+        assert basic_blueprint.get_build_state(r) == BuildState.BUILDABLE
 
 
 def test_buildable_recipes(basic_blueprint: Blueprint) -> None:
