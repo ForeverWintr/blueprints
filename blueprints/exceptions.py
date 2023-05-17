@@ -1,10 +1,10 @@
-class AssemblerError(Exception):
+class blueprintsError(Exception):
     """Base class for frame factory errors"""
 
 
-class ConfigurationError(AssemblerError):
+class ConfigurationError(blueprintsError):
     """The specified configuration is invalid"""
 
 
-class MissingDependencyError(AssemblerError):
+class MissingDependencyError(blueprintsError):
     """An upstream dependency is missing and at least one dependency does not allow missing"""

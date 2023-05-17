@@ -1,9 +1,9 @@
 import dataclasses
 import pytest
 
-from assembler.tests.conftest import TestData, TestColumn, TABLES, Node
-from assembler.recipes import general, static_frame, base
-from assembler.factory import Factory, util
+from blueprints.tests.conftest import TestData, TestColumn, TABLES, Node
+from blueprints.recipes import general, static_frame, base
+from blueprints.factory import Factory, util
 
 
 def test_immutable():
@@ -93,7 +93,7 @@ def test_recipe_type_registry():
     reg = base._RecipeTypeRegistry()
     key = reg.key(FakeRecipe)
     assert key == (
-        "assembler.tests.test_recipes",
+        "blueprints.tests.test_recipes",
         "test_recipe_type_registry.<locals>.FakeRecipe",
     )
 

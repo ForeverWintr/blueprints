@@ -9,12 +9,12 @@ import importlib
 from frozendict import frozendict
 import networkx as nx
 
-from assembler.constants import BuildState
-from assembler import constants
-from assembler import exceptions
+from blueprints.constants import BuildState
+from blueprints import constants
+from blueprints import exceptions
 
 if tp.TYPE_CHECKING:
-    from assembler.recipes.base import Recipe, Dependencies, DependencyRequest
+    from blueprints.recipes.base import Recipe, Dependencies, DependencyRequest
 
 
 class MissingPlaceholder(tp.NamedTuple):

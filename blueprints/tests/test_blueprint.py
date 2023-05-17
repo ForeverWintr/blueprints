@@ -4,15 +4,15 @@ import typing as tp
 import pytest
 from frozendict import frozendict
 
-from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
-from assembler.blueprint import (
+from blueprints.recipes.base import Recipe, DependencyRequest, Dependencies
+from blueprints.blueprint import (
     Blueprint,
     get_blueprint_layout,
 )
-from assembler.constants import BuildState
-from assembler import exceptions
-from assembler.tests.conftest import TestData, TestColumn, Node
-from assembler import util
+from blueprints.constants import BuildState
+from blueprints import exceptions
+from blueprints.tests.conftest import TestData, TestColumn, Node
+from blueprints import util
 
 
 @pytest.fixture

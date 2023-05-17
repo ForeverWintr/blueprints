@@ -8,9 +8,9 @@ import static_frame as sf
 import numpy as np
 from frozendict import frozendict
 
-from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
-from assembler.constants import MissingDependencyBehavior
-from assembler import util
+from blueprints.recipes.base import Recipe, DependencyRequest, Dependencies
+from blueprints.constants import MissingDependencyBehavior
+from blueprints import util
 
 
 class _FromDelimited(Recipe):

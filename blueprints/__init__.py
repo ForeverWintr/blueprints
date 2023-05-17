@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Top-level package for assembler."""
+"""Top-level package for blueprints."""
 
 __author__ = """Tom Rutherford"""
 __email__ = "foreverwintr@gmail.com"

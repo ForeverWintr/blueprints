@@ -5,9 +5,9 @@ import json
 from frozendict import frozendict
 import networkx as nx
 
-from assembler import util
+from blueprints import util
 
-from assembler.recipes.base import Recipe, RECIPE_TYPE_REGISTRY
+from blueprints.recipes.base import Recipe, RECIPE_TYPE_REGISTRY
 
 
 class RecipeRegistry:

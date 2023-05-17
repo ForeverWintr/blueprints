@@ -1,8 +1,8 @@
 from __future__ import annotations
 import typing as tp
 
-from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
-from assembler import constants
+from blueprints.recipes.base import Recipe, DependencyRequest, Dependencies
+from blueprints import constants
 
 #  Pretend these are tables
 TABLES = {

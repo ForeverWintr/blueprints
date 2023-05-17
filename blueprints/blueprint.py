@@ -4,14 +4,14 @@ import json
 
 import networkx as nx
 
-from assembler.recipes.base import Recipe, Dependencies, Parameters
-from assembler.constants import (
+from blueprints.recipes.base import Recipe, Dependencies, Parameters
+from blueprints.constants import (
     BuildState,
     BUILD_STATE_TO_COLOR,
     MissingDependencyBehavior,
 )
-from assembler import util
-from assembler import serialization
+from blueprints import util
+from blueprints import serialization
 
 if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt

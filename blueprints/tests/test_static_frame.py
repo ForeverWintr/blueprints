@@ -9,14 +9,14 @@ import static_frame as sf
 import frame_fixtures as ff
 import pytest
 
-from assembler.recipes.static_frame import (
+from blueprints.recipes.static_frame import (
     FrameFromDelimited,
     SeriesFromDelimited,
     FrameFromRecipes,
 )
-from assembler.recipes.general import FromFunction, Object
-from assembler.factory import Factory
-from assembler import util
+from blueprints.recipes.general import FromFunction, Object
+from blueprints.factory import Factory
+from blueprints import util
 
 
 @pytest.fixture(scope="module")
@@ -276,5 +276,5 @@ def test_frame_from_recipes_missing_index(sample_frame):
     result = f.process_recipe(recipe)
 
     # I've decided that it's ok for process_recipe to return missing, at least for now.
-    # See https://github.com/ForeverWintr/assembler/issues/3
+    # See https://github.com/ForeverWintr/blueprints/issues/3
     assert isinstance(result, util.MissingPlaceholder)
