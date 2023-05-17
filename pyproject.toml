@@ -14,7 +14,7 @@ module = [
 ignore_missing_imports = true
 
 [tool.poetry]
-name = "assembler"
+name = "blueprints"
 version = "0.1.0"
 description = "A package for aggregating data from disparate sources"
 authors = ["Tom Rutherford <tmrutherford@gmail.com>"]
