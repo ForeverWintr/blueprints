@@ -1,6 +1,7 @@
 from flask import Flask
 
 from assembler.renderers.dash_renderer import models, dash_layout
+from assembler.tests import conftest
 
 
 def create_app():
