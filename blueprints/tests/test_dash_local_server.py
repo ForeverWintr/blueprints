@@ -1,6 +1,6 @@
-from assembler.renderers.dash_renderer import flask_app
+from blueprints.renderers.dash_renderer import flask_app
 
-from assembler.tests import conftest
+from blueprints.tests import conftest
 
 
 def test_update(basic_blueprint: conftest.Blueprint):

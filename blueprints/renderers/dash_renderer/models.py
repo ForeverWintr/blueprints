@@ -9,7 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import orm
 import jwt
 
-from assembler.blueprint import Blueprint
+from blueprints.blueprint import Blueprint
 
 db = SQLAlchemy()
 view = FlaskBlueprint("view", __name__)

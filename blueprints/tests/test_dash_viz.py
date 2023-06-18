@@ -3,8 +3,8 @@ from plotly import graph_objects as go
 
 # from plotly import express as px # Requires pandas :|
 
-from assembler.blueprint import Blueprint, get_blueprint_layout
-from assembler.tests.test_blueprint import Node
+from blueprints.blueprint import Blueprint, get_blueprint_layout
+from blueprints.tests.test_blueprint import Node
 
 
 def test_visualize() -> None:

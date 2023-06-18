@@ -5,8 +5,8 @@ import time
 
 import requests
 
-from assembler.renderers.dash_renderer import flask_app
-from assembler.tests.conftest import Node, Blueprint
+from blueprints.renderers.dash_renderer import flask_app
+from blueprints.tests.conftest import Node, Blueprint
 
 
 def nodes() -> dict[str, Node]:

@@ -3,9 +3,9 @@ from dash.dependencies import Input, Output, State
 import dash_cytoscape as cyto
 from dash import ctx
 
-from assembler.blueprint import Blueprint
-from assembler.tests.test_blueprint import Node
-from assembler.constants import (
+from blueprints.blueprint import Blueprint
+from blueprints.tests.test_blueprint import Node
+from blueprints.constants import (
     NodeAttrs,
     BuildStatus,
     BUILD_STATUS_TO_COLOR,
