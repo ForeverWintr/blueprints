@@ -1,5 +1,6 @@
-from blueprints.renderers.dash_renderer import flask_app
+from flask import url_for
 
+from blueprints.renderers.dash_renderer import flask_app
 from blueprints.tests import conftest
 
 
@@ -9,5 +10,12 @@ def test_update(basic_blueprint: conftest.Blueprint):
 
     with app.test_client() as client:
         r = client.post("/blueprint", json=basic_blueprint.to_serializable_dict())
+        json_data = r.json
+        assert set(json_data.keys()) == {"frame_no", "next_frame", "run_id", "token"}
+        assert json_data["frame_no"] == 0
 
-    assert set(r.json.keys()) == {"token", "run_id"}
+        r2 = client.put(
+            json_data["next_frame"],
+            json=basic_blueprint.to_serializable_dict(),
+        )
+        assert 0
