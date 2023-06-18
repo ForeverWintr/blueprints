@@ -17,5 +17,8 @@ def test_update(basic_blueprint: conftest.Blueprint):
         r2 = client.put(
             json_data["next_frame"],
             json=basic_blueprint.to_serializable_dict(),
+            headers={
+                "Authorization": f"Bearer {json_data['token']}",
+            },
         )
         assert 0

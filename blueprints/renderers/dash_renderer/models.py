@@ -10,6 +10,7 @@ from sqlalchemy import orm
 import jwt
 
 from blueprints.blueprint import Blueprint
+from blueprints.renderers.dash_renderer import auth
 
 db = SQLAlchemy()
 view = FlaskBlueprint("view", __name__)
@@ -36,15 +37,8 @@ def new_blueprint() -> None:
     db.session.add(new_frame)
     db.session.commit()
 
-    # Should Run ID be a jwt?
-    token = jwt.encode(
-        {
-            "run_id": new_frame.run_id,
-            # iat stands for 'Issued At', and is a reserved term in jwt.
-            "iat": datetime.datetime.utcnow(),
-        },
-        key=current_app.config["SECRET_KEY"],
-    )
+    token = auth.create_jwt(new_frame.run_id)
+
     return jsonify(
         {
             "token": token,
@@ -61,6 +55,12 @@ def new_blueprint() -> None:
 
 @view.put("/blueprint/<run_id>/<frame_no>")
 def add_frame(run_id: str, frame_no: int) -> None:
+    token = jwt.decode(
+        jwt=request.headers.get("Authorization").removeprefix("Bearer "),
+        key=current_app.config.get("SECRET_KEY"),
+        algorithms=["HS256"],
+    )
+
     bp = Blueprint.from_serializable_dict(request.json)
     new_frame = Frame(blueprint_data=bp.to_json(), frame_no=frame_no)
     db.session.add(new_frame)
