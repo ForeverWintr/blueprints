@@ -79,7 +79,12 @@ def test_get_blueprint_layout() -> None:
 
     g = util.make_dependency_graph([b, c])
     layout = get_blueprint_layout(g)
-    assert layout == {b: (0, 0), c: (0.1, 0), a: (0, 0.2), d: (0.1, 0.2)}
+    assert layout == {
+        b: (0.0, 0.0),
+        c: (0.5, 0.0),
+        a: (0.0, 0.2),
+        d: (0.5, 0.2),
+    }
 
 
 def test_mark_built(basic_blueprint: Blueprint) -> None:
