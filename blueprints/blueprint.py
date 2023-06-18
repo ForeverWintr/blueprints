@@ -4,21 +4,21 @@ import json
 
 import networkx as nx
 
-from assembler.recipes.base import Recipe, Dependencies, Parameters
-from assembler.constants import (
+from blueprints.recipes.base import Recipe, Dependencies, Parameters
+from blueprints.constants import (
     BuildState,
     BUILD_STATE_TO_COLOR,
     MissingDependencyBehavior,
 )
-from assembler import util
-from assembler import serialization
+from blueprints import util
+from blueprints import serialization
 
 if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt
 
 
 def get_blueprint_layout(
-    g: nx.DiGraph, vertical_increment: float = 0.2, horizontal_increment: float = 0.1
+    g: nx.DiGraph, vertical_increment: float = 0.2, horizontal_increment: float = 0.5
 ) -> dict[Recipe, tuple[float, float]]:
     """Return a dictionary from each recipe in the graph to it's x,y position"""
     bottom_layer = {n for n, d in g.out_degree() if d == 0}
@@ -217,11 +217,8 @@ class Blueprint:
         positions = get_blueprint_layout(self._dependency_graph)
 
         nodes = sorted(self._dependency_graph, key=str)
-        labels = {n: str(n) for n in nodes}
-        colors = [
-            BUILD_STATE_TO_COLOR[self._node_view[n][NodeAttrs.build_status]]
-            for n in nodes
-        ]
+        labels = {n: n.short_name() for n in nodes}
+        colors = [BUILD_STATE_TO_COLOR[self._build_state[n]] for n in nodes]
 
         nx.draw_networkx(
             self._dependency_graph,

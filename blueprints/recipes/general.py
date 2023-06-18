@@ -2,7 +2,7 @@ import typing as tp
 
 from frozendict import frozendict
 
-from assembler.recipes.base import Recipe, Dependencies
+from blueprints.recipes.base import Recipe, Dependencies
 
 
 class Object(Recipe):

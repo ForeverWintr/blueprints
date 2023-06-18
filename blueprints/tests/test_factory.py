@@ -5,8 +5,8 @@ import functools
 
 import pytest
 
-from assembler.factory import Factory, FactoryMP
-from assembler.tests.conftest import (
+from blueprints.factory import Factory, FactoryMP
+from blueprints.tests.conftest import (
     TestData,
     TestColumn,
     TABLES,
@@ -14,10 +14,10 @@ from assembler.tests.conftest import (
     Raiser,
     BindMissing,
 )
-from assembler.blueprint import Blueprint
-from assembler import exceptions
-from assembler import util
-from assembler.recipes.general import Object
+from blueprints.blueprint import Blueprint
+from blueprints import exceptions
+from blueprints import util
+from blueprints.recipes.general import Object
 
 FACTORY_TYPES = (Factory, FactoryMP)
 
@@ -63,7 +63,7 @@ def test_recipes_to_build_error(factory_constructor):
     b._buildable = frozenset()
 
     f = factory_constructor()
-    with pytest.raises(exceptions.AssemblerError):
+    with pytest.raises(exceptions.blueprintsError):
         f.recipes_to_build(b)
 
 

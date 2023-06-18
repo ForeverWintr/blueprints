@@ -3,10 +3,10 @@ from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, Futur
 import os
 import multiprocessing
 
-from assembler.recipes.base import Recipe, Parameters
-from assembler import util
-from assembler.blueprint import Blueprint
-from assembler import exceptions
+from blueprints.recipes.base import Recipe, Parameters
+from blueprints import util
+from blueprints.blueprint import Blueprint
+from blueprints import exceptions
 
 
 class Factory:
@@ -28,7 +28,7 @@ class Factory:
         if not buildable and not blueprint.is_built():
             # This should not happen. If it does, it indicates an internal error in
             # the factory.
-            raise exceptions.AssemblerError(
+            raise exceptions.blueprintsError(
                 "Blueprint is not built but returned no buildable recipes."
             )
         if building:

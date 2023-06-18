@@ -3,10 +3,9 @@ import typing as tp
 
 import pytest
 
-from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
-from assembler import constants
-from assembler.blueprint import Blueprint
-
+from blueprints.blueprint import Blueprint
+from blueprints.recipes.base import Recipe, DependencyRequest, Dependencies
+from blueprints import constants
 
 #  Pretend these are tables
 TABLES = {

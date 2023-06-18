@@ -9,8 +9,8 @@ import operator
 
 from frozendict import frozendict
 
-from assembler.constants import MissingDependencyBehavior
-from assembler import util
+from blueprints.constants import MissingDependencyBehavior
+from blueprints import util
 
 
 class Parameters(tp.NamedTuple):

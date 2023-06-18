@@ -8,11 +8,11 @@ from pathlib import Path
 from frozendict import frozendict
 import networkx as nx
 
-from assembler.tests.conftest import Node
-from assembler.recipes import general, static_frame, base
-from assembler.factory import util
-from assembler import serialization
-from assembler.blueprint import Blueprint
+from blueprints.tests.conftest import Node
+from blueprints.recipes import general, static_frame, base
+from blueprints.factory import util
+from blueprints import serialization
+from blueprints.blueprint import Blueprint
 
 
 class Case(tp.NamedTuple):

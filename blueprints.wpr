@@ -4,14 +4,8 @@
 # Wing project file                                              #
 ##################################################################
 [project attributes]
-proj.directory-list = [{'dirloc': loc('assembler'),
-                        'excludes': (),
-                        'filter': '*',
-                        'include_hidden': False,
-                        'recursive': True,
-                        'watch_for_changes': True},
-                       {'dirloc': loc('.'),
-                        'excludes': (),
+proj.directory-list = [{'dirloc': loc('.'),
+                        'excludes': ['assembler'],
                         'filter': '*',
                         'include_hidden': False,
                         'recursive': True,

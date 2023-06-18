@@ -4,15 +4,15 @@ import typing as tp
 import pytest
 from frozendict import frozendict
 
-from assembler.recipes.base import Recipe, DependencyRequest, Dependencies
-from assembler.blueprint import (
+from blueprints.recipes.base import Recipe, DependencyRequest, Dependencies
+from blueprints.blueprint import (
     Blueprint,
     get_blueprint_layout,
 )
-from assembler.constants import BuildState
-from assembler import exceptions
-from assembler.tests.conftest import TestData, TestColumn, Node
-from assembler import util
+from blueprints.constants import BuildState
+from blueprints import exceptions
+from blueprints.tests.conftest import TestData, TestColumn, Node
+from blueprints import util
 
 
 def test_from_recipes() -> None:
@@ -60,7 +60,12 @@ def test_get_blueprint_layout() -> None:
 
     g = util.make_dependency_graph([b, c])
     layout = get_blueprint_layout(g)
-    assert layout == {b: (0, 0), c: (0.1, 0), a: (0, 0.2), d: (0.1, 0.2)}
+    assert layout == {
+        b: (0.0, 0.0),
+        c: (0.5, 0.0),
+        a: (0.0, 0.2),
+        d: (0.5, 0.2),
+    }
 
 
 def test_mark_built(basic_blueprint: Blueprint) -> None:
