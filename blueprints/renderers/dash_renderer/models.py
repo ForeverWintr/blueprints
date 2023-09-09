@@ -62,6 +62,8 @@ def add_frame(run_id: str, frame_no: str) -> None:
         key=current_app.config.get("SECRET_KEY"),
         algorithms=["HS256"],
     )
+    if token["run_id"] != run_id:
+        return jsonify({"message": f"{run_id} does not match token."}), 404
 
     bp = Blueprint.from_serializable_dict(request.json)
     new_frame = Frame(blueprint_data=bp.to_json(), frame_no=int(frame_no))
