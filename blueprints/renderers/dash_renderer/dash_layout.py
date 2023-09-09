@@ -58,7 +58,7 @@ def update_graph_scatter(url, step_idx, btn_prev_clicks, btn_next_clicks):
     except ValueError as e:
         return dash.no_update, str(e)
 
-    frame = models.get_frame(run_id=run_id, frame_no=step_idx)
+    bp = models.get_blueprint(run_id=run_id, frame_no=step_idx)
     return
     # https://hackersandslackers.com/plotly-dash-with-flask/
     # btn_clicked = ctx.triggered_id

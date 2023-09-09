@@ -22,16 +22,21 @@ class Frame(db.Model):
         primary_key=True, default=lambda: str(uuid.uuid4())
     )
     frame_no: orm.Mapped[int] = orm.mapped_column(primary_key=True)
-    blueprint_data: orm.Mapped[str] = orm.mapped_column
+    blueprint_data: orm.Mapped[str] = orm.mapped_column()
 
 
-@lru_cache
 def get_frame(run_id: str, frame_no: int) -> Frame:
     return (
         db.session.query(Frame)
         .filter(Frame.run_id == run_id, Frame.frame_no == frame_no)
         .one()
     )
+
+
+@lru_cache
+def get_blueprint(run_id: str, frame_no: int) -> Frame:
+    frame = get_frame(run_id=run_id, frame_no=frame_no)
+    return Blueprint.from_json(frame.blueprint_data)
 
 
 def response(frame: Frame, token: dict[str, int | str]) -> dict[str, int | str]:
