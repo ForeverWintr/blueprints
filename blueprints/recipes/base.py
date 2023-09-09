@@ -203,7 +203,8 @@ class Recipe(ABC):
         # Automatically make other recipes dataclasses.
         r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)  # type: ignore
 
-        # Assert that this only added attributes, rather than creating a new class.
+        # Assert that dataclasses only added attributes, rather than creating a new
+        # class.
         assert r is cls
 
         # Add to the global registry of recipe classes.

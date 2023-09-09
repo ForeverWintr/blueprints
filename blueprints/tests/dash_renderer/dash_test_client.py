@@ -40,11 +40,11 @@ def main():
 
     print("Uploading blueprint")
     r = requests.post(f"{url}/blueprint", json=bp.to_serializable_dict())
-
+    print(r)
     # finally:
     # proc.kill()
 
-    breakpoint()
+    # breakpoint()
 
 
 if __name__ == "__main__":

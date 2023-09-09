@@ -28,5 +28,8 @@ def create_app():
 
 
 if __name__ == "__main__":
+    # Note: if using this to debug, remember to import any recipe you plan to send to
+    # the server.
+    # TODO: add a recipe import hook.
     app = create_app()
     app.run(debug=True, use_reloader=False)
