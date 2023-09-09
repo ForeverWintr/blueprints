@@ -3,6 +3,7 @@ import subprocess
 import sys
 import time
 import pprint
+import webbrowser
 
 import requests
 
@@ -42,7 +43,12 @@ def main():
     print("Uploading blueprint")
     r = requests.post(f"{url}/blueprint", json=bp.to_serializable_dict())
     print(r)
-    pprint.pprint(r.json())
+    result_data = r.json()
+
+    result_data["viz_url"] = f'{url}/visualize/{result_data["run_id"]}'
+    pprint.pprint(result_data)
+
+    webbrowser.open(result_data["viz_url"])
     # finally:
     # proc.kill()
 

@@ -5,6 +5,8 @@ from dash import ctx
 import dash
 from flask import request
 
+from blueprints.renderers.dash_renderer import models
+
 
 cyto.load_extra_layouts()
 dash_app = Dash(
@@ -31,7 +33,7 @@ dash_app.layout = html.Div(
     [
         cytoscape,
         # The memory store reverts to the default on every page refresh
-        dcc.Store("step-index", data=1, storage_type="memory"),
+        dcc.Store("step-index", data=0, storage_type="memory"),
         html.Button("Previous", id="btn-prev"),
         html.Button("Next", id="btn-next"),
         html.P(id="err-msg", style={"color": "red"}),
@@ -50,11 +52,13 @@ dash_app.layout = html.Div(
     Input("btn-next", "n_clicks"),
 )
 def update_graph_scatter(url, step_idx, btn_prev_clicks, btn_next_clicks):
-    components = [c for c in url.split("/") if c]
-    if len(components) > 1:
-        print("bad")
-        return dash.no_update, "Bad!"
-    print("good")
+    # Get the blueprint ID from the URL.
+    try:
+        _, _, run_id = url.split("/")
+    except ValueError as e:
+        return dash.no_update, str(e)
+
+    frame = models.get_frame(run_id=run_id, frame_no=step_idx)
     return
     # https://hackersandslackers.com/plotly-dash-with-flask/
     # btn_clicked = ctx.triggered_id

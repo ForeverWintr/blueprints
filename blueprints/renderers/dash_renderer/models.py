@@ -1,7 +1,8 @@
 from __future__ import annotations
-
+import typing as tp
 import datetime
 import uuid
+from functools import lru_cache
 
 from flask import Blueprint as FlaskBlueprint
 from flask import request, current_app, jsonify, url_for
@@ -22,6 +23,15 @@ class Frame(db.Model):
     )
     frame_no: orm.Mapped[int] = orm.mapped_column(primary_key=True)
     blueprint_data: orm.Mapped[str] = orm.mapped_column
+
+
+@lru_cache
+def get_frame(run_id: str, frame_no: int) -> Frame:
+    return (
+        db.session.query(Frame)
+        .filter(Frame.run_id == run_id, Frame.frame_no == frame_no)
+        .one()
+    )
 
 
 def response(frame: Frame, token: dict[str, int | str]) -> dict[str, int | str]:
