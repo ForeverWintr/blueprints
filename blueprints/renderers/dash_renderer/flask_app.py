@@ -1,7 +1,7 @@
 from flask import Flask
+import jwt
 
-from blueprints.renderers.dash_renderer import models, dash_layout
-from blueprints.tests import conftest
+from blueprints.renderers.dash_renderer import models, dash_layout, auth
 
 
 def create_app():
@@ -20,6 +20,8 @@ def create_app():
         models.db.create_all()
 
     app.register_blueprint(models.view)
+
+    app.errorhandler(jwt.DecodeError)(auth.jwt_auth_error_handler)
 
     dash_layout.dash_app.init_app(app)
     return app
