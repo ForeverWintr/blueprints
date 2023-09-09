@@ -2,6 +2,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
+import pprint
 
 import requests
 
@@ -41,6 +42,7 @@ def main():
     print("Uploading blueprint")
     r = requests.post(f"{url}/blueprint", json=bp.to_serializable_dict())
     print(r)
+    pprint.pprint(r.json())
     # finally:
     # proc.kill()
 

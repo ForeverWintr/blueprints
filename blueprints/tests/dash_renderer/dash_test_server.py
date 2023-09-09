@@ -8,7 +8,7 @@ def main() -> tp.NoReturn:
     from blueprints.tests import conftest
 
     app = flask_app.create_app()
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=False, use_reloader=False, passthrough_errors=True)
 
 
 if __name__ == "__main__":
