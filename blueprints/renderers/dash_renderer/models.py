@@ -24,6 +24,19 @@ class Frame(db.Model):
     blueprint_data: orm.Mapped[str] = orm.mapped_column
 
 
+def response(frame: Frame, token: dict[str, int | str]) -> dict[str, int | str]:
+    return {
+        "token": token,
+        "run_id": frame.run_id,
+        "frame_no": frame.frame_no,
+        "next_frame": url_for(
+            "view.add_frame",
+            run_id=frame.run_id,
+            frame_no=frame.frame_no + 1,
+        ),
+    }
+
+
 @view.post("/blueprint")
 def new_blueprint() -> None:
     """Post a new blueprint"""
@@ -39,22 +52,11 @@ def new_blueprint() -> None:
 
     token = auth.create_jwt(new_frame.run_id)
 
-    return jsonify(
-        {
-            "token": token,
-            "run_id": new_frame.run_id,
-            "frame_no": new_frame.frame_no,
-            "next_frame": url_for(
-                "view.add_frame",
-                run_id=new_frame.run_id,
-                frame_no=new_frame.frame_no + 1,
-            ),
-        }
-    )
+    return jsonify(response(new_frame, token))
 
 
 @view.put("/blueprint/<run_id>/<frame_no>")
-def add_frame(run_id: str, frame_no: int) -> None:
+def add_frame(run_id: str, frame_no: str) -> None:
     token = jwt.decode(
         jwt=request.headers.get("Authorization").removeprefix("Bearer "),
         key=current_app.config.get("SECRET_KEY"),
@@ -62,7 +64,8 @@ def add_frame(run_id: str, frame_no: int) -> None:
     )
 
     bp = Blueprint.from_serializable_dict(request.json)
-    new_frame = Frame(blueprint_data=bp.to_json(), frame_no=frame_no)
+    new_frame = Frame(blueprint_data=bp.to_json(), frame_no=int(frame_no))
     db.session.add(new_frame)
     db.session.commit()
-    breakpoint()
+
+    return jsonify(response(new_frame, token))

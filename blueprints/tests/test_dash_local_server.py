@@ -10,6 +10,7 @@ def test_update(basic_blueprint: conftest.Blueprint):
 
     with app.test_client() as client:
         r = client.post("/blueprint", json=basic_blueprint.to_serializable_dict())
+        assert r.status_code == 200
         json_data = r.json
         assert set(json_data.keys()) == {"frame_no", "next_frame", "run_id", "token"}
         assert json_data["frame_no"] == 0
@@ -21,4 +22,7 @@ def test_update(basic_blueprint: conftest.Blueprint):
                 "Authorization": f"Bearer {json_data['token']}",
             },
         )
-        assert 0
+        assert r2.status_code == 200
+        json_data2 = r2.json
+        assert set(json_data2.keys()) == {"frame_no", "next_frame", "run_id", "token"}
+        assert json_data2["frame_no"] == 1
