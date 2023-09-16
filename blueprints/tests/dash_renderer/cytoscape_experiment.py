@@ -5,12 +5,7 @@ from dash import ctx
 
 from blueprints.blueprint import Blueprint
 from blueprints.tests.test_blueprint import Node
-from blueprints.constants import (
-    NodeAttrs,
-    BuildStatus,
-    BUILD_STATUS_TO_COLOR,
-    MissingDependencyBehavior,
-)
+
 
 s = Node(name="source")
 a = Node(name="a", dependencies=(s,))
