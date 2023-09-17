@@ -1,5 +1,9 @@
+import typing as tp
+import argparse
+
 from flask import Flask
 import jwt
+import importlib
 
 from blueprints.renderers.dash_renderer import models, dash_layout, auth
 
@@ -27,9 +31,30 @@ def create_app():
     return app
 
 
+def _parse_modules(modules: str) -> tuple:
+    return tuple(x.strip() for x in modules.split(","))
+
+
+def get_argparse() -> argparse.ArgumentParser:
+    p = argparse.ArgumentParser(description=run_locally.__doc__)
+    p.add_argument(
+        "--modules",
+        help="Comma separated list of modules to import before launching the server.",
+        type=_parse_modules,
+    )
+    return p
+
+
+def run_locally(argv: list[str] | None = None) -> tp.NoReturn:
+    """Launch a local server, for use with dash local renderer"""
+    p = get_argparse()
+    args = p.parse_args(argv)
+
+    app = create_app()
+    app.run(debug=True, use_reloader=False)
+
+
 if __name__ == "__main__":
     # Note: if using this to debug, remember to import any recipe you plan to send to
     # the server.
-    # TODO: add a recipe import hook.
-    app = create_app()
-    app.run(debug=True, use_reloader=False)
+    run_locally()
