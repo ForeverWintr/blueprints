@@ -13,7 +13,8 @@ def main() -> tp.NoReturn:
 
 # Component that:
 # Attaches to BP and sends updates to server
-# Translates a blueprint into cytoscape.
+# Translates a blueprint into cytoscape. x
+
 
 if __name__ == "__main__":
     main()

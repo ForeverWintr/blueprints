@@ -5,7 +5,7 @@ from dash import ctx
 import dash
 from flask import request
 
-from blueprints.renderers.dash_renderer import models
+from blueprints.renderers.dash_renderer import models, dash_util
 from blueprints import constants
 
 
@@ -26,12 +26,15 @@ cytoscape = cyto.Cytoscape(
         {"selector": s.name, "style": {"shape": "square", "background-color": c}}
         for s, c in constants.BUILD_STATE_TO_COLOR.items()
     ]
-    # stylesheet=[  # Group selectors
-    # {"selector": "node", "style": {"content": "data(label)"}},
-    # # Class selectors
-    # {"selector": ".red", "style": {"background-color": "red", "line-color": "red"}},
-    # {"selector": ".square", "style": {"shape": "square"}},
-    # ],
+    + [  # Group selectors
+        {"selector": "node", "style": {"content": "data(label)"}},
+        # Class selectors
+        {
+            "selector": ".red",
+            "style": {"background-color": "blue", "line-color": "blue"},
+        },
+        {"selector": ".square", "style": {"shape": "square"}},
+    ],
 )
 
 dash_app.layout = html.Div(
@@ -64,7 +67,7 @@ def update_graph_scatter(url, step_idx, btn_prev_clicks, btn_next_clicks):
         return dash.no_update, str(e)
 
     bp = models.get_frame(run_id=run_id, frame_no=step_idx).blueprint
-
+    elements = dash_util.blueprint_to_cytoscape(bp)
     return elements, 0, ""
     # https://hackersandslackers.com/plotly-dash-with-flask/
     # btn_clicked = ctx.triggered_id
