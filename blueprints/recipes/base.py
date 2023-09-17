@@ -80,6 +80,10 @@ class _RecipeTypeRegistry:
     def key(recipe: tp.Type[Recipe]) -> tuple[str, str]:
         return (recipe.__module__, recipe.__qualname__)
 
+    def modules(self) -> tuple[str]:
+        """Return module names for all recipes"""
+        return tuple(m for m, _ in self._registry)
+
     def add(self, recipe: tp.Type[Recipe]) -> None:
         """Add a new recipe to the registry, asserting that it is not already there"""
         key = self.key(recipe)

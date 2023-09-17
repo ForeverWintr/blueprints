@@ -15,6 +15,6 @@ def dash_local_renderer():
     # Use the recipe registry to list modules that need to be imported, then pass this
     # to the subprocess that runs the server.
 
-    # Or import from registry?
+    # Or import from registry? - That seems like a possible security risk. Importing once at startup removes the option of untrusted users sending import commands.
     asdf
     yield
