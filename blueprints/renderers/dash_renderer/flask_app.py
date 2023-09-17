@@ -50,6 +50,10 @@ def run_locally(argv: list[str] | None = None) -> tp.NoReturn:
     p = get_argparse()
     args = p.parse_args(argv)
 
+    # Import so the server has access to recipes.
+    for m in args.modules:
+        importlib.import_module(m)
+
     app = create_app()
     app.run(debug=True, use_reloader=False)
 
