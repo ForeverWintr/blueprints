@@ -59,18 +59,7 @@ def update_graph_scatter(url, step_idx, btn_prev_clicks, btn_next_clicks):
         return dash.no_update, str(e)
 
     bp = models.get_frame(run_id=run_id, frame_no=step_idx).blueprint
-    g = bp._dependency_graph
-    elements = []
-    for edge in g.edges:
-        a, b = (str(x) for x in edge)
-        for n in (a, b):
-            element = {
-                "data": {"id": n, "label": n},
-                "grabbable": False,
-                "classes": "square",
-            }
-            elements.append(element)
-        elements.append({"data": {"source": a, "target": b}})
+
     return elements, 0, ""
     # https://hackersandslackers.com/plotly-dash-with-flask/
     # btn_clicked = ctx.triggered_id
