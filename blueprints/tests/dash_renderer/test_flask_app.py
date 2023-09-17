@@ -18,4 +18,3 @@ def test_run_locally(mock_import, mock_run) -> None:
         [mock.call("imaginary.module.a"), mock.call("imaginary.module.b")]
     )
     mock_run.assert_called_once_with(debug=True, use_reloader=False)
-    assert 0
