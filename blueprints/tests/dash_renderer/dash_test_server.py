@@ -11,5 +11,9 @@ def main() -> tp.NoReturn:
     app.run(debug=False, use_reloader=False, passthrough_errors=True)
 
 
+# Component that:
+# Attaches to BP and sends updates to server
+# Translates a blueprint into cytoscape.
+
 if __name__ == "__main__":
     main()
