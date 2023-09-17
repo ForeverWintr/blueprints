@@ -13,7 +13,13 @@ def main() -> tp.NoReturn:
 
 # Component that:
 # Attaches to BP and sends updates to server
-# Translates a blueprint into cytoscape. x
+
+# with dash_renderer() is tempting, but you don't want to stop the server then (unless I
+# change how callbacks work). But if you don't do that, you either make the subprocess a
+# daemon, or make the parent process wait. If it's going to wait it should be in a
+# context manager.
+
+# Translates a blueprint into cytoscape.
 
 
 if __name__ == "__main__":

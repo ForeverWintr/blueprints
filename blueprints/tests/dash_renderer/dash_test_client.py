@@ -9,6 +9,7 @@ import requests
 
 from blueprints.renderers.dash_renderer import flask_app
 from blueprints.tests.conftest import Node, Blueprint
+from blueprints.factory import Factory
 
 
 def nodes() -> dict[str, Node]:
