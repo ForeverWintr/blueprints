@@ -6,6 +6,7 @@ import dash
 from flask import request
 
 from blueprints.renderers.dash_renderer import models
+from blueprints import constants
 
 
 cyto.load_extra_layouts()
@@ -21,12 +22,16 @@ cytoscape = cyto.Cytoscape(
     layout={"name": "dagre"},
     style={"width": "100vw", "height": "90vh"},
     elements=[],
-    stylesheet=[  # Group selectors
-        {"selector": "node", "style": {"content": "data(label)"}},
-        # Class selectors
-        {"selector": ".red", "style": {"background-color": "red", "line-color": "red"}},
-        {"selector": ".square", "style": {"shape": "square"}},
-    ],
+    stylesheet=[
+        {"selector": s.name, "style": {"shape": "square", "background-color": c}}
+        for s, c in constants.BUILD_STATE_TO_COLOR.items()
+    ]
+    # stylesheet=[  # Group selectors
+    # {"selector": "node", "style": {"content": "data(label)"}},
+    # # Class selectors
+    # {"selector": ".red", "style": {"background-color": "red", "line-color": "red"}},
+    # {"selector": ".square", "style": {"shape": "square"}},
+    # ],
 )
 
 dash_app.layout = html.Div(
