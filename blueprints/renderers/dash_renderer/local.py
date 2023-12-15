@@ -4,7 +4,9 @@ import threading
 from pathlib import Path
 import sys
 import signal
+import time
 
+import requests
 
 from blueprints.renderers.dash_renderer import flask_app
 from blueprints.recipes.base import RECIPE_TYPE_REGISTRY
@@ -25,8 +27,12 @@ def dash_local_renderer():
     ]
     proc = subprocess.Popen(command)
 
-    # Or import from registry? - That seems like a possible security risk. Importing once at startup removes the option of untrusted users sending import commands.
-    asdf
+    server_up = False
+    while not server_up:
+        time.sleep(0.001)
+        r = requests.get("http://127.0.0.1:5000/status")
+        server_up = r.status_code == 200
     yield
+    asdf
 
     proc.send_signal

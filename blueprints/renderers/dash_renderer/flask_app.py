@@ -55,6 +55,12 @@ def run_locally(argv: list[str] | None = None) -> tp.NoReturn:
         importlib.import_module(m)
 
     app = create_app()
+
+    @app.get("/status")
+    def status():
+        """Return 200 once the app is running"""
+        return ("OK", 200)
+
     app.run(debug=True, use_reloader=False)
 
 

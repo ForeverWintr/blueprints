@@ -34,6 +34,7 @@ def send(bp: Blueprint, url: str) -> dict:
     print("Uploading blueprint")
     r = requests.post(f"{url}/blueprint", json=bp.to_serializable_dict())
     print(r)
+    r.raise_for_status()
     return r.json()
 
 
