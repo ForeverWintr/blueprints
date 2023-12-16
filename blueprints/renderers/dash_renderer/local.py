@@ -20,8 +20,8 @@ def dash_local_renderer():
     # Use the recipe registry to list modules that need to be imported, then pass this
     # to the subprocess that runs the server.
     command = [
-        # sys.executable,
-        "python",
+        sys.executable,
+        # "python",
         server_path,
         "--modules",
         ",".join(RECIPE_TYPE_REGISTRY.modules()),

@@ -69,7 +69,7 @@ def new_blueprint() -> None:
     return jsonify(response(new_frame, token))
 
 
-@view.put("/blueprint/<run_id>/<frame_no>")
+@view.post("/blueprint/<run_id>/<frame_no>")
 def add_frame(run_id: str, frame_no: str) -> None:
     token = jwt.decode(
         jwt=request.headers.get("Authorization").removeprefix("Bearer "),

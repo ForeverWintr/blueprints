@@ -32,7 +32,7 @@ def basic_blueprint(nodes) -> Blueprint:
 
 def send(bp: Blueprint, url: str) -> dict:
     print("Uploading blueprint")
-    r = requests.post(f"{url}/blueprint", json=bp.to_serializable_dict())
+    r = requests.post(url, json=bp.to_serializable_dict())
     print(r)
     r.raise_for_status()
     return r.json()
@@ -45,7 +45,11 @@ def main():
 
     with dash_local_renderer() as r:
         bp = basic_blueprint(node_map)
-        result_data = send(bp, url)
+        result_data = send(bp, url=f"{url}/blueprint")
+
+        for node in bp._dependency_graph.nodes:
+            bp.mark_built(node)
+            result_data = send(bp, url=f'{url}{result_data["next_frame"]}')
 
         result_data["viz_url"] = f'{url}/visualize/{result_data["run_id"]}'
         pprint.pprint(result_data)
