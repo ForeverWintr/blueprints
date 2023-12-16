@@ -51,6 +51,7 @@ def main():
         pprint.pprint(result_data)
 
         webbrowser.open(result_data["viz_url"])
+        asdf
     # finally:
     # proc.kill()
 

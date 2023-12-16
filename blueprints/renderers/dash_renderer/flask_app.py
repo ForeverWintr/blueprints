@@ -41,8 +41,14 @@ def get_argparse() -> argparse.ArgumentParser:
         "--modules",
         help="Comma separated list of modules to import before launching the server.",
         type=_parse_modules,
+        default=(),
     )
     return p
+
+
+def status():
+    """Return 200 once the app is running"""
+    return ("OK", 200)
 
 
 def run_locally(argv: list[str] | None = None) -> tp.NoReturn:
@@ -56,10 +62,8 @@ def run_locally(argv: list[str] | None = None) -> tp.NoReturn:
 
     app = create_app()
 
-    @app.get("/status")
-    def status():
-        """Return 200 once the app is running"""
-        return ("OK", 200)
+    # Register a status endpoing
+    app.get("/status")(status)
 
     app.run(debug=True, use_reloader=False)
 

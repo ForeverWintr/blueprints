@@ -20,7 +20,8 @@ def dash_local_renderer():
     # Use the recipe registry to list modules that need to be imported, then pass this
     # to the subprocess that runs the server.
     command = [
-        sys.executable,
+        # sys.executable,
+        "python",
         server_path,
         "--modules",
         ",".join(RECIPE_TYPE_REGISTRY.modules()),
@@ -32,7 +33,7 @@ def dash_local_renderer():
         time.sleep(0.001)
         r = requests.get("http://127.0.0.1:5000/status")
         server_up = r.status_code == 200
-    yield
-    asdf
+    yield proc
 
-    proc.send_signal
+    proc.send_signal(signal.SIGINT)
+    return proc.wait(timeout=10)
