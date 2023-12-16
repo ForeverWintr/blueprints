@@ -30,9 +30,9 @@ def basic_blueprint(nodes) -> Blueprint:
     return Blueprint.from_recipes([nodes["b"], nodes["c"]])
 
 
-def send(bp: Blueprint, url: str) -> dict:
+def send(bp: Blueprint, url: str, headers=None) -> dict:
     print("Uploading blueprint")
-    r = requests.post(url, json=bp.to_serializable_dict())
+    r = requests.post(url, json=bp.to_serializable_dict(), headers=headers)
     print(r)
     r.raise_for_status()
     return r.json()
@@ -49,7 +49,13 @@ def main():
 
         for node in bp._dependency_graph.nodes:
             bp.mark_built(node)
-            result_data = send(bp, url=f'{url}{result_data["next_frame"]}')
+            result_data = send(
+                bp,
+                url=f'{url}{result_data["next_frame"]}',
+                headers={
+                    "Authorization": f"Bearer {result_data['token']}",
+                },
+            )
 
         result_data["viz_url"] = f'{url}/visualize/{result_data["run_id"]}'
         pprint.pprint(result_data)
