@@ -18,17 +18,19 @@ def test_post(test_client: FlaskClient, basic_blueprint: conftest.Blueprint) -> 
     assert set(json_data.keys()) == {"frame_no", "next_frame", "run_id", "token"}
     assert json_data["frame_no"] == 0
 
-    r2 = test_client.post(
-        json_data["next_frame"],
-        json=basic_blueprint.to_serializable_dict(),
-        headers={
-            "Authorization": f"Bearer {json_data['token']}",
-        },
-    )
-    assert r2.status_code == 200
-    json_data2 = r2.json
-    assert set(json_data2.keys()) == {"frame_no", "next_frame", "run_id", "token"}
-    assert json_data2["frame_no"] == 1
+    for i in range(1, 4):
+        r = test_client.post(
+            json_data["next_frame"],
+            json=basic_blueprint.to_serializable_dict(),
+            headers={
+                "Authorization": f"Bearer {json_data['token']}",
+            },
+        )
+
+        assert r.status_code == 200
+        json_data = r.json
+        assert set(json_data.keys()) == {"frame_no", "next_frame", "run_id", "token"}
+        assert json_data["frame_no"] == i
 
 
 def test_post_bad_token(

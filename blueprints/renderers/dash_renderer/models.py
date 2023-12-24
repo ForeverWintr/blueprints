@@ -71,16 +71,19 @@ def new_blueprint() -> None:
 
 @view.post("/blueprint/<run_id>/<frame_no>")
 def add_frame(run_id: str, frame_no: str) -> None:
-    token = jwt.decode(
-        jwt=request.headers.get("Authorization").removeprefix("Bearer "),
+    token = request.headers.get("Authorization").removeprefix("Bearer ")
+    decoded = jwt.decode(
+        jwt=token,
         key=current_app.config.get("SECRET_KEY"),
         algorithms=["HS256"],
     )
-    if token["run_id"] != run_id:
+    if decoded["run_id"] != run_id:
         return jsonify({"message": f"{run_id} does not match token."}), 404
 
     bp = Blueprint.from_serializable_dict(request.json)
-    new_frame = Frame(blueprint_data=bp.to_json(), frame_no=int(frame_no))
+    new_frame = Frame(
+        blueprint_data=bp.to_json(), frame_no=int(frame_no), run_id=decoded["run_id"]
+    )
     db.session.add(new_frame)
     db.session.commit()
 
