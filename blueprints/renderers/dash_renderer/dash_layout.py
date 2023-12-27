@@ -59,7 +59,9 @@ dash_app.layout = html.Div(
     Input("btn-prev", "n_clicks"),
     Input("btn-next", "n_clicks"),
 )
-def update_graph_scatter(url, step_idx, btn_prev_clicks, btn_next_clicks):
+def update_graph_scatter(
+    url: str, step_idx: int, btn_prev_clicks: int | None, btn_next_clicks: int | None
+):
     # Get the blueprint ID from the URL.
     try:
         _, _, run_id = url.split("/")

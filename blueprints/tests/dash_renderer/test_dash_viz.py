@@ -1,3 +1,6 @@
+from __future__ import annotations
+import typing as tp
+
 import plotly
 from plotly import graph_objects as go
 
@@ -5,6 +8,10 @@ from plotly import graph_objects as go
 
 from blueprints.blueprint import Blueprint, get_blueprint_layout
 from blueprints.tests.test_blueprint import Node
+from blueprints.renderers.dash_renderer import dash_layout
+
+if tp.TYPE_CHECKING:
+    from flask.testing import FlaskClient
 
 
 def test_visualize() -> None:
@@ -79,4 +86,14 @@ def test_cytoscape() -> None:
     bp = Blueprint.from_recipes([b, c])
 
     g = bp._dependency_graph
+    assert 0
+
+
+def test_update_graph_scatter(existing_run_id: str) -> None:
+    r = dash_layout.update_graph_scatter(
+        url=f"localhost/visualize/{existing_run_id}",
+        step_idx=0,
+        btn_prev_clicks=None,
+        btn_next_clicks=None,
+    )
     assert 0
