@@ -105,6 +105,16 @@ def test_recipe_type_registry():
     assert reg.get(key) is FakeRecipe
 
 
+def test_recipe_type_registry_modules():
+    class FakeRecipe:
+        pass
+
+    reg = base._RecipeTypeRegistry()
+    reg.add(FakeRecipe)
+
+    assert reg.modules() == (FakeRecipe.__module__,)
+
+
 @pytest.mark.skip
 def test_to_do():
     # Caching
