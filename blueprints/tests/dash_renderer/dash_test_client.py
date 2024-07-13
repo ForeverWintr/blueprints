@@ -43,7 +43,7 @@ def main():
     url = "http://127.0.0.1:5000"
     node_map = nodes()
 
-    with dash_local_renderer() as r:
+    with dash_local_renderer(launch_server=True) as r:
         bp = basic_blueprint(node_map)
         result_data = send(bp, url=f"{url}/blueprint")
 

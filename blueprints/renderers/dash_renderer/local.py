@@ -13,7 +13,7 @@ from blueprints.recipes.base import RECIPE_TYPE_REGISTRY
 
 
 @contextmanager
-def dash_local_renderer():
+def dash_local_renderer(launch_server: bool = True) -> int | None:
     """Runs a dash server locally to render the blueprint"""
     server_path = Path(flask_app.__file__)
 
@@ -26,7 +26,10 @@ def dash_local_renderer():
         "--modules",
         ",".join(RECIPE_TYPE_REGISTRY.modules()),
     ]
-    proc = subprocess.Popen(command)
+    print(' '.join(str(c) for c in command))
+    proc = None
+    if launch_server:
+        proc = subprocess.Popen(command)
 
     server_up = False
     while not server_up:
@@ -35,5 +38,6 @@ def dash_local_renderer():
         server_up = r.status_code == 200
     yield proc
 
-    proc.send_signal(signal.SIGINT)
-    return proc.wait(timeout=10)
+    if launch_server:
+        proc.send_signal(signal.SIGINT)
+        return proc.wait(timeout=10)
