@@ -112,3 +112,5 @@ ENV/
 
 # Poetry based on this recommendation: https://stackoverflow.com/a/61076546/1286571
 poetry.lock
+
+.vscode/
