@@ -22,7 +22,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.10"
+python = ">=3.11"
 networkx = "^2.8.6"
 frozendict = "^2.3.4"
 dash = "^2.9.2"
