@@ -141,7 +141,7 @@ def test_frame_from_recipes(sample_frame):
 # row/col select, labels, axis, expected
 class FRFixture(tp.NamedTuple):
     name: str
-    col_select,
+    col_select: tp.Any
     expected_index: str | list[str]
     expected_cols: str | list[str]
     extra: tuple[util.MissingPlaceholder] = ()
