@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from pathlib import Path
 import typing as tp
 import itertools
@@ -139,7 +141,7 @@ def test_frame_from_recipes(sample_frame):
 # row/col select, labels, axis, expected
 class FRFixture(tp.NamedTuple):
     name: str
-    col_select: sf.GetItemKeyType
+    col_select,
     expected_index: str | list[str]
     expected_cols: str | list[str]
     extra: tuple[util.MissingPlaceholder] = ()

@@ -99,9 +99,9 @@ class FrameFromRecipes(Recipe):
     axis: int = 0
 
     ## Class level configuration
-    on_missing_dependency: tp.ClassVar[
-        MissingDependencyBehavior
-    ] = MissingDependencyBehavior.BIND
+    on_missing_dependency: tp.ClassVar[MissingDependencyBehavior] = (
+        MissingDependencyBehavior.BIND
+    )
 
     def get_dependency_request(self) -> DependencyRequest:
         r = DependencyRequest(*self.recipes)
