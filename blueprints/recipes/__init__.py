@@ -7,9 +7,9 @@ from blueprints.recipes.static_frame import (
 
 
 __all__ = [
-    Object,
-    FromFunction,
-    SeriesFromDelimited,
-    FrameFromDelimited,
-    FrameFromRecipes,
+    "Object",
+    "FromFunction",
+    "SeriesFromDelimited",
+    "FrameFromDelimited",
+    "FrameFromRecipes",
 ]
