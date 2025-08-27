@@ -1,24 +1,23 @@
 from __future__ import annotations
 
-from pathlib import Path
-import typing as tp
-import itertools
 import datetime
+import itertools
+import typing as tp
 from functools import partial
+from pathlib import Path
 
-
-import static_frame as sf
 import frame_fixtures as ff
 import pytest
+import static_frame as sf
 
+from blueprints import util
+from blueprints.factory import Factory
+from blueprints.recipes.general import FromFunction, Object
 from blueprints.recipes.static_frame import (
     FrameFromDelimited,
-    SeriesFromDelimited,
     FrameFromRecipes,
+    SeriesFromDelimited,
 )
-from blueprints.recipes.general import FromFunction, Object
-from blueprints.factory import Factory
-from blueprints import util
 
 
 @pytest.fixture(scope="module")

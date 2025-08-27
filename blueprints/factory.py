@@ -1,12 +1,11 @@
-import typing as tp
-from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED, Future
-import os
 import multiprocessing
+import os
+import typing as tp
+from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
 
-from blueprints.recipes.base import Recipe, Parameters
-from blueprints import util
+from blueprints import exceptions, util
 from blueprints.blueprint import Blueprint
-from blueprints import exceptions
+from blueprints.recipes.base import Parameters, Recipe
 
 
 class Factory:

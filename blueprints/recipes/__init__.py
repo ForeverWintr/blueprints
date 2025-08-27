@@ -1,10 +1,9 @@
-from blueprints.recipes.general import Object, FromFunction
+from blueprints.recipes.general import FromFunction, Object
 from blueprints.recipes.static_frame import (
-    SeriesFromDelimited,
     FrameFromDelimited,
     FrameFromRecipes,
+    SeriesFromDelimited,
 )
-
 
 __all__ = [
     "Object",

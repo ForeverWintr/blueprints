@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 import typing as tp
 
-from blueprints.recipes.base import Recipe, DependencyRequest, Dependencies
 from blueprints import constants
+from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
 
 #  Pretend these are tables
 TABLES = {

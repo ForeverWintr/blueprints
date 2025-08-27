@@ -1,20 +1,19 @@
 from __future__ import annotations
 
-import typing as tp
-import json
 import functools
-import sys
 import importlib
+import json
+import sys
+import typing as tp
 
-from frozendict import frozendict
 import networkx as nx
+from frozendict import frozendict
 
+from blueprints import constants, exceptions
 from blueprints.constants import BuildState
-from blueprints import constants
-from blueprints import exceptions
 
 if tp.TYPE_CHECKING:
-    from blueprints.recipes.base import Recipe, Dependencies, DependencyRequest
+    from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
 
 
 class MissingPlaceholder(tp.NamedTuple):

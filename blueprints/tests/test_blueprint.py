@@ -1,18 +1,18 @@
 from __future__ import annotations
+
 import typing as tp
 
 import pytest
 from frozendict import frozendict
 
-from blueprints.recipes.base import Recipe, DependencyRequest, Dependencies
+from blueprints import exceptions, util
 from blueprints.blueprint import (
     Blueprint,
     get_blueprint_layout,
 )
 from blueprints.constants import BuildState
-from blueprints import exceptions
-from blueprints.tests.conftest import TestData, TestColumn, Node
-from blueprints import util
+from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
+from blueprints.tests.conftest import Node, TestColumn, TestData
 
 
 @pytest.fixture
