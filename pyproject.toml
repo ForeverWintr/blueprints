@@ -23,12 +23,12 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = ">=3.11"
-networkx = "^2.8.6"
 frozendict = "^2.3.4"
 dash = "^2.9.2"
 dash-cytoscape = "^0.3.0"
 flask-caching = "^2.0.2"
 static-frame = "^3.2.0"
+networkx = "^3.5"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.971"
