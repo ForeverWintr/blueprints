@@ -24,6 +24,16 @@ class SeriesRecipe(Recipe):
         return a Series."""
 
 
+class FrameRecipe(Recipe):
+    """Abstract class for recipes that return StaticFrame Frames"""
+
+    @abstractmethod
+    def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
+        """Given a Dependencies object corresponding to the DependencyRequest returned
+        by `get_dependency_request`, extract the data that this recipe describes and
+        return a Frame."""
+
+
 class _FromDelimited(Recipe):
     """Base class for common file arguments"""
 
@@ -105,7 +115,7 @@ class FrameFromRecipes(Recipe):
         horizontal.
     """
 
-    recipes: tuple[Recipe, ...]
+    recipes: tuple[SeriesRecipe | FrameRecipe, ...]
     labels: Recipe | None = None
     axis: int = 0
 
