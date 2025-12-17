@@ -3,6 +3,7 @@ from __future__ import annotations
 import functools
 import typing as tp
 from pathlib import Path
+from abc import abstractmethod
 
 import numpy as np
 import static_frame as sf
@@ -11,6 +12,16 @@ from frozendict import frozendict
 from blueprints import util
 from blueprints.constants import MissingDependencyBehavior
 from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
+
+
+class SeriesRecipe(Recipe):
+    """Abstract class for recipes that return StaticFrame Series"""
+
+    @abstractmethod
+    def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Series:
+        """Given a Dependencies object corresponding to the DependencyRequest returned
+        by `get_dependency_request`, extract the data that this recipe describes and
+        return a Series."""
 
 
 class _FromDelimited(Recipe):
