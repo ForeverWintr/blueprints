@@ -17,6 +17,8 @@ from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
 class SeriesRecipe(Recipe):
     """Abstract class for recipes that return StaticFrame Series"""
 
+    name: str
+
     @abstractmethod
     def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Series:
         """Given a Dependencies object corresponding to the DependencyRequest returned
@@ -26,6 +28,8 @@ class SeriesRecipe(Recipe):
 
 class FrameRecipe(Recipe):
     """Abstract class for recipes that return StaticFrame Frames"""
+
+    name: str
 
     @abstractmethod
     def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
@@ -98,6 +102,44 @@ class FrameFromDelimited(_FromDelimited):
         if self.index_column:
             f = f.set_index(self.index_column, drop=True)
         return f
+
+
+class FrameFromColumns(FrameRecipe):
+    """Return a frame by horizontal concat of all the provided recipes"""
+
+    recipes: tuple[SeriesRecipe | FrameRecipe, ...]
+
+    ## Class level configuration
+    on_missing_dependency: tp.ClassVar[MissingDependencyBehavior] = (
+        MissingDependencyBehavior.BIND
+    )
+
+    def get_dependency_request(self) -> DependencyRequest:
+        return DependencyRequest(*self.recipes)
+
+    def extract_from_dependencies(
+        self, dependencies: Dependencies
+    ) -> sf.Frame | util.MissingPlaceholder:
+        """Missing dependencies become series using the final index. Missing index
+        propogates."""
+        not_missing = [
+            x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
+        ]
+        to_concat = []
+        for r in self.recipes:
+            d = dependencies.recipe_to_result[r]
+            if isinstance(d, util.MissingPlaceholder):
+                try:
+                    label = r.name
+                except AttributeError:
+                    # Not all recipes have labels.
+                    label = d.reason
+                d = sf.Series.from_element(d.fill_value, name=label, index=labels)
+
+            to_concat.append(d)
+
+        label_kwarg = {direction: labels}
+        return sf.Frame.from_concat(to_concat, axis=self.axis, **label_kwarg)
 
 
 class FrameFromRecipes(Recipe):

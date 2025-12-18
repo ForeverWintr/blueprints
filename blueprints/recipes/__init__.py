@@ -4,6 +4,7 @@ from blueprints.recipes.static_frame import (
     FrameFromRecipes,
     SeriesFromDelimited,
     SeriesRecipe,
+    FrameFromColumns,
 )
 
 __all__ = [
@@ -13,4 +14,5 @@ __all__ = [
     "FrameFromDelimited",
     "FrameFromRecipes",
     "SeriesRecipe",
+    "FrameFromColumns",
 ]
