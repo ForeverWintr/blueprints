@@ -3,21 +3,29 @@ import os
 import typing as tp
 from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
 
+import frozendict
+
 from blueprints import exceptions, util
 from blueprints.blueprint import Blueprint
 from blueprints.recipes.base import Parameters, Recipe
 
 
 class Factory:
-    def __init__(self, allow_missing: bool = True):
+    def __init__(
+        self,
+        allow_missing: bool = True,
+        shared_state: dict
+    ):
         """A factory controls the construction of recipes.
 
         Args:
             allow_missing: If False, individual recipes' allow_missing settings are ignored,
         and any missing data errors are raised. If both the factory and recipe have
         allow_missing set to true, missing data sentinels are returned instead.
+            shared_state: A dictionary. Recipes can opt to receive this in Recipe.extract_from_dependencies.
         """
         self.allow_missing = allow_missing
+        self.shared_state = frozendict.frozendict(shared_state)
 
     @staticmethod
     def recipes_to_build(

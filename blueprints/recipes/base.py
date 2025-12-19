@@ -105,6 +105,7 @@ class Recipe(ABC):
     on_missing_dependency: tp.ClassVar[MissingDependencyBehavior] = (
         MissingDependencyBehavior.SKIP
     )
+    bind_shared_state: tp.ClassVar[bool] = False
 
     def get_dependency_request(self) -> DependencyRequest:
         """Return a DependencyRequest specifiying recipes that this recipe depends on."""
