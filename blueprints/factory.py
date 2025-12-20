@@ -14,7 +14,7 @@ class Factory:
     def __init__(
         self,
         allow_missing: bool = True,
-        shared_state: dict
+        shared_state: dict = frozendict(),
     ):
         """A factory controls the construction of recipes.
 
@@ -22,7 +22,7 @@ class Factory:
             allow_missing: If False, individual recipes' allow_missing settings are ignored,
         and any missing data errors are raised. If both the factory and recipe have
         allow_missing set to true, missing data sentinels are returned instead.
-            shared_state: A dictionary. Recipes can opt to receive this in Recipe.extract_from_dependencies.
+            shared_state: A dictionary. Recipes can opt to receive this in Recipe.extract_from_dependencies by setting the bind_shared_state classvar to true.
         """
         self.allow_missing = allow_missing
         self.shared_state = frozendict.frozendict(shared_state)
