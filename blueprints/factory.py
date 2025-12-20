@@ -3,7 +3,7 @@ import os
 import typing as tp
 from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
 
-import frozendict
+from frozendict import frozendict
 
 from blueprints import exceptions, util
 from blueprints.blueprint import Blueprint
@@ -25,7 +25,7 @@ class Factory:
             shared_state: A dictionary. Recipes can opt to receive this in Recipe.extract_from_dependencies by setting the bind_shared_state classvar to true.
         """
         self.allow_missing = allow_missing
-        self.shared_state = frozendict.frozendict(shared_state)
+        self.shared_state = frozendict(shared_state)
 
     @staticmethod
     def recipes_to_build(
@@ -52,7 +52,9 @@ class Factory:
                 dependencies = blueprint.prepare_to_build(
                     recipe, instantiated, metadata=metadata
                 )
-                result = util.process_recipe(recipe, dependencies=dependencies)
+                result = util.process_recipe(
+                    recipe, dependencies=dependencies, shared_state=self.shared_state
+                )
 
                 unbuildable = blueprint.update_result(result, instantiated)
                 if unbuildable:
@@ -111,6 +113,7 @@ class FactoryMP(Factory):
                         util.process_recipe,
                         recipe=recipe,
                         dependencies=dependencies,
+                        shared_state=self.shared_state,
                     )
                     running_futures.add(future)
                     building.add(recipe)

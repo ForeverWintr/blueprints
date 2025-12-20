@@ -18,7 +18,7 @@ def test_process_recipe_success() -> None:
 
     r = Success()
     deps = Dependencies((), {}, {}, metadata=Parameters(factory_allow_missing=True))
-    result = util.process_recipe(r, dependencies=deps)
+    result = util.process_recipe(r, dependencies=deps, shared_state=frozendict())
     assert result.recipe == r
     assert result.status == BuildState.BUILT
     assert result.output == 1
@@ -34,7 +34,7 @@ def test_process_recipe_missing() -> None:
 
     r = Missing()
     deps = Dependencies((), {}, {}, metadata=Parameters(factory_allow_missing=True))
-    result = util.process_recipe(r, dependencies=deps)
+    result = util.process_recipe(r, dependencies=deps, shared_state=frozendict())
     assert result.recipe == r
     assert result.status == BuildState.MISSING
     assert result.output == util.MissingPlaceholder(
@@ -55,13 +55,13 @@ def test_process_recipe_raises() -> None:
 
     # This fails because the recipe has `allow_missing=False`.
     with pytest.raises(ZeroDivisionError):
-        util.process_recipe(r, dependencies=deps)
+        util.process_recipe(r, dependencies=deps, shared_state=frozendict())
 
     # This fails because the value of allow missing is overridden in the dependencies metadata.
     r2 = dataclasses.replace(r, allow_missing=True)
     deps2 = Dependencies((), {}, {}, metadata=Parameters(factory_allow_missing=False))
     with pytest.raises(ZeroDivisionError):
-        util.process_recipe(r2, dependencies=deps2)
+        util.process_recipe(r2, dependencies=deps2, shared_state=frozendict())
 
 
 @pytest.mark.skip
