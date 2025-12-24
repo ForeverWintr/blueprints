@@ -1,7 +1,6 @@
 # This mostly comes from examples here: https://github.com/marketplace/actions/install-poetry-action
 
-name: Tests
-
+name: Lint and Test
 on:
   push:
     branches: [ main ]
