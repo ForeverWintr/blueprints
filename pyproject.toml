@@ -19,6 +19,7 @@ mypy = "^1.17.1"
 pytest = "^8.4.1"
 ruff = "^0.12.11"
 frame-fixtures = "^1.1.0"
+pytest-cov = "^7.0.0"
 
 [project]
 name = "blueprints"
