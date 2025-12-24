@@ -43,3 +43,6 @@ dependencies=[
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint.isort]
+force-single-line = true

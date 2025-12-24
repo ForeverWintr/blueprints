@@ -1,5 +1,7 @@
 import dash_cytoscape as cyto
-from dash import Dash, ctx, html
+from dash import Dash
+from dash import ctx
+from dash import html
 
 cyto.load_extra_layouts()
 app = Dash(__name__)

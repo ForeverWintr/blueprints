@@ -8,8 +8,11 @@ __version__ = "0.1.0"
 
 
 from blueprints.blueprint import Blueprint
-from blueprints.factory import Factory, FactoryMP
-from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
+from blueprints.factory import Factory
+from blueprints.factory import FactoryMP
+from blueprints.recipes.base import Dependencies
+from blueprints.recipes.base import DependencyRequest
+from blueprints.recipes.base import Recipe
 
 __all__ = [
     "Blueprint",

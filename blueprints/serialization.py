@@ -7,7 +7,8 @@ import networkx as nx
 from frozendict import frozendict
 
 from blueprints import util
-from blueprints.recipes.base import RECIPE_TYPE_REGISTRY, Recipe
+from blueprints.recipes.base import RECIPE_TYPE_REGISTRY
+from blueprints.recipes.base import Recipe
 
 
 class RecipeRegistry:

@@ -10,7 +10,9 @@ from frozendict import frozendict
 
 from blueprints import util
 from blueprints.constants import MissingDependencyBehavior
-from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
+from blueprints.recipes.base import Dependencies
+from blueprints.recipes.base import DependencyRequest
+from blueprints.recipes.base import Recipe
 
 
 class _FromDelimited(Recipe):

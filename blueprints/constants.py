@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from enum import Enum, auto
+from enum import Enum
+from enum import auto
 
 
 class BuildState(Enum):
