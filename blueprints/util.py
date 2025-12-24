@@ -11,6 +11,8 @@ from blueprints import exceptions
 from blueprints.constants import BuildState
 
 if tp.TYPE_CHECKING:
+    from frozendict import frozendict
+
     from blueprints.recipes.base import Dependencies
     from blueprints.recipes.base import DependencyRequest
     from blueprints.recipes.base import Recipe

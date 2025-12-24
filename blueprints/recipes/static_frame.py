@@ -127,6 +127,7 @@ class FrameFromColumns(FrameRecipe):
         not_missing = [
             x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
         ]
+        final_index = sf.Index.from_union(x.index for x in not_missing)
         to_concat = []
         for r in self.recipes:
             d = dependencies.recipe_to_result[r]
@@ -136,12 +137,11 @@ class FrameFromColumns(FrameRecipe):
                 except AttributeError:
                     # Not all recipes have labels.
                     label = d.reason
-                d = sf.Series.from_element(d.fill_value, name=label, index=labels)
+                d = sf.Series.from_element(d.fill_value, name=label, index=final_index)
 
             to_concat.append(d)
 
-        label_kwarg = {direction: labels}
-        return sf.Frame.from_concat(to_concat, axis=self.axis, **label_kwarg)
+        return sf.Frame.from_concat(to_concat, axis=1)
 
 
 class FrameFromRecipes(Recipe):
