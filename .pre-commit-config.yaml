@@ -6,6 +6,7 @@ repos:
       - id: check-added-large-files
       - id: check-ast
       - id: no-commit-to-branch
+        name: No commit to main
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
@@ -13,7 +14,8 @@ repos:
     hooks:
       # Run the linter.
       - id: ruff-check
-        args: [--select I --fix]
+        name: Sort imports
+        args: [--select, I, --fix]
       - id: ruff-check
       # Run the formatter.
       - id: ruff-format
