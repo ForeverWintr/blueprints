@@ -1,19 +1,19 @@
 from __future__ import annotations
 
-import functools
 import importlib
-import json
 import sys
 import typing as tp
 
 import networkx as nx
-from frozendict import frozendict
 
-from blueprints import constants, exceptions
+from blueprints import constants
+from blueprints import exceptions
 from blueprints.constants import BuildState
 
 if tp.TYPE_CHECKING:
-    from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
+    from blueprints.recipes.base import Dependencies
+    from blueprints.recipes.base import DependencyRequest
+    from blueprints.recipes.base import Recipe
 
 
 class MissingPlaceholder(tp.NamedTuple):
@@ -114,7 +114,7 @@ def replace(
     original_type = type(item)
     constructor = type_replace.get(original_type, original_type)
     new_items = item
-    changes = not constructor is original_type
+    changes = constructor is not original_type
 
     def recurse(x):
         nonlocal changes
@@ -124,7 +124,7 @@ def replace(
             get_replacement=get_replacement,
             type_replace=type_replace,
         )
-        if not new is x:
+        if new is not x:
             changes = True
         return new
 

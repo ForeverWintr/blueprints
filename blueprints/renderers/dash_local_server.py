@@ -1,7 +1,7 @@
 import dash_cytoscape as cyto
-from dash import Dash, ctx, dcc, html
-from dash.dependencies import Input, Output, State
-from flask import request
+from dash import Dash
+from dash import ctx
+from dash import html
 
 cyto.load_extra_layouts()
 app = Dash(__name__)
@@ -46,16 +46,16 @@ def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
     elif btn_clicked == "btn-prev":
         step_idx = step_idx - 1
 
-    while step_idx > len(steps):
-        steps.append(make_step())
+    # while step_idx > len(steps):
+    # steps.append(make_step())
 
-    return steps[step_idx - 1], step_idx
+    # return steps[step_idx - 1], step_idx
 
 
-@app.server.post("/update")
-def update():
-    """Update data, or shut down if we get a poison pill."""
-    asdf
+# @app.server.post("/update")
+# def update():
+# """Update data, or shut down if we get a poison pill."""
+# asdf
 
 
 if __name__ == "__main__":

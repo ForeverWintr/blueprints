@@ -1,11 +1,16 @@
 import multiprocessing
 import os
 import typing as tp
-from concurrent.futures import FIRST_COMPLETED, Future, ProcessPoolExecutor, wait
+from concurrent.futures import FIRST_COMPLETED
+from concurrent.futures import Future
+from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import wait
 
-from blueprints import exceptions, util
+from blueprints import exceptions
+from blueprints import util
 from blueprints.blueprint import Blueprint
-from blueprints.recipes.base import Parameters, Recipe
+from blueprints.recipes.base import Parameters
+from blueprints.recipes.base import Recipe
 
 
 class Factory:

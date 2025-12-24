@@ -12,12 +12,11 @@ import static_frame as sf
 
 from blueprints import util
 from blueprints.factory import Factory
-from blueprints.recipes.general import FromFunction, Object
-from blueprints.recipes.static_frame import (
-    FrameFromDelimited,
-    FrameFromRecipes,
-    SeriesFromDelimited,
-)
+from blueprints.recipes.general import FromFunction
+from blueprints.recipes.general import Object
+from blueprints.recipes.static_frame import FrameFromDelimited
+from blueprints.recipes.static_frame import FrameFromRecipes
+from blueprints.recipes.static_frame import SeriesFromDelimited
 
 
 @pytest.fixture(scope="module")
@@ -97,7 +96,7 @@ def test_allow_missing(missing_configurations, sample_frame):
         if fp.name == "not_a_file.tsv":
             err = FileNotFoundError
 
-        if err == KeyError:
+        if err is KeyError:
             if factory.allow_missing:
                 assert factory.process_recipe(recipe).to_pairs() == (
                     ("zZbu", "missing"),
@@ -109,7 +108,7 @@ def test_allow_missing(missing_configurations, sample_frame):
                 with pytest.raises(err):
                     factory.process_recipe(recipe)
 
-        elif err == FileNotFoundError:
+        elif err is FileNotFoundError:
             if factory.allow_missing:
                 m = factory.process_recipe(recipe)
                 assert isinstance(m, util.MissingPlaceholder)
