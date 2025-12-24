@@ -1,13 +1,9 @@
 import pprint
-import subprocess
-import sys
-import time
 import webbrowser
 from pathlib import Path
 
 import requests
 
-from blueprints.factory import Factory
 from blueprints.renderers.dash_renderer import flask_app
 from blueprints.renderers.dash_renderer.local import dash_local_renderer
 from blueprints.tests.conftest import Blueprint
@@ -40,11 +36,11 @@ def send(bp: Blueprint, url: str, headers=None) -> dict:
 
 
 def main():
-    server_path = Path(flask_app.__file__)
+    Path(flask_app.__file__)
     url = "http://127.0.0.1:5000"
     node_map = nodes()
 
-    with dash_local_renderer(launch_server=True) as r:
+    with dash_local_renderer(launch_server=True):
         bp = basic_blueprint(node_map)
         result_data = send(bp, url=f"{url}/blueprint")
 

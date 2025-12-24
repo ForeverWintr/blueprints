@@ -1,13 +1,10 @@
 import dash
 import dash_cytoscape as cyto
 from dash import Dash
-from dash import ctx
 from dash import dcc
 from dash import html
 from dash.dependencies import Input
 from dash.dependencies import Output
-from dash.dependencies import State
-from flask import request
 
 from blueprints import constants
 from blueprints.renderers.dash_renderer import dash_util

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import typing as tp
 
-import plotly
 from plotly import graph_objects as go
 
 # from plotly import express as px # Requires pandas :|
@@ -12,7 +11,7 @@ from blueprints.renderers.dash_renderer import dash_layout
 from blueprints.tests.test_blueprint import Node
 
 if tp.TYPE_CHECKING:
-    from flask.testing import FlaskClient
+    pass
 
 
 def test_visualize() -> None:
@@ -34,7 +33,7 @@ def test_visualize() -> None:
             x, y = layout[node]
             edge_x.append(x)
             edge_y.append(y)
-            if not node in seen:
+            if node not in seen:
                 node_x.append(x)
                 node_y.append(y)
                 seen.add(node)
@@ -60,7 +59,7 @@ def test_visualize() -> None:
         marker_size=30,
         text=[str(n) for n in bp._dependency_graph.nodes],
     )
-    fig = go.Figure(
+    go.Figure(
         data=[edge_trace, node_trace],
         layout=go.Layout(
             title="<br>Network graph made with Python",
@@ -84,14 +83,13 @@ def test_cytoscape() -> None:
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
 
-    bp = Blueprint.from_recipes([b, c])
+    Blueprint.from_recipes([b, c])
 
-    g = bp._dependency_graph
     assert 0
 
 
 def test_update_graph_scatter(existing_run_id: str) -> None:
-    r = dash_layout.update_graph_scatter(
+    dash_layout.update_graph_scatter(
         url=f"localhost/visualize/{existing_run_id}",
         step_idx=0,
         btn_prev_clicks=None,

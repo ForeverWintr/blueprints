@@ -11,7 +11,6 @@ from blueprints.tests import conftest
 if tp.TYPE_CHECKING:
     from flask.testing import FlaskClient
 
-    from blueprints.blueprint import Blueprint
 
 
 @pytest.fixture
