@@ -10,11 +10,11 @@ on:
 
 jobs:
 
-  lint:
+  prek:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: psf/black@stable
+      - uses: actions/checkout@v6
+      - uses: j178/prek-action@v1
 
 
   test:
@@ -29,16 +29,16 @@ jobs:
       run:
         shell: bash
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4.2.0
+      uses: actions/setup-python@v6
       with:
         python-version: ${{ matrix.python-version }}
         # cache: 'poetry' # Needs poetry lockfile.
 
     - name: Install poetry
-      uses: snok/install-poetry@v1.3.3
+      uses: snok/install-poetry@v1
       with:
         virtualenvs-create: true
         virtualenvs-in-project: true
