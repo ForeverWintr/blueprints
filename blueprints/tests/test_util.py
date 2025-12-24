@@ -6,8 +6,11 @@ import pytest
 from frozendict import frozendict
 
 from blueprints import util
-from blueprints.constants import CALLABLE_KEY_IDENTIFIER, BuildState
-from blueprints.recipes.base import Dependencies, Parameters, Recipe
+from blueprints.constants import CALLABLE_KEY_IDENTIFIER
+from blueprints.constants import BuildState
+from blueprints.recipes.base import Dependencies
+from blueprints.recipes.base import Parameters
+from blueprints.recipes.base import Recipe
 from blueprints.tests.conftest import Node
 
 

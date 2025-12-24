@@ -3,11 +3,15 @@ from __future__ import annotations
 import datetime
 import typing as tp
 import uuid
-from functools import cached_property, lru_cache
+from functools import cached_property
+from functools import lru_cache
 
 import jwt
 from flask import Blueprint as FlaskBlueprint
-from flask import current_app, jsonify, request, url_for
+from flask import current_app
+from flask import jsonify
+from flask import request
+from flask import url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import orm
 

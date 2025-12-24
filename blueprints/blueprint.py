@@ -5,13 +5,14 @@ import typing as tp
 
 import networkx as nx
 
-from blueprints import serialization, util
-from blueprints.constants import (
-    BUILD_STATE_TO_COLOR,
-    BuildState,
-    MissingDependencyBehavior,
-)
-from blueprints.recipes.base import Dependencies, Parameters, Recipe
+from blueprints import serialization
+from blueprints import util
+from blueprints.constants import BUILD_STATE_TO_COLOR
+from blueprints.constants import BuildState
+from blueprints.constants import MissingDependencyBehavior
+from blueprints.recipes.base import Dependencies
+from blueprints.recipes.base import Parameters
+from blueprints.recipes.base import Recipe
 
 if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt

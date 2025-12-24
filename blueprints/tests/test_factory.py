@@ -5,18 +5,18 @@ import typing as tp
 
 import pytest
 
-from blueprints import exceptions, util
+from blueprints import exceptions
+from blueprints import util
 from blueprints.blueprint import Blueprint
-from blueprints.factory import Factory, FactoryMP
+from blueprints.factory import Factory
+from blueprints.factory import FactoryMP
 from blueprints.recipes.general import Object
-from blueprints.tests.conftest import (
-    TABLES,
-    BindMissing,
-    MultiColumn,
-    Raiser,
-    TestColumn,
-    TestData,
-)
+from blueprints.tests.conftest import TABLES
+from blueprints.tests.conftest import BindMissing
+from blueprints.tests.conftest import MultiColumn
+from blueprints.tests.conftest import Raiser
+from blueprints.tests.conftest import TestColumn
+from blueprints.tests.conftest import TestData
 
 FACTORY_TYPES = (Factory, FactoryMP)
 

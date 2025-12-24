@@ -6,7 +6,9 @@ import pytest
 
 from blueprints import constants
 from blueprints.blueprint import Blueprint
-from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
+from blueprints.recipes.base import Dependencies
+from blueprints.recipes.base import DependencyRequest
+from blueprints.recipes.base import Recipe
 
 #  Pretend these are tables
 TABLES = {

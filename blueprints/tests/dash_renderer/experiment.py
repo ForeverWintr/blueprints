@@ -4,8 +4,11 @@ from collections import deque
 import dash
 import plotly
 import plotly.graph_objs as go
-from dash import ctx, dcc, html
-from dash.dependencies import Input, Output
+from dash import ctx
+from dash import dcc
+from dash import html
+from dash.dependencies import Input
+from dash.dependencies import Output
 
 X = deque(maxlen=20)
 X.append(1)

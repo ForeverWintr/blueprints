@@ -12,7 +12,9 @@ from frozendict import frozendict
 from blueprints import serialization
 from blueprints.blueprint import Blueprint
 from blueprints.factory import util
-from blueprints.recipes import base, general, static_frame
+from blueprints.recipes import base
+from blueprints.recipes import general
+from blueprints.recipes import static_frame
 from blueprints.tests.conftest import Node
 
 

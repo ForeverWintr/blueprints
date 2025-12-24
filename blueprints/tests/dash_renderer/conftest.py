@@ -4,7 +4,8 @@ import typing as tp
 
 import pytest
 
-from blueprints.renderers.dash_renderer import flask_app, models
+from blueprints.renderers.dash_renderer import flask_app
+from blueprints.renderers.dash_renderer import models
 from blueprints.tests import conftest
 
 if tp.TYPE_CHECKING:

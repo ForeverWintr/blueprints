@@ -5,7 +5,9 @@ import typing as tp
 import jwt
 from flask import Flask
 
-from blueprints.renderers.dash_renderer import auth, dash_layout, models
+from blueprints.renderers.dash_renderer import auth
+from blueprints.renderers.dash_renderer import dash_layout
+from blueprints.renderers.dash_renderer import models
 
 
 def create_app():

@@ -2,7 +2,8 @@
 import datetime
 
 import jwt
-from flask import current_app, jsonify
+from flask import current_app
+from flask import jsonify
 
 
 def create_jwt(run_id: str):

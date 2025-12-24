@@ -9,11 +9,14 @@ import typing as tp
 import networkx as nx
 from frozendict import frozendict
 
-from blueprints import constants, exceptions
+from blueprints import constants
+from blueprints import exceptions
 from blueprints.constants import BuildState
 
 if tp.TYPE_CHECKING:
-    from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
+    from blueprints.recipes.base import Dependencies
+    from blueprints.recipes.base import DependencyRequest
+    from blueprints.recipes.base import Recipe
 
 
 class MissingPlaceholder(tp.NamedTuple):

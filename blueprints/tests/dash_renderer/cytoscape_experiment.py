@@ -1,6 +1,11 @@
 import dash_cytoscape as cyto
-from dash import Dash, ctx, dcc, html
-from dash.dependencies import Input, Output, State
+from dash import Dash
+from dash import ctx
+from dash import dcc
+from dash import html
+from dash.dependencies import Input
+from dash.dependencies import Output
+from dash.dependencies import State
 
 from blueprints.blueprint import Blueprint
 from blueprints.tests.test_blueprint import Node
