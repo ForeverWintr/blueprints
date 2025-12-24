@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import functools
 import typing as tp
-from pathlib import Path
 from abc import abstractmethod
+from pathlib import Path
 
 import numpy as np
 import static_frame as sf
@@ -11,7 +11,9 @@ from frozendict import frozendict
 
 from blueprints import util
 from blueprints.constants import MissingDependencyBehavior
-from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
+from blueprints.recipes.base import Dependencies
+from blueprints.recipes.base import DependencyRequest
+from blueprints.recipes.base import Recipe
 
 
 class SeriesRecipe(Recipe):

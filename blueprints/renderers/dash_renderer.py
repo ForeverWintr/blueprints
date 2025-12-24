@@ -1,6 +1,7 @@
 import dash_cytoscape as cyto
-from dash import Dash, ctx, dcc, html
-from dash.dependencies import Input, Output, State
+from dash import Dash
+from dash import dcc
+from dash import html
 
 
 class DashRenderer:
