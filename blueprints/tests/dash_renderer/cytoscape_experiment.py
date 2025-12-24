@@ -72,10 +72,10 @@ def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
     elif btn_clicked == "btn-prev":
         step_idx = step_idx - 1
 
-    while step_idx > len(steps):
-        steps.append(make_step())
+    # while step_idx > len(steps):
+    # steps.append(make_step())
 
-    return steps[step_idx - 1], step_idx
+    # return steps[step_idx - 1], step_idx
 
 
 if __name__ == "__main__":

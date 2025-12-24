@@ -18,6 +18,25 @@ from blueprints.tests.conftest import TestColumn
 from blueprints.tests.conftest import TestData
 
 
+@pytest.fixture
+def nodes() -> dict[str, Node]:
+    a = Node(name="a")
+    d = Node(name="d")
+    b = Node(name="b", dependencies=(a,))
+    c = Node(name="c", dependencies=(a, d))
+    return {
+        "a": a,
+        "d": d,
+        "b": b,
+        "c": c,
+    }
+
+
+@pytest.fixture
+def basic_blueprint(nodes) -> Blueprint:
+    return Blueprint.from_recipes([nodes["b"], nodes["c"]])
+
+
 def test_from_recipes() -> None:
     r1 = TestColumn(table_name="A", key=1)
     r2 = TestColumn(table_name="b", key=4)

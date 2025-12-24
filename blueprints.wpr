@@ -1,5 +1,5 @@
 #!wing
-#!version=10.0
+#!version=11.0
 ##################################################################
 # Wing project file                                              #
 ##################################################################
@@ -11,9 +11,6 @@ proj.directory-list = [{'dirloc': loc('.'),
                         'recursive': True,
                         'watch_for_changes': True}]
 proj.file-type = 'shared'
-proj.launch-config = {loc('blueprints/renderers/dash_renderer/flask_app.py'): ('project',
-        ('--modules blueprints.tests.conftest,blueprints.tests.conftest,blueprints.tests.conftest,blueprints.tests.conftest,blueprints.tests.conftest,blueprints.tests.conftest',
-         ''))}
 testing.auto-test-file-specs = (('glob',
-                                 'test_*py'),)
+                                 'test_*.py'),)
 testing.test-framework = {None: ':internal pytest'}

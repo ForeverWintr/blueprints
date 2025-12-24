@@ -105,9 +105,9 @@ class Recipe(ABC):
     missing_data_exceptions: tp.Type[Exception] | tp.Tuple[tp.Type[Exception], ...] = ()
 
     ## Class level configuration
-    on_missing_dependency: tp.ClassVar[
-        MissingDependencyBehavior
-    ] = MissingDependencyBehavior.SKIP
+    on_missing_dependency: tp.ClassVar[MissingDependencyBehavior] = (
+        MissingDependencyBehavior.SKIP
+    )
 
     def get_dependency_request(self) -> DependencyRequest:
         """Return a DependencyRequest specifiying recipes that this recipe depends on."""

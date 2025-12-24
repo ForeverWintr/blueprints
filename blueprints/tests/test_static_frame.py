@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import datetime
 import itertools
 import typing as tp
@@ -94,7 +96,7 @@ def test_allow_missing(missing_configurations, sample_frame):
         if fp.name == "not_a_file.tsv":
             err = FileNotFoundError
 
-        if err == KeyError:
+        if err is KeyError:
             if factory.allow_missing:
                 assert factory.process_recipe(recipe).to_pairs() == (
                     ("zZbu", "missing"),
@@ -106,7 +108,7 @@ def test_allow_missing(missing_configurations, sample_frame):
                 with pytest.raises(err):
                     factory.process_recipe(recipe)
 
-        elif err == FileNotFoundError:
+        elif err is FileNotFoundError:
             if factory.allow_missing:
                 m = factory.process_recipe(recipe)
                 assert isinstance(m, util.MissingPlaceholder)
@@ -137,7 +139,7 @@ def test_frame_from_recipes(sample_frame):
 # row/col select, labels, axis, expected
 class FRFixture(tp.NamedTuple):
     name: str
-    col_select: sf.GetItemKeyType
+    col_select: tp.Any
     expected_index: str | list[str]
     expected_cols: str | list[str]
     extra: tuple[util.MissingPlaceholder] = ()

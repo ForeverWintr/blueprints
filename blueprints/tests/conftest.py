@@ -55,9 +55,9 @@ class MultiColumn(Recipe):
 class BindMissing(MultiColumn):
     allow_missing: bool = True
 
-    on_missing_dependency: tp.ClassVar[
-        constants.MissingDependencyBehavior
-    ] = constants.MissingDependencyBehavior.BIND
+    on_missing_dependency: tp.ClassVar[constants.MissingDependencyBehavior] = (
+        constants.MissingDependencyBehavior.BIND
+    )
 
 
 class Raiser(Recipe):
