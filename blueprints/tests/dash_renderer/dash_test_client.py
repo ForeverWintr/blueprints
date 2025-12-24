@@ -1,16 +1,16 @@
-from pathlib import Path
+import pprint
 import subprocess
 import sys
 import time
-import pprint
 import webbrowser
+from pathlib import Path
 
 import requests
 
-from blueprints.renderers.dash_renderer import flask_app
-from blueprints.tests.conftest import Node, Blueprint
 from blueprints.factory import Factory
+from blueprints.renderers.dash_renderer import flask_app
 from blueprints.renderers.dash_renderer.local import dash_local_renderer
+from blueprints.tests.conftest import Blueprint, Node
 
 
 def nodes() -> dict[str, Node]:

@@ -1,16 +1,17 @@
 from __future__ import annotations
-import typing as tp
-from abc import ABC, abstractmethod
+
 import dataclasses
+import functools
 import itertools
 import json
-import functools
 import operator
+import typing as tp
+from abc import ABC, abstractmethod
 
 from frozendict import frozendict
 
-from blueprints.constants import MissingDependencyBehavior
 from blueprints import util
+from blueprints.constants import MissingDependencyBehavior
 
 
 class Parameters(tp.NamedTuple):

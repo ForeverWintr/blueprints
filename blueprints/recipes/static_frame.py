@@ -1,16 +1,16 @@
 from __future__ import annotations
 
+import functools
 import typing as tp
 from pathlib import Path
-import functools
 
-import static_frame as sf
 import numpy as np
+import static_frame as sf
 from frozendict import frozendict
 
-from blueprints.recipes.base import Recipe, DependencyRequest, Dependencies
-from blueprints.constants import MissingDependencyBehavior
 from blueprints import util
+from blueprints.constants import MissingDependencyBehavior
+from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
 
 
 class _FromDelimited(Recipe):

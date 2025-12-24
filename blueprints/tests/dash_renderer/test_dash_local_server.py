@@ -1,11 +1,11 @@
 from __future__ import annotations
+
 import typing as tp
 
 from flask import url_for
 
 from blueprints.renderers.dash_renderer import flask_app
 from blueprints.tests import conftest
-
 
 if tp.TYPE_CHECKING:
     from flask.testing import FlaskClient

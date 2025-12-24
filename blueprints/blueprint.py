@@ -1,17 +1,17 @@
 from __future__ import annotations
-import typing as tp
+
 import json
+import typing as tp
 
 import networkx as nx
 
-from blueprints.recipes.base import Recipe, Dependencies, Parameters
+from blueprints import serialization, util
 from blueprints.constants import (
-    BuildState,
     BUILD_STATE_TO_COLOR,
+    BuildState,
     MissingDependencyBehavior,
 )
-from blueprints import util
-from blueprints import serialization
+from blueprints.recipes.base import Dependencies, Parameters, Recipe
 
 if tp.TYPE_CHECKING:
     from matplotlib import pyplot as plt

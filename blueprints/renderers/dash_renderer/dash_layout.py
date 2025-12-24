@@ -1,13 +1,11 @@
-from dash import Dash, html, dcc
-from dash.dependencies import Input, Output, State
-import dash_cytoscape as cyto
-from dash import ctx
 import dash
+import dash_cytoscape as cyto
+from dash import Dash, ctx, dcc, html
+from dash.dependencies import Input, Output, State
 from flask import request
 
-from blueprints.renderers.dash_renderer import models, dash_util
 from blueprints import constants
-
+from blueprints.renderers.dash_renderer import dash_util, models
 
 cyto.load_extra_layouts()
 dash_app = Dash(

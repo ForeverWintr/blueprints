@@ -1,9 +1,10 @@
 import dataclasses
+
 import pytest
 
-from blueprints.tests.conftest import TestData, TestColumn, TABLES, Node
-from blueprints.recipes import general, static_frame, base
 from blueprints.factory import Factory, util
+from blueprints.recipes import base, general, static_frame
+from blueprints.tests.conftest import TABLES, Node, TestColumn, TestData
 
 
 def test_immutable():

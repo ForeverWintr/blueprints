@@ -1,23 +1,22 @@
 from __future__ import annotations
-import typing as tp
 
 import functools
+import typing as tp
 
 import pytest
 
+from blueprints import exceptions, util
+from blueprints.blueprint import Blueprint
 from blueprints.factory import Factory, FactoryMP
+from blueprints.recipes.general import Object
 from blueprints.tests.conftest import (
-    TestData,
-    TestColumn,
     TABLES,
+    BindMissing,
     MultiColumn,
     Raiser,
-    BindMissing,
+    TestColumn,
+    TestData,
 )
-from blueprints.blueprint import Blueprint
-from blueprints import exceptions
-from blueprints import util
-from blueprints.recipes.general import Object
 
 FACTORY_TYPES = (Factory, FactoryMP)
 

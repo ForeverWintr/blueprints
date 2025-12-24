@@ -1,13 +1,11 @@
+import random
 from collections import deque
 
 import dash
-from dash.dependencies import Output, Input
-from dash import dcc
-from dash import html
-from dash import ctx
 import plotly
-import random
 import plotly.graph_objs as go
+from dash import ctx, dcc, html
+from dash.dependencies import Input, Output
 
 X = deque(maxlen=20)
 X.append(1)

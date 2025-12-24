@@ -1,15 +1,15 @@
-from contextlib import contextmanager
-import subprocess
-import threading
-from pathlib import Path
-import sys
 import signal
+import subprocess
+import sys
+import threading
 import time
+from contextlib import contextmanager
+from pathlib import Path
 
 import requests
 
-from blueprints.renderers.dash_renderer import flask_app
 from blueprints.recipes.base import RECIPE_TYPE_REGISTRY
+from blueprints.renderers.dash_renderer import flask_app
 
 
 @contextmanager

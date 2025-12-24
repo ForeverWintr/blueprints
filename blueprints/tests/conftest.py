@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 import typing as tp
 
 import pytest
 
-from blueprints.blueprint import Blueprint
-from blueprints.recipes.base import Recipe, DependencyRequest, Dependencies
 from blueprints import constants
+from blueprints.blueprint import Blueprint
+from blueprints.recipes.base import Dependencies, DependencyRequest, Recipe
 
 #  Pretend these are tables
 TABLES = {

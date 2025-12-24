@@ -1,13 +1,13 @@
 from __future__ import annotations
-import typing as tp
-import json
 
-from frozendict import frozendict
+import json
+import typing as tp
+
 import networkx as nx
+from frozendict import frozendict
 
 from blueprints import util
-
-from blueprints.recipes.base import Recipe, RECIPE_TYPE_REGISTRY
+from blueprints.recipes.base import RECIPE_TYPE_REGISTRY, Recipe
 
 
 class RecipeRegistry:

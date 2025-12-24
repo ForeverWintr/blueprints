@@ -1,14 +1,15 @@
 from __future__ import annotations
-import typing as tp
-import datetime
-import uuid
-from functools import lru_cache, cached_property
 
+import datetime
+import typing as tp
+import uuid
+from functools import cached_property, lru_cache
+
+import jwt
 from flask import Blueprint as FlaskBlueprint
-from flask import request, current_app, jsonify, url_for
+from flask import current_app, jsonify, request, url_for
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import orm
-import jwt
 
 from blueprints.blueprint import Blueprint
 from blueprints.renderers.dash_renderer import auth

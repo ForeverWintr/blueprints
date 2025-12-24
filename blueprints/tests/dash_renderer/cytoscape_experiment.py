@@ -1,11 +1,9 @@
-from dash import Dash, html, dcc
-from dash.dependencies import Input, Output, State
 import dash_cytoscape as cyto
-from dash import ctx
+from dash import Dash, ctx, dcc, html
+from dash.dependencies import Input, Output, State
 
 from blueprints.blueprint import Blueprint
 from blueprints.tests.test_blueprint import Node
-
 
 s = Node(name="source")
 a = Node(name="a", dependencies=(s,))

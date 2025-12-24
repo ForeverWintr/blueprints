@@ -1,13 +1,13 @@
-import typing as tp
 import dataclasses
+import typing as tp
+from functools import partial
 
 import pytest
 from frozendict import frozendict
-from functools import partial
 
 from blueprints import util
-from blueprints.recipes.base import Recipe, Dependencies, Parameters
-from blueprints.constants import BuildState, CALLABLE_KEY_IDENTIFIER
+from blueprints.constants import CALLABLE_KEY_IDENTIFIER, BuildState
+from blueprints.recipes.base import Dependencies, Parameters, Recipe
 from blueprints.tests.conftest import Node
 
 

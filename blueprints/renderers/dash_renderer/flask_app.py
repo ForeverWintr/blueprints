@@ -1,11 +1,11 @@
-import typing as tp
 import argparse
-
-from flask import Flask
-import jwt
 import importlib
+import typing as tp
 
-from blueprints.renderers.dash_renderer import models, dash_layout, auth
+import jwt
+from flask import Flask
+
+from blueprints.renderers.dash_renderer import auth, dash_layout, models
 
 
 def create_app():

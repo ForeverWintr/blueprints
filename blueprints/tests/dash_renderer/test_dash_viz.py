@@ -1,14 +1,14 @@
 from __future__ import annotations
+
 import typing as tp
 
 import plotly
 from plotly import graph_objects as go
 
 # from plotly import express as px # Requires pandas :|
-
 from blueprints.blueprint import Blueprint, get_blueprint_layout
-from blueprints.tests.test_blueprint import Node
 from blueprints.renderers.dash_renderer import dash_layout
+from blueprints.tests.test_blueprint import Node
 
 if tp.TYPE_CHECKING:
     from flask.testing import FlaskClient

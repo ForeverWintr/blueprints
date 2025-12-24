@@ -1,18 +1,19 @@
 from __future__ import annotations
-import typing as tp
+
 import dataclasses
-import pytest
 import json
+import typing as tp
 from pathlib import Path
 
-from frozendict import frozendict
 import networkx as nx
+import pytest
+from frozendict import frozendict
 
-from blueprints.tests.conftest import Node
-from blueprints.recipes import general, static_frame, base
-from blueprints.factory import util
 from blueprints import serialization
 from blueprints.blueprint import Blueprint
+from blueprints.factory import util
+from blueprints.recipes import base, general, static_frame
+from blueprints.tests.conftest import Node
 
 
 class Case(tp.NamedTuple):
