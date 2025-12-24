@@ -97,7 +97,7 @@ def test_allow_missing(missing_configurations, sample_frame):
         if fp.name == "not_a_file.tsv":
             err = FileNotFoundError
 
-        if err == KeyError:
+        if err is KeyError:
             if factory.allow_missing:
                 assert factory.process_recipe(recipe).to_pairs() == (
                     ("zZbu", "missing"),
@@ -109,7 +109,7 @@ def test_allow_missing(missing_configurations, sample_frame):
                 with pytest.raises(err):
                     factory.process_recipe(recipe)
 
-        elif err == FileNotFoundError:
+        elif err is FileNotFoundError:
             if factory.allow_missing:
                 m = factory.process_recipe(recipe)
                 assert isinstance(m, util.MissingPlaceholder)
