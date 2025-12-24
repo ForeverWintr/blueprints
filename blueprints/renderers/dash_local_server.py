@@ -1,7 +1,5 @@
 import dash_cytoscape as cyto
-from dash import Dash, ctx, dcc, html
-from dash.dependencies import Input, Output, State
-from flask import request
+from dash import Dash, ctx, html
 
 cyto.load_extra_layouts()
 app = Dash(__name__)

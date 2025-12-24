@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import functools
-import typing as tp
 
 import pytest
 
