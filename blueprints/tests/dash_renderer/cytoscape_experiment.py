@@ -1,7 +1,32 @@
 import dash_cytoscape as cyto
 from dash import Dash
 from dash import ctx
+from dash import dcc
 from dash import html
+
+from blueprints.blueprint import Blueprint
+from blueprints.tests.test_blueprint import Node
+
+s = Node(name="source")
+a = Node(name="a", dependencies=(s,))
+d = Node(name="d")
+b = Node(name="out_b", dependencies=(a,))
+c = Node(name="out_c", dependencies=(a, d))
+
+bp = Blueprint.from_recipes([b, c])
+
+g = bp._dependency_graph
+elements = []
+for edge in g.edges:
+    a, b = (str(x) for x in edge)
+    for n in (a, b):
+        element = {
+            "data": {"id": n, "label": n},
+            "grabbable": False,
+            "classes": "square",
+        }
+        elements.append(element)
+    elements.append({"data": {"source": a, "target": b}})
 
 cyto.load_extra_layouts()
 app = Dash(__name__)
@@ -11,7 +36,7 @@ cytoscape = cyto.Cytoscape(
     id="cytoscape-two-nodes",
     layout={"name": "dagre"},
     style={"width": "100vw", "height": "90vh"},
-    elements=[],
+    elements=elements,
     stylesheet=[  # Group selectors
         {"selector": "node", "style": {"content": "data(label)"}},
         # Class selectors
@@ -20,13 +45,14 @@ cytoscape = cyto.Cytoscape(
     ],
 )
 
+
 app.layout = html.Div(
     [
         cytoscape,
         # The memory store reverts to the default on every page refresh
-        # dcc.Store("step-index", data=1, storage_type="memory"),
-        # html.Button("Previous", id="btn-prev"),
-        # html.Button("Next", id="btn-next"),
+        dcc.Store("step-index", data=1, storage_type="memory"),
+        html.Button("Previous", id="btn-prev"),
+        html.Button("Next", id="btn-next"),
     ]
 )
 
@@ -52,11 +78,5 @@ def update_graph_scatter(step_idx, btn_prev_clicks, btn_next_clicks):
     # return steps[step_idx - 1], step_idx
 
 
-# @app.server.post("/update")
-# def update():
-# """Update data, or shut down if we get a poison pill."""
-# asdf
-
-
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
