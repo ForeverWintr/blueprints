@@ -173,6 +173,18 @@ def test_is_built(nodes: dict[str, Node], basic_blueprint: basic_blueprint):
     assert not basic_blueprint.is_built()
 
 
+def test_successors(nodes: dict[str, Node], basic_blueprint: Blueprint) -> None:
+    r = basic_blueprint.successors(nodes["a"])
+    assert r == frozenset({nodes["c"], nodes["b"]})
+    assert basic_blueprint.successors(nodes["b"]) == frozenset()
+
+
+def test_predecessors(nodes: dict[str, Node], basic_blueprint: Blueprint) -> None:
+    r = basic_blueprint.predecessors(nodes["b"])
+    assert r == frozenset({nodes["a"]})
+    assert basic_blueprint.predecessors(nodes["a"]) == frozenset()
+
+
 @pytest.mark.skip
 def test_visualize() -> None:
     # Slow import.
