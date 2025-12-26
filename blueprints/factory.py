@@ -122,6 +122,7 @@ class FactoryMP(Factory):
                         recipe=recipe,
                         dependencies=dependencies,
                         config=self.config,
+                        requested_by=blueprint.what_depends_on(recipe),
                     )
                     running_futures.add(future)
                     building.add(recipe)

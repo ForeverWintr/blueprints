@@ -87,10 +87,15 @@ class Raiser(Recipe):
             raise self.missing_data_exceptions()
         return DependencyRequest()
 
-    def extract_from_dependencies(self, *columns) -> tp.Any:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> tp.Any:
         if self.raise_in == "extract_from_dependencies":
             raise self.missing_data_exceptions()
-        return columns
+        return dependencies.recipe_to_result.values()
 
 
 class Node(Recipe):
@@ -102,7 +107,7 @@ class Node(Recipe):
     def get_dependency_request(self) -> DependencyRequest:
         return DependencyRequest(*self.dependencies)
 
-    def extract_from_dependencies(self, *args) -> tp.Any:
+    def extract_from_dependencies(self, *args, **kwargs) -> tp.Any:
         pass
 
     def __repr__(self):
