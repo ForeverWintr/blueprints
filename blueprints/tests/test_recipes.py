@@ -1,5 +1,9 @@
-import dataclasses
+from __future__ import annotations
 
+import dataclasses
+import typing as tp
+
+import frozendict
 import pytest
 
 from blueprints.factory import Factory
@@ -8,6 +12,7 @@ from blueprints.recipes import base
 from blueprints.recipes import general
 from blueprints.recipes import static_frame
 from blueprints.tests.conftest import TABLES
+from blueprints.tests.conftest import MultiColumn
 from blueprints.tests.conftest import Node
 from blueprints.tests.conftest import TestColumn
 from blueprints.tests.conftest import TestData
@@ -114,7 +119,27 @@ def test_recipe_type_registry():
 
 def test_requesting_recipes() -> None:
     "Test that a recipe receives its requesting recipes."
-    assert 0
+
+    columns = (
+        TestColumn(table_name="A", key=1),
+        TestColumn(table_name="A", key=1),
+        TestColumn(table_name="A", key=2),
+    )
+
+    class TRecipe(MultiColumn):
+        def extract_from_dependencies(
+            self,
+            dependencies: base.Dependencies,
+            requesting_recipes: tuple[base.Recipe, ...],
+            config: frozendict[str, tp.Any],
+        ) -> tp.Any:
+            raise NotImplementedError("WIP")
+
+    r = TRecipe(columns=columns)
+
+    result = Factory().process_recipe(r)
+
+    assert result == 0
 
 
 @pytest.mark.skip

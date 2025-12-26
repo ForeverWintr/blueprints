@@ -19,18 +19,18 @@ class Factory:
     def __init__(
         self,
         allow_missing: bool = True,
-        shared_state: dict = frozendict(),
+        config: dict = frozendict(),
     ):
         """A factory controls the construction of recipes.
 
         Args:
-            allow_missing: If False, individual recipes' allow_missing settings are ignored,
-        and any missing data errors are raised. If both the factory and recipe have
-        allow_missing set to true, missing data sentinels are returned instead.
-            shared_state: A dictionary. Recipes can opt to receive this in Recipe.extract_from_dependencies by setting the bind_shared_state classvar to true.
+
+            allow_missing: If False, individual recipes' allow_missing settings are ignored, and any missing data errors are raised. If both the factory and recipe have allow_missing set to true, missing data sentinels are returned instead.
+            config: A dictionary that you can use for arbitrary configuration values.
+            Recipes receive this in Recipe.extract_from_dependencies
         """
         self.allow_missing = allow_missing
-        self.shared_state = frozendict(shared_state)
+        self.config = frozendict(config)
 
     @staticmethod
     def recipes_to_build(
@@ -58,7 +58,7 @@ class Factory:
                     recipe, instantiated, metadata=metadata
                 )
                 result = util.process_recipe(
-                    recipe, dependencies=dependencies, shared_state=self.shared_state
+                    recipe, dependencies=dependencies, config=self.config
                 )
 
                 unbuildable = blueprint.update_result(result, instantiated)
@@ -118,7 +118,7 @@ class FactoryMP(Factory):
                         util.process_recipe,
                         recipe=recipe,
                         dependencies=dependencies,
-                        shared_state=self.shared_state,
+                        config=self.config,
                     )
                     running_futures.add(future)
                     building.add(recipe)

@@ -30,12 +30,12 @@ class ProcessResult(tp.NamedTuple):
 
 
 def process_recipe(
-    recipe: Recipe, dependencies: Dependencies, shared_state: frozendict
+    recipe: Recipe, dependencies: Dependencies, config: frozendict
 ) -> ProcessResult:
     """Called in a child process, this utility function returns both the recipe and the result of
     its `extract_from_dependencies` method."""
     try:
-        result = recipe.extract_from_dependencies(dependencies)
+        result = recipe.extract_from_dependencies(dependencies, config=config)
     except recipe.missing_data_exceptions as e:
         if not dependencies.metadata.factory_allow_missing or not recipe.allow_missing:
             raise
