@@ -58,7 +58,10 @@ class Factory:
                     recipe, instantiated, metadata=metadata
                 )
                 result = util.process_recipe(
-                    recipe, dependencies=dependencies, config=self.config
+                    recipe,
+                    dependencies=dependencies,
+                    config=self.config,
+                    requesting_recipes=blueprint.successors(recipe),
                 )
 
                 unbuildable = blueprint.update_result(result, instantiated)

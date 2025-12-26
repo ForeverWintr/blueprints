@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import typing as tp
 
+from frozendict import frozendict
+
 from blueprints import constants
 from blueprints.recipes.base import Dependencies
 from blueprints.recipes.base import DependencyRequest
@@ -18,7 +20,12 @@ TABLES = {
 class TestData(Recipe):
     table_name: str
 
-    def extract_from_dependencies(self, _: Dependencies) -> dict[int, int]:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requesting_recipes: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> dict[int, int]:
         return dict(TABLES[self.table_name])
 
 
@@ -32,7 +39,12 @@ class TestColumn(Recipe):
             TestData(table_name=self.table_name),
         )
 
-    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requesting_recipes: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> tp.Any:
         table = dependencies.args[0]
         return table[self.key]
 
