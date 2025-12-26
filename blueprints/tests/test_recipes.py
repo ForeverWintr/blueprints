@@ -8,13 +8,10 @@ import frozendict
 import pytest
 
 from blueprints.factory import Factory
-from blueprints.factory import util
 from blueprints.recipes import base
 from blueprints.recipes import general
-from blueprints.recipes import static_frame
 from blueprints.tests.conftest import TABLES
 from blueprints.tests.conftest import MultiColumn
-from blueprints.tests.conftest import Node
 from blueprints.tests.conftest import TestColumn
 from blueprints.tests.conftest import TestData
 
@@ -81,22 +78,6 @@ def test_from_function():
 def test_object():
     r = general.Object(payload=5)
     assert Factory().process_recipe(r) == 5
-
-
-RECIPE_EXAMPLES = (
-    static_frame.FrameFromDelimited,
-    static_frame.SeriesFromDelimited,
-    static_frame.FrameFromRecipes,
-)
-
-
-@pytest.mark.skip
-def test_recipe_registry():
-    d = Node(name="dep")
-    r = Node(name="r", dependencies=(d,))
-    e = Node(name="e", dependencies=(d,))
-    reg = util.recipe_registry([r, e])
-    assert reg == {id(x): x for x in (d, e, r)}
 
 
 def test_recipe_type_registry():
