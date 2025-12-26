@@ -22,10 +22,20 @@ class SeriesRecipe(Recipe):
     name: str
 
     @abstractmethod
-    def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Series:
-        """Given a Dependencies object corresponding to the DependencyRequest returned
-        by `get_dependency_request`, extract the data that this recipe describes and
-        return a Series."""
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requesting_recipes: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Series:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requesting_recipes: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
 
 
 class FrameRecipe(Recipe):
@@ -34,10 +44,20 @@ class FrameRecipe(Recipe):
     name: str
 
     @abstractmethod
-    def extract_from_dependencies(self, dependencies: Dependencies) -> sf.Frame:
-        """Given a Dependencies object corresponding to the DependencyRequest returned
-        by `get_dependency_request`, extract the data that this recipe describes and
-        return a Frame."""
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requesting_recipes: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Frame:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requesting_recipes: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
 
 
 class _FromDelimited(Recipe):
@@ -76,7 +96,20 @@ class SeriesFromDelimited(_FromDelimited):
         )
         return DependencyRequest(frame_recipe)
 
-    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requesting_recipes: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Series:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requesting_recipes: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
         frame = dependencies.args[0]
 
         try:
@@ -99,7 +132,20 @@ class FrameFromDelimited(_FromDelimited):
 
     missing_data_exceptions: tp.Type[BaseException] = FileNotFoundError
 
-    def extract_from_dependencies(self, _: Dependencies) -> tp.Any:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requesting_recipes: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Frame:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requesting_recipes: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
         f = self.frame_extract_function(self.file_path, **self.frame_extract_kwargs)
         if self.index_column:
             f = f.set_index(self.index_column, drop=True)
@@ -120,10 +166,20 @@ class FrameFromColumns(FrameRecipe):
         return DependencyRequest(*self.recipes)
 
     def extract_from_dependencies(
-        self, dependencies: Dependencies
+        self,
+        dependencies: Dependencies,
+        requesting_recipes: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
     ) -> sf.Frame | util.MissingPlaceholder:
-        """Missing dependencies become series using the final index. Missing index
-        propogates."""
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requesting_recipes: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
+
         not_missing = [
             x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
         ]
@@ -175,10 +231,19 @@ class FrameFromRecipes(Recipe):
         return r
 
     def extract_from_dependencies(
-        self, dependencies: Dependencies
+        self,
+        dependencies: Dependencies,
+        requesting_recipes: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
     ) -> sf.Frame | util.MissingPlaceholder:
-        """Missing dependencies become series using the final index. Missing index
-        propogates."""
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requesting_recipes: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
 
         direction = "columns"
         if self.axis:

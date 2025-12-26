@@ -112,6 +112,11 @@ def test_recipe_type_registry():
     assert reg.get(key) is FakeRecipe
 
 
+def test_requesting_recipes() -> None:
+    "Test that a recipe receives its requesting recipes."
+    assert 0
+
+
 @pytest.mark.skip
 def test_to_do():
     # Caching

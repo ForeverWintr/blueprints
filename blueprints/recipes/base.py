@@ -111,10 +111,20 @@ class Recipe(ABC):
         return DependencyRequest()
 
     @abstractmethod
-    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
-        """Given a Dependencies object corresponding to the DependencyRequest returned
-        by `get_dependency_request` above, extract the data that this recipe
-        describes."""
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requesting_recipes: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> tp.Any:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requesting_recipes: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
 
     @classmethod
     def from_serializable_dict(cls, data: dict, key_to_recipe: dict) -> tp.Self:
