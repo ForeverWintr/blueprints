@@ -17,7 +17,7 @@ class Object(Recipe):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requesting_recipes: tuple[Recipe, ...],
+        requested_by: tuple[Recipe, ...],
         config: frozendict[str, tp.Any],
     ) -> tp.Hashable:
         """Extract the data this recipe describes.
@@ -25,7 +25,7 @@ class Object(Recipe):
         Args:
             dependencies: a Dependencies object corresponding to the DependencyRequest
             returned by `get_dependency_request` above. Dependent recipes have been
-            requesting_recipes: The recipes that requested this recipe.
+            requested_by: The recipes that requested this recipe.
             config: A dictionary containing user defined configuration.
         """
         return self.payload
@@ -45,7 +45,7 @@ class FromFunction(Recipe):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requesting_recipes: tuple[Recipe, ...],
+        requested_by: tuple[Recipe, ...],
         config: frozendict[str, tp.Any],
     ) -> tp.Any:
         """Extract the data this recipe describes.
@@ -53,7 +53,7 @@ class FromFunction(Recipe):
         Args:
             dependencies: a Dependencies object corresponding to the DependencyRequest
             returned by `get_dependency_request` above. Dependent recipes have been
-            requesting_recipes: The recipes that requested this recipe.
+            requested_by: The recipes that requested this recipe.
             config: A dictionary containing user defined configuration.
         """
         return self.function(*self.args, **self.kwargs)

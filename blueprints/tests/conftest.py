@@ -23,7 +23,7 @@ class TestData(Recipe):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requesting_recipes: tuple[Recipe, ...],
+        requested_by: tuple[Recipe, ...],
         config: frozendict[str, tp.Any],
     ) -> dict[int, int]:
         return dict(TABLES[self.table_name])
@@ -42,7 +42,7 @@ class TestColumn(Recipe):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requesting_recipes: tuple[Recipe, ...],
+        requested_by: tuple[Recipe, ...],
         config: frozendict[str, tp.Any],
     ) -> tp.Any:
         table = dependencies.args[0]
@@ -56,7 +56,12 @@ class MultiColumn(Recipe):
         """This depends on a table"""
         return DependencyRequest(*self.columns)
 
-    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> tp.Any:
         columns = tuple(dependencies.recipe_to_result[c] for c in self.columns)
         return columns
 

@@ -118,26 +118,28 @@ def test_recipe_type_registry():
     assert reg.get(key) is FakeRecipe
 
 
-def test_requesting_recipes() -> None:
+def test_requested_by() -> None:
     "Test that a recipe receives its requesting recipes."
 
     columns = (
-        TestColumn(table_name="A", key=1),
         TestColumn(table_name="A", key=1),
         TestColumn(table_name="A", key=2),
     )
     r = MultiColumn(columns=columns)
 
+    unmocked = TestData.extract_from_dependencies
+
     def assert_successors(
         self,
         dependencies: base.Dependencies,
-        requesting_recipes: tuple[base.Recipe, ...],
+        requested_by: tuple[base.Recipe, ...],
         config: frozendict[str, tp.Any],
     ):
-        return TestData.extract_from_dependencies(
+        assert requested_by == frozenset(columns)
+        return unmocked(
             self,
             dependencies,
-            requesting_recipes,
+            requested_by,
             config,
         )
 
@@ -150,7 +152,7 @@ def test_requesting_recipes() -> None:
         result = Factory().process_recipe(r)
 
     ed.assert_called()
-    assert result == 0
+    assert result == (1, 2)
 
 
 @pytest.mark.skip
