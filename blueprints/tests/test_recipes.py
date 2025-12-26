@@ -42,7 +42,7 @@ def test_hash_eq():
 
 def test_extract_from_dependencies():
     recipe = TestData(table_name="A")
-    assert recipe.extract_from_dependencies(None) == TABLES["A"]
+    assert recipe.extract_from_dependencies(None, None, None) == TABLES["A"]
 
 
 def test_from_function():
