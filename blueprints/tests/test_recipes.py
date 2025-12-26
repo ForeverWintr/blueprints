@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import dataclasses
 import typing as tp
+from unittest.mock import patch
 
 import frozendict
 import pytest
@@ -125,20 +126,30 @@ def test_requesting_recipes() -> None:
         TestColumn(table_name="A", key=1),
         TestColumn(table_name="A", key=2),
     )
+    r = MultiColumn(columns=columns)
 
-    class TRecipe(MultiColumn):
-        def extract_from_dependencies(
+    def assert_successors(
+        self,
+        dependencies: base.Dependencies,
+        requesting_recipes: tuple[base.Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ):
+        return TestData.extract_from_dependencies(
             self,
-            dependencies: base.Dependencies,
-            requesting_recipes: tuple[base.Recipe, ...],
-            config: frozendict[str, tp.Any],
-        ) -> tp.Any:
-            raise NotImplementedError("WIP")
+            dependencies,
+            requesting_recipes,
+            config,
+        )
 
-    r = TRecipe(columns=columns)
+    with patch.object(
+        TestData,
+        "extract_from_dependencies",
+        side_effect=assert_successors,
+        autospec=True,
+    ) as ed:
+        result = Factory().process_recipe(r)
 
-    result = Factory().process_recipe(r)
-
+    ed.assert_called()
     assert result == 0
 
 
