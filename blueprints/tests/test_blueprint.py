@@ -24,17 +24,20 @@ def nodes() -> dict[str, Node]:
     d = Node(name="d")
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
+    e = Node(name="e", dependencies=(c,))
+
     return {
         "a": a,
         "d": d,
         "b": b,
         "c": c,
+        "e": e,
     }
 
 
 @pytest.fixture
 def basic_blueprint(nodes) -> Blueprint:
-    return Blueprint.from_recipes([nodes["b"], nodes["c"]])
+    return Blueprint.from_recipes([nodes["b"], nodes["e"]])
 
 
 def test_from_recipes() -> None:
@@ -100,6 +103,7 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         "a": BuildState.BUILDABLE,
         "c": BuildState.NOT_STARTED,
         "d": BuildState.BUILDABLE,
+        "e": BuildState.NOT_STARTED,
     }
 
     basic_blueprint.mark_built(Node(name="a"))
@@ -112,6 +116,7 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         "a": BuildState.BUILT,
         "c": BuildState.NOT_STARTED,
         "d": BuildState.BUILDABLE,
+        "e": BuildState.NOT_STARTED,
     }
 
 
@@ -154,8 +159,8 @@ def test_dependency_request():
     assert d.kwargs["foo"] == "5"
 
 
-def test_outputs(basic_blueprint):
-    assert {n.name for n in basic_blueprint.outputs} == {"b", "c"}
+def test_outputs(basic_blueprint: Blueprint):
+    assert {n.name for n in basic_blueprint.outputs} == {"b", "e"}
 
 
 def test_is_built(nodes: dict[str, Node], basic_blueprint: basic_blueprint):
