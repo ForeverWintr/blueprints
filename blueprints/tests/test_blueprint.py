@@ -178,16 +178,18 @@ def test_is_built(nodes: dict[str, Node], basic_blueprint: basic_blueprint):
     assert not basic_blueprint.is_built()
 
 
-def test_successors(nodes: dict[str, Node], basic_blueprint: Blueprint) -> None:
-    r = basic_blueprint.successors(nodes["a"])
+def test_what_depends_on(nodes: dict[str, Node], basic_blueprint: Blueprint) -> None:
+    r = basic_blueprint.what_depends_on(nodes["a"])
     assert r == frozenset({nodes["c"], nodes["b"]})
-    assert basic_blueprint.successors(nodes["b"]) == frozenset()
+    assert basic_blueprint.what_depends_on(nodes["b"]) == frozenset()
 
 
-def test_predecessors(nodes: dict[str, Node], basic_blueprint: Blueprint) -> None:
-    r = basic_blueprint.predecessors(nodes["b"])
+def test_get_dependencies_of(
+    nodes: dict[str, Node], basic_blueprint: Blueprint
+) -> None:
+    r = basic_blueprint.get_dependencies_of(nodes["b"])
     assert r == frozenset({nodes["a"]})
-    assert basic_blueprint.predecessors(nodes["a"]) == frozenset()
+    assert basic_blueprint.get_dependencies_of(nodes["a"]) == frozenset()
 
 
 @pytest.mark.skip

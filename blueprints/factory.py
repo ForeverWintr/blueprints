@@ -61,7 +61,7 @@ class Factory:
                     recipe,
                     dependencies=dependencies,
                     config=self.config,
-                    requested_by=blueprint.successors(recipe),
+                    requested_by=blueprint.what_depends_on(recipe),
                 )
 
                 unbuildable = blueprint.update_result(result, instantiated)

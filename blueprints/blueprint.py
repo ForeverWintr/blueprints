@@ -114,11 +114,11 @@ class Blueprint:
         """Return the build state of the given recipe"""
         return self._build_state[recipe]
 
-    def successors(self, recipe: Recipe) -> frozenset[Recipe]:
+    def what_depends_on(self, recipe: Recipe) -> frozenset[Recipe]:
         """Return recipes that requested the specified recipe"""
         return frozenset(self._dependency_graph.successors(recipe))
 
-    def predecessors(self, recipe: Recipe) -> frozenset[Recipe]:
+    def get_dependencies_of(self, recipe: Recipe) -> frozenset[Recipe]:
         """Return recipes that the specified recipe requested"""
         return frozenset(self._dependency_graph.predecessors(recipe))
 
