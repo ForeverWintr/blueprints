@@ -25,7 +25,7 @@ class SeriesRecipe(Recipe):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requested_by: tuple[Recipe, ...],
+        requested_by: frozenset[Recipe],
         config: frozendict[str, tp.Any],
     ) -> sf.Series:
         """Extract the data this recipe describes.
@@ -47,7 +47,7 @@ class FrameRecipe(Recipe):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requested_by: tuple[Recipe, ...],
+        requested_by: frozenset[Recipe],
         config: frozendict[str, tp.Any],
     ) -> sf.Frame:
         """Extract the data this recipe describes.
@@ -99,7 +99,7 @@ class SeriesFromDelimited(_FromDelimited):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requested_by: tuple[Recipe, ...],
+        requested_by: frozenset[Recipe],
         config: frozendict[str, tp.Any],
     ) -> sf.Series:
         """Extract the data this recipe describes.
@@ -135,7 +135,7 @@ class FrameFromDelimited(_FromDelimited):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requested_by: tuple[Recipe, ...],
+        requested_by: frozenset[Recipe],
         config: frozendict[str, tp.Any],
     ) -> sf.Frame:
         """Extract the data this recipe describes.
@@ -168,7 +168,7 @@ class FrameFromColumns(FrameRecipe):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requested_by: tuple[Recipe, ...],
+        requested_by: frozenset[Recipe],
         config: frozendict[str, tp.Any],
     ) -> sf.Frame | util.MissingPlaceholder:
         """Extract the data this recipe describes.
@@ -233,7 +233,7 @@ class FrameFromRecipes(Recipe):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requested_by: tuple[Recipe, ...],
+        requested_by: frozenset[Recipe],
         config: frozendict[str, tp.Any],
     ) -> sf.Frame | util.MissingPlaceholder:
         """Extract the data this recipe describes.

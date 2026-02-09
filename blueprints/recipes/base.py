@@ -113,7 +113,7 @@ class Recipe(ABC):
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
-        requested_by: tuple[Recipe, ...],
+        requested_by: frozenset[Recipe, ...],
         config: frozendict[str, tp.Any],
     ) -> tp.Any:
         """Extract the data this recipe describes.
