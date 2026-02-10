@@ -4,6 +4,7 @@ import functools
 import typing as tp
 from abc import abstractmethod
 from pathlib import Path
+import dataclasses
 
 import numpy as np
 import static_frame as sf
@@ -14,6 +15,7 @@ from blueprints.constants import MissingDependencyBehavior
 from blueprints.recipes.base import Dependencies
 from blueprints.recipes.base import DependencyRequest
 from blueprints.recipes.base import Recipe
+from blueprints.recipes import FromFunction
 
 
 class SeriesRecipe(Recipe):
@@ -60,6 +62,12 @@ class FrameRecipe(Recipe):
         """
 
 
+class FrameFromFunction(FrameRecipe):
+    name: str
+    from_function: FromFunction
+
+
+# TODO frame recipe
 class _FromDelimited(Recipe):
     """Base class for common file arguments"""
 
@@ -278,3 +286,78 @@ class FrameFromRecipes(Recipe):
 
         label_kwarg = {direction: labels}
         return sf.Frame.from_concat(to_concat, axis=self.axis, **label_kwarg)
+
+
+def assert_all_equal(col: str, group: sf.Frame) -> tp.Any:
+    """A duplicate handler for ReindexedFrame that fails if the duplicates are not identical, then returns the first"""
+
+
+class ReindexedFrame(FrameRecipe):
+    """A Frame with one of its columns set as index
+
+    Args:
+        frame: A recipe that produces the frame to be reindexed.
+        new_index_label: The column to reindex by.
+
+        column_to_duplicate_handler: A mapping from column label to a duplicate handling
+        function. The function receives the column name and each group of duplicates,
+        and should return a single value. For example, when reindexing security level
+        weights by company id, the function will be called for each company that has
+        more than one security. It will recieve all rows corresponding to that company,
+        and should return a single number representing that company's weight. The
+        resulting frame is guaranteed to contain all columns mentioned in this mapping,
+        but may also contain other columns.
+    """
+
+    frame: FrameRecipe
+    new_index_label: str
+    column_to_duplicate_handler: frozendict[
+        str, tp.Callable[[str, sf.Frame], tp.Any]
+    ] = frozendict()
+
+    name: str = dataclasses.field(init=False, repr=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "name", self.frame.name)
+
+    def get_dependency_request(self) -> DependencyRequest:
+        return DependencyRequest(self.frame)
+
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: tuple[Column, ...],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Frame:
+        [frame] = dependencies.args
+
+        # Short circuit if there are no duplicates.
+        if not frame[self.new_index_label].duplicated().any():
+            return frame.set_index(self.new_index_label)
+
+        dup_hanlders = self.column_to_duplicate_handler
+        if self.new_index_label not in dup_hanlders:
+            raise NotImplementedError("TR WIP")
+
+
+class Column(SeriesRecipe):
+    """A Column from a frame, optionally reindexed"""
+
+    name: str
+    frame: FrameRecipe
+    reindex_by: str | None = None
+    reindex_duplicate_handler: tp.Callable[[str, sf.Frame], tp.Any] | None = None
+
+    def get_dependency_request(self) -> DependencyRequest:
+        return DependencyRequest(
+            frame=ReindexedFrame(frame=self.frame, new_index_label=self.reindex_by)
+        )
+
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: tuple[Column, ...],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Series:
+        # ReindexedFrame has already ensured the index is set as we requested.
+        return dependencies.kwargs[self.name]
