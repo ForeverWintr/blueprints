@@ -352,7 +352,7 @@ class _Reindexer(FrameRecipe):
             result = sf.FrameGO(index=frame[self.new_index_label])
             for c, r in col_recipe_pairs:
                 result[r] = frame[c]
-            return result.to_frame()
+            return result.to_frame().rename(index=self.new_index_label)
 
         # There are duplicates. Apply duplicate handlers.
         index = []
