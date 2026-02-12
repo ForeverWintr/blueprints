@@ -293,6 +293,12 @@ def test_column() -> None:
     fr = static_frame.FrameFromFunction(
         name="frame", from_function=FromFunction(function=lambda: frame)
     )
+    a = static_frame.Column(
+        name="a",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
+    )
     b = static_frame.Column(
         name="b",
         frame=fr,
@@ -314,14 +320,14 @@ def test_column() -> None:
     )
 
     r = Factory().process_recipe(
-        static_frame.FrameFromColumns(recipes=(b, c, c2), name="result")
+        static_frame.FrameFromColumns(recipes=(a, b, c, c2), name="result")
     )
     assert r.to_markdown() == (
-        "|  |b |c   |c2|\n"
-        "|--|--|----|--|\n"
-        "|e |5 |6.0 |6 |\n"
-        "|n |4 |4.5 |4 |\n"
-        "|o |2 |2.5 |2 |"
+        "|  |a |b |c   |c2|\n"
+        "|--|--|--|----|--|\n"
+        "|e |e |5 |6.0 |6 |\n"
+        "|n |n |4 |4.5 |4 |\n"
+        "|o |o |2 |2.5 |2 |"
     )
     assert r.index.name == "a"
 
