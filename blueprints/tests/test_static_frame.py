@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import itertools
 import typing as tp
 from functools import partial
@@ -37,9 +37,7 @@ def row_col_frame() -> sf.Frame:
 @pytest.fixture(scope="module")
 def date_index_frame(row_col_frame) -> sf.Frame:
     return row_col_frame.relabel(
-        index=sf.IndexDate.from_date_range(
-            datetime.date(2023, 1, 1), datetime.date(2023, 1, 3)
-        )
+        index=sf.IndexDate.from_date_range(dt.date(2023, 1, 1), dt.date(2023, 1, 3))
     )
 
 
@@ -216,7 +214,7 @@ def test_frame_from_recipe_index_date(date_index_frame) -> None:
             FromFunction(function=lambda: date_index_frame),
             FromFunction(
                 function=lambda: date_index_frame.relabel(
-                    index=date_index_frame.index + datetime.timedelta(2),
+                    index=date_index_frame.index + dt.timedelta(2),
                     index_constructor=sf.IndexDate,
                     columns=["c3", "c4", "c5"],
                 )
@@ -281,7 +279,7 @@ def test_frame_from_recipes_missing_index(sample_frame) -> None:
     assert isinstance(result, util.MissingPlaceholder)
 
 
-def test_column(sample_frame: sf.Frame) -> None:
+def test_column() -> None:
     frame = sf.Frame.from_records(
         (
             ["o", 1, 2, "x"],
@@ -299,20 +297,70 @@ def test_column(sample_frame: sf.Frame) -> None:
         name="b",
         frame=fr,
         reindex_by="a",
-        reindex_duplicate_handler=lambda c, f: f[c].max(),
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
     )
     c = static_frame.Column(
         name="c",
         frame=fr,
         reindex_by="a",
-        reindex_duplicate_handler=lambda c, f: f[c].mean(),
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].mean(),
     )
     c2 = static_frame.Column(
+        name="c2",
+        source_name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].iloc[0],
+    )
+
+    r = Factory().process_recipe(
+        static_frame.FrameFromColumns(recipes=(b, c, c2), name="result")
+    )
+    assert r.to_markdown() == (
+        "|  |b |c   |c2|\n"
+        "|--|--|----|--|\n"
+        "|e |5 |6.0 |6 |\n"
+        "|n |4 |4.5 |4 |\n"
+        "|o |2 |2.5 |2 |"
+    )
+    assert r.index.name == "a"
+
+
+def test_column_date_index() -> None:
+    frame = sf.Frame.from_records(
+        (
+            [dt.date(2020, 1, 1), 1, 2, "x"],
+            [dt.date(2020, 1, 1), 2, 3, "y"],
+            [dt.date(2025, 1, 1), 3, 4, "z"],
+            [dt.date(2025, 1, 1), 4, 5, "a"],
+            [dt.date(2026, 1, 1), 5, 6, "x"],
+        ),
+        columns=["a", "b", "c", "d"],
+        dtypes={
+            "a": "datetime64[D]",
+        },
+    )
+    fr = static_frame.FrameFromFunction(
+        name="frame", from_function=FromFunction(function=lambda: frame)
+    )
+    b = static_frame.Column(
+        name="b",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
+    )
+    c = static_frame.Column(
         name="c",
         frame=fr,
         reindex_by="a",
-        reindex_duplicate_handler=lambda c, f: f[c].iloc[0],
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].mean(),
     )
+    r = Factory().process_recipes((b, c))
 
-    r = Factory().process_recipes((b, c, c2))
-    assert 0
+    assert sf.Frame.from_concat(r.values(), axis=1).to_markdown() == (
+        "|           |b |c  |\n"
+        "|-----------|--|---|\n"
+        "|2020-01-01 |2 |2.5|\n"
+        "|2025-01-01 |4 |4.5|\n"
+        "|2026-01-01 |5 |6.0|"
+    )

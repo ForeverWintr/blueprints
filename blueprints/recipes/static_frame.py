@@ -203,7 +203,7 @@ class FrameFromColumns(FrameRecipe):
         not_missing = [
             x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
         ]
-        final_index = sf.Index.from_union(x.index for x in not_missing)
+        final_index = sf.Index.from_union(*(x.index for x in not_missing))
         to_concat = []
         for r in self.recipes:
             d = dependencies.recipe_to_result[r]
@@ -314,6 +314,25 @@ class _Reindexer(FrameRecipe):
     def get_dependency_request(self) -> DependencyRequest:
         return DependencyRequest(self.frame)
 
+    @staticmethod
+    def _make_column_recipe_pairs(
+        frame: sf.Frame,
+        requested_by: frozenset[Column],
+    ) -> list[tuple[str, Column]]:
+        """Return pairs of (column_name, requesting_recipe) for all requesting recipes.
+        Note that two recipes may request the same column with different duplicate
+        handling."""
+        col_to_recipe = {}
+        for r in requested_by:
+            col_to_recipe.setdefault(r.source_name, []).append(r)
+
+        col_recipe_pairs = []
+        for c in frame.columns:
+            if c in col_to_recipe:
+                for r in col_to_recipe[c]:
+                    col_recipe_pairs.append((c, r))
+        return col_recipe_pairs
+
     def extract_from_dependencies(
         self,
         dependencies: Dependencies,
@@ -322,90 +341,62 @@ class _Reindexer(FrameRecipe):
     ) -> sf.Frame:
         frame: sf.Frame = dependencies.args[0]
 
-        # Sort for stability between runs.
-        requestors = sorted(requested_by, key=lambda r: r.name)
-        requested_cols = sorted(set(r.name for r in requestors)) + [
-            self.new_index_label
-        ]
-
-        # Filter frame to only contain requested cols. We don't know how to handle
-        # duplicates otherwise.
-        frame = frame[requested_cols]
-
         # Short circuit if there are no duplicates.
         if not frame[self.new_index_label].duplicated().any():
             return frame.set_index(self.new_index_label)
 
         # There are duplicates. Apply duplicate handlers.
+
+        col_recipe_pairs = self._make_column_recipe_pairs(
+            frame=frame, requested_by=requested_by
+        )
+
         index = []
         rows = []
         for new_idx, group in frame.iter_group_items(self.new_index_label):
-            if group.shape[0] == 1:
-                raise NotImplementedError("TR WIP")
+            index.append(new_idx)
+            if group.size == 1:
+                # No duplicates; do not call handlers.
+                row = [group[c] for c, _ in col_recipe_pairs]
             else:
-                raise NotImplementedError("TR WIP")
+                row = []
+                for colname, recipe in col_recipe_pairs:
+                    row.append(recipe.reindex_duplicate_handler(recipe, group))
+            rows.append(row)
 
-
-def assert_all_equal(col: str, group: sf.Frame) -> tp.Any:
-    """A duplicate handler for ReindexedFrame that fails if the duplicates are not identical, then returns the first"""
-    raise NotImplementedError("TR WIP")
-
-
-class ReindexedFrame(FrameRecipe):
-    """A Frame with one of its columns set as index
-
-    Args:
-        frame: A recipe that produces the frame to be reindexed.
-        new_index_label: The column to reindex by.
-
-        column_to_duplicate_handler: A mapping from column label to a duplicate handling
-        function. The function receives the column name and each group of duplicates,
-        and should return a single value. For example, when reindexing security level
-        weights by company id, the function will be called for each company that has
-        more than one security. It will recieve all rows corresponding to that company,
-        and should return a single number representing that company's weight. The
-        resulting frame is guaranteed to contain all columns mentioned in this mapping,
-        but may also contain other columns.
-    """
-
-    frame: FrameRecipe
-    new_index_label: str
-    column_to_duplicate_handler: frozendict[
-        str, tp.Callable[[str, sf.Frame], tp.Any]
-    ] = frozendict()
-
-    name: str = dataclasses.field(init=False, repr=False)
-
-    def __post_init__(self):
-        object.__setattr__(self, "name", self.frame.name)
-
-    def get_dependency_request(self) -> DependencyRequest:
-        return DependencyRequest(self.frame)
-
-    def extract_from_dependencies(
-        self,
-        dependencies: Dependencies,
-        requested_by: tuple[Column, ...],
-        config: frozendict[str, tp.Any],
-    ) -> sf.Frame:
-        [frame] = dependencies.args
-
-        # Short circuit if there are no duplicates.
-        if not frame[self.new_index_label].duplicated().any():
-            return frame.set_index(self.new_index_label)
-
-        dup_hanlders = self.column_to_duplicate_handler
-        if self.new_index_label not in dup_hanlders:
-            raise NotImplementedError("TR WIP")
+        columns = [r for _, r in col_recipe_pairs]
+        return sf.Frame.from_records(
+            rows,
+            index=index,
+            index_constructor=sf.IndexAutoConstructorFactory,
+            columns=columns,
+        ).rename(index=self.new_index_label)
 
 
 class Column(SeriesRecipe):
-    """A Column from a frame, optionally reindexed"""
+    """A Column from a frame, optionally reindexed.
+
+    Args:
+        name: The name of the resulting series.
+
+        source_name: the name of the source column in `frame`. Defaults to `name`.
+
+        reindex_by: A source column to reindex by.
+
+        reindex_duplicate_handler: If `reindex_by` is set to a column with duplicates,
+        this function is called once per each group of duplicate rows. Receives this
+        recipe and all columns for each duplicate value.
+    """
 
     name: str
     frame: FrameRecipe
+    source_name: str | None = None
     reindex_by: str | None = None
-    reindex_duplicate_handler: tp.Callable[[str, sf.Frame], tp.Any] | None = None
+    reindex_duplicate_handler: tp.Callable[[tp.Self, sf.Frame], tp.Any] | None = None
+
+    def __post_init__(self):
+        if self.source_name is None:
+            object.__setattr__(self, "source_name", self.name)
 
     def get_dependency_request(self) -> DependencyRequest:
         return DependencyRequest(
@@ -418,5 +409,6 @@ class Column(SeriesRecipe):
         requested_by: tuple[Column, ...],
         config: frozendict[str, tp.Any],
     ) -> sf.Series:
-        # ReindexedFrame has already ensured the index is set as we requested.
-        return dependencies.kwargs[self.name]
+        frame = dependencies.kwargs["frame"]
+        series = frame[self]
+        return series.rename(self.name)

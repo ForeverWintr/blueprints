@@ -6,7 +6,6 @@ from blueprints.recipes.static_frame import FrameFromRecipes
 from blueprints.recipes.static_frame import FrameRecipe
 from blueprints.recipes.static_frame import SeriesFromDelimited
 from blueprints.recipes.static_frame import SeriesRecipe
-from blueprints.recipes.static_frame import ReindexedFrame
 from blueprints.recipes.static_frame import Column
 
 __all__ = [
