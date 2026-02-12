@@ -341,16 +341,20 @@ class _Reindexer(FrameRecipe):
     ) -> sf.Frame:
         frame: sf.Frame = dependencies.args[0]
 
-        # Short circuit if there are no duplicates.
-        if not frame[self.new_index_label].duplicated().any():
-            return frame.set_index(self.new_index_label)
-
-        # There are duplicates. Apply duplicate handlers.
-
+        # Determine final columns.
         col_recipe_pairs = self._make_column_recipe_pairs(
             frame=frame, requested_by=requested_by
         )
 
+        # Short circuit if there are no duplicates.
+        if not frame[self.new_index_label].duplicated().any():
+            frame = frame.set_index(self.new_index_label)
+            result = sf.FrameGO(index=frame[self.new_index_label])
+            for c, r in col_recipe_pairs:
+                result[r] = frame[c]
+            return result.to_frame()
+
+        # There are duplicates. Apply duplicate handlers.
         index = []
         rows = []
         for new_idx, group in frame.iter_group_items(self.new_index_label):

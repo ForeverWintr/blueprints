@@ -332,6 +332,57 @@ def test_column() -> None:
     assert r.index.name == "a"
 
 
+def test_column_no_dups() -> None:
+    frame = sf.Frame.from_records(
+        (
+            ["o", 1, 2, "x"],
+            ["n", 4, 5, "a"],
+            ["e", 5, 6, "x"],
+        ),
+        columns=["a", "b", "c", "d"],
+    )
+    fr = static_frame.FrameFromFunction(
+        name="frame", from_function=FromFunction(function=lambda: frame)
+    )
+    a = static_frame.Column(
+        name="a",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
+    )
+    b = static_frame.Column(
+        name="b",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
+    )
+    c = static_frame.Column(
+        name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].mean(),
+    )
+    c2 = static_frame.Column(
+        name="c2",
+        source_name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].iloc[0],
+    )
+
+    r = Factory().process_recipe(
+        static_frame.FrameFromColumns(recipes=(a, b, c, c2), name="result")
+    )
+    assert r.to_markdown() == (
+        "|  |a |b |c |c2|\n"
+        "|--|--|--|--|--|\n"
+        "|o |o |1 |2 |2 |\n"
+        "|n |n |4 |5 |5 |\n"
+        "|e |e |5 |6 |6 |"
+    )
+    assert r.index.name == "a"
+
+
 def test_column_date_index() -> None:
     frame = sf.Frame.from_records(
         (
