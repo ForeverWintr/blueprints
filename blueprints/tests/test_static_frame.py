@@ -281,6 +281,38 @@ def test_frame_from_recipes_missing_index(sample_frame) -> None:
     assert isinstance(result, util.MissingPlaceholder)
 
 
-def test_column(sample_frame) -> None:
-    r = static_frame.Column()
+def test_column(sample_frame: sf.Frame) -> None:
+    frame = sf.Frame.from_records(
+        (
+            ["o", 1, 2, "x"],
+            ["o", 2, 3, "y"],
+            ["n", 3, 4, "z"],
+            ["n", 4, 5, "a"],
+            ["e", 5, 6, "x"],
+        ),
+        columns=["a", "b", "c", "d"],
+    )
+    fr = static_frame.FrameFromFunction(
+        name="frame", from_function=FromFunction(function=lambda: frame)
+    )
+    b = static_frame.Column(
+        name="b",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda c, f: f[c].max(),
+    )
+    c = static_frame.Column(
+        name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda c, f: f[c].mean(),
+    )
+    c2 = static_frame.Column(
+        name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda c, f: f[c].iloc[0],
+    )
+
+    r = Factory().process_recipes((b, c, c2))
     assert 0

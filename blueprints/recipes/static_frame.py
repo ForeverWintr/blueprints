@@ -66,6 +66,18 @@ class FrameFromFunction(FrameRecipe):
     name: str
     from_function: FromFunction
 
+    def get_dependency_request(self) -> DependencyRequest:
+        """Return a DependencyRequest specifiying recipes that this recipe depends on."""
+        return DependencyRequest(self.from_function)
+
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: frozenset[Recipe],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Frame:
+        return dependencies.args[0].rename(self.name)
+
 
 # TODO frame recipe
 class _FromDelimited(Recipe):
@@ -288,8 +300,55 @@ class FrameFromRecipes(Recipe):
         return sf.Frame.from_concat(to_concat, axis=self.axis, **label_kwarg)
 
 
+class _Reindexer(FrameRecipe):
+    """Used internally when a recipe requests column(s) from a reindexed frame. Not
+    intended as a standalone recipe"""
+
+    frame: FrameRecipe
+    new_index_label: str
+    name: str = dataclasses.field(init=False, repr=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "name", self.frame.name)
+
+    def get_dependency_request(self) -> DependencyRequest:
+        return DependencyRequest(self.frame)
+
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: frozenset[Column],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Frame:
+        frame: sf.Frame = dependencies.args[0]
+
+        # Sort for stability between runs.
+        requestors = sorted(requested_by, key=lambda r: r.name)
+        requested_cols = sorted(set(r.name for r in requestors)) + [
+            self.new_index_label
+        ]
+
+        # Filter frame to only contain requested cols. We don't know how to handle
+        # duplicates otherwise.
+        frame = frame[requested_cols]
+
+        # Short circuit if there are no duplicates.
+        if not frame[self.new_index_label].duplicated().any():
+            return frame.set_index(self.new_index_label)
+
+        # There are duplicates. Apply duplicate handlers.
+        index = []
+        rows = []
+        for new_idx, group in frame.iter_group_items(self.new_index_label):
+            if group.shape[0] == 1:
+                raise NotImplementedError("TR WIP")
+            else:
+                raise NotImplementedError("TR WIP")
+
+
 def assert_all_equal(col: str, group: sf.Frame) -> tp.Any:
     """A duplicate handler for ReindexedFrame that fails if the duplicates are not identical, then returns the first"""
+    raise NotImplementedError("TR WIP")
 
 
 class ReindexedFrame(FrameRecipe):
@@ -350,7 +409,7 @@ class Column(SeriesRecipe):
 
     def get_dependency_request(self) -> DependencyRequest:
         return DependencyRequest(
-            frame=ReindexedFrame(frame=self.frame, new_index_label=self.reindex_by)
+            frame=_Reindexer(frame=self.frame, new_index_label=self.reindex_by)
         )
 
     def extract_from_dependencies(
