@@ -173,71 +173,18 @@ class FrameFromDelimited(_FromDelimited):
 
 
 class FrameFromColumns(FrameRecipe):
-    """Return a frame by horizontal concat of all the provided recipes"""
-
-    recipes: tuple[SeriesRecipe | FrameRecipe, ...]
-
-    ## Class level configuration
-    on_missing_dependency: tp.ClassVar[MissingDependencyBehavior] = (
-        MissingDependencyBehavior.BIND
-    )
-
-    def get_dependency_request(self) -> DependencyRequest:
-        return DependencyRequest(*self.recipes)
-
-    def extract_from_dependencies(
-        self,
-        dependencies: Dependencies,
-        requested_by: frozenset[Recipe],
-        config: frozendict[str, tp.Any],
-    ) -> sf.Frame | util.MissingPlaceholder:
-        """Extract the data this recipe describes.
-
-        Args:
-            dependencies: a Dependencies object corresponding to the DependencyRequest
-            returned by `get_dependency_request` above. Dependent recipes have been
-            requested_by: The recipes that requested this recipe.
-            config: A dictionary containing user defined configuration.
-        """
-
-        not_missing = [
-            x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
-        ]
-        final_index = sf.Index.from_union(*(x.index for x in not_missing))
-        to_concat = []
-        for r in self.recipes:
-            d = dependencies.recipe_to_result[r]
-            if isinstance(d, util.MissingPlaceholder):
-                try:
-                    label = r.name
-                except AttributeError:
-                    # Not all recipes have labels.
-                    label = d.reason
-                d = sf.Series.from_element(d.fill_value, name=label, index=final_index)
-
-            to_concat.append(d)
-
-        return sf.Frame.from_concat(to_concat, axis=1)
-
-
-class FrameFromRecipes(Recipe):
-    """Create a frame by concatenating the result of other recipes (all of which should
-    return frames or series).
+    """Return a frame by horizontal concat of all the provided recipes
 
     Args:
-        recipes: a tuple of recipes, each of which should return a frame or series. By
-        default, the indexes will be unioned.
+        recipes: Recipes that return Frames/Series, which will be concatenated horizontally (as columns).
 
-        labels: A recipe, the result of which is used for the index labels in horizontal
-        concatenation or column labels in vertical concatenation.
-
-        axis: Argument to Frame.from_concat. 0 for vertical concatenation, 1 for
-        horizontal.
+        labels: Column labels that will override column labels in the resulting frame,
+        or a recipe that returns same. If specified, length must match the number of
+        columns.
     """
 
     recipes: tuple[SeriesRecipe | FrameRecipe, ...]
-    labels: Recipe | None = None
-    axis: int = 0
+    labels: tuple[tp.Hashable, ...] | sf.Index | Recipe = ()
 
     ## Class level configuration
     on_missing_dependency: tp.ClassVar[MissingDependencyBehavior] = (
@@ -246,7 +193,7 @@ class FrameFromRecipes(Recipe):
 
     def get_dependency_request(self) -> DependencyRequest:
         r = DependencyRequest(*self.recipes)
-        if self.labels is not None:
+        if isinstance(self.labels, Recipe):
             r.kwargs["labels"] = self.labels
         return r
 
@@ -265,39 +212,33 @@ class FrameFromRecipes(Recipe):
             config: A dictionary containing user defined configuration.
         """
 
-        direction = "columns"
-        if self.axis:
-            direction = "index"
-
         not_missing = [
             x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
         ]
-        labels = dependencies.kwargs.get("labels")
-        if labels is None:
-            labels = functools.reduce(
-                sf.Index.union, (getattr(x, direction) for x in not_missing)
-            )
-        elif isinstance(labels, util.MissingPlaceholder):
-            # The frame can't be built without labels. Propagate missing.
-            return labels
-        elif not isinstance(labels, sf.Index):
-            labels = sf.IndexAutoConstructorFactory(name=None)(labels)
-
+        final_index = not_missing[0].index.union(*(x.index for x in not_missing[1:]))
         to_concat = []
         for r in self.recipes:
             d = dependencies.recipe_to_result[r]
             if isinstance(d, util.MissingPlaceholder):
                 try:
-                    label = r.label
+                    label = r.name
                 except AttributeError:
                     # Not all recipes have labels.
                     label = d.reason
-                d = sf.Series.from_element(d.fill_value, name=label, index=labels)
+                d = sf.Series.from_element(d.fill_value, name=label, index=final_index)
 
             to_concat.append(d)
 
-        label_kwarg = {direction: labels}
-        return sf.Frame.from_concat(to_concat, axis=self.axis, **label_kwarg)
+        result = sf.Frame.from_concat(to_concat, axis=1)
+        if self.labels:
+            colnames = self.labels
+            if "labels" in dependencies.kwargs:
+                colnames = dependencies.kwargs["labels"]
+                if isinstance(colnames, util.MissingPlaceholder):
+                    # The frame can't be built without labels. Propagate missing.
+                    return colnames
+            result = result.relabel(columns=colnames)
+        return result
 
 
 class _Reindexer(FrameRecipe):
