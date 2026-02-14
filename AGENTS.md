@@ -12,16 +12,16 @@ Core package code lives in `blueprints/`. Key modules:
 Project config is in `pyproject.toml`; lint hooks are in `.pre-commit-config.yaml`.
 
 ## Build, Test, and Development Commands
-Use Poetry and Python 3.11+.
+Use uv and Python 3.11+.
 
 ```bash
-poetry install --with dev      # Install runtime + dev dependencies
-poetry run pytest              # Run test suite
-poetry run pytest --cov=blueprints --cov-report=term-missing
-poetry run ruff check .        # Lint (includes import-order checks)
-poetry run ruff format .       # Format code
-poetry run mypy blueprints     # Static type checks
-poetry run pre-commit install  # Enable local git hooks
+uv sync --group dev                               # Create/update .venv with dev deps
+uv run pytest                                     # Run test suite
+uv run pytest --cov=blueprints --cov-report=term-missing
+uv run ruff check .                               # Lint (includes import-order checks)
+uv run ruff format .                              # Format code
+uv run mypy blueprints                            # Static type checks
+uv run pre-commit install                         # Enable local git hooks
 ```
 
 ## Coding Style & Naming Conventions
@@ -40,5 +40,5 @@ poetry run pre-commit install  # Enable local git hooks
 - Open PRs from branches (do not commit directly to `main`), include:
   - What changed and why.
   - Linked issue(s), if applicable.
-  - Test evidence (`poetry run pytest` output summary).
+  - Test evidence (`uv run pytest` output summary).
   - Screenshots only for renderer/UI-visible changes.
