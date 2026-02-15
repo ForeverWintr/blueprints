@@ -39,6 +39,7 @@ jobs:
       run: uv run pytest --cov=blueprints --cov-report=xml
 
     - name: Upload coverage
+      if: ${{ secrets.CODECOV_TOKEN != '' }}
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
