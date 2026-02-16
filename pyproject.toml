@@ -17,7 +17,7 @@ ignore_missing_imports = true
 [dependency-groups]
 dev = [
     "mypy>=1.17.1,<2.0.0",
-    "pytest>=8.4.1,<9.0.0",
+    "pytest>=8.4.1,<10.0.0",
     "ruff>=0.12.11,<1.0.0",
     "frame-fixtures>=1.1.0,<2.0.0",
     "pytest-cov>=7.0.0,<8.0.0",
