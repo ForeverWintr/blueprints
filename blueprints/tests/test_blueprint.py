@@ -24,17 +24,20 @@ def nodes() -> dict[str, Node]:
     d = Node(name="d")
     b = Node(name="b", dependencies=(a,))
     c = Node(name="c", dependencies=(a, d))
+    e = Node(name="e", dependencies=(c,))
+
     return {
         "a": a,
         "d": d,
         "b": b,
         "c": c,
+        "e": e,
     }
 
 
 @pytest.fixture
 def basic_blueprint(nodes) -> Blueprint:
-    return Blueprint.from_recipes([nodes["b"], nodes["c"]])
+    return Blueprint.from_recipes([nodes["b"], nodes["e"]])
 
 
 def test_from_recipes() -> None:
@@ -100,6 +103,7 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         "a": BuildState.BUILDABLE,
         "c": BuildState.NOT_STARTED,
         "d": BuildState.BUILDABLE,
+        "e": BuildState.NOT_STARTED,
     }
 
     basic_blueprint.mark_built(Node(name="a"))
@@ -112,6 +116,7 @@ def test_mark_built(basic_blueprint: Blueprint) -> None:
         "a": BuildState.BUILT,
         "c": BuildState.NOT_STARTED,
         "d": BuildState.BUILDABLE,
+        "e": BuildState.NOT_STARTED,
     }
 
 
@@ -154,8 +159,8 @@ def test_dependency_request():
     assert d.kwargs["foo"] == "5"
 
 
-def test_outputs(basic_blueprint):
-    assert {n.name for n in basic_blueprint.outputs} == {"b", "c"}
+def test_outputs(basic_blueprint: Blueprint):
+    assert {n.name for n in basic_blueprint.outputs} == {"b", "e"}
 
 
 def test_is_built(nodes: dict[str, Node], basic_blueprint: basic_blueprint):
@@ -171,6 +176,20 @@ def test_is_built(nodes: dict[str, Node], basic_blueprint: basic_blueprint):
 
     basic_blueprint.mark_buildable(nodes["b"])
     assert not basic_blueprint.is_built()
+
+
+def test_what_depends_on(nodes: dict[str, Node], basic_blueprint: Blueprint) -> None:
+    r = basic_blueprint.what_depends_on(nodes["a"])
+    assert r == frozenset({nodes["c"], nodes["b"]})
+    assert basic_blueprint.what_depends_on(nodes["b"]) == frozenset()
+
+
+def test_get_dependencies_of(
+    nodes: dict[str, Node], basic_blueprint: Blueprint
+) -> None:
+    r = basic_blueprint.get_dependencies_of(nodes["b"])
+    assert r == frozenset({nodes["a"]})
+    assert basic_blueprint.get_dependencies_of(nodes["a"]) == frozenset()
 
 
 @pytest.mark.skip

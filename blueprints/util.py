@@ -11,6 +11,8 @@ from blueprints import exceptions
 from blueprints.constants import BuildState
 
 if tp.TYPE_CHECKING:
+    from frozendict import frozendict
+
     from blueprints.recipes.base import Dependencies
     from blueprints.recipes.base import DependencyRequest
     from blueprints.recipes.base import Recipe
@@ -27,12 +29,18 @@ class ProcessResult(tp.NamedTuple):
     output: tp.Any
 
 
-def process_recipe(recipe: Recipe, dependencies: Dependencies) -> ProcessResult:
+def process_recipe(
+    recipe: Recipe,
+    dependencies: Dependencies,
+    config: frozendict,
+    requested_by: frozenset[Recipe],
+) -> ProcessResult:
     """Called in a child process, this utility function returns both the recipe and the result of
     its `extract_from_dependencies` method."""
-
     try:
-        result = recipe.extract_from_dependencies(dependencies)
+        result = recipe.extract_from_dependencies(
+            dependencies, config=config, requested_by=requested_by
+        )
     except recipe.missing_data_exceptions as e:
         if not dependencies.metadata.factory_allow_missing or not recipe.allow_missing:
             raise

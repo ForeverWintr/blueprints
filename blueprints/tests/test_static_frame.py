@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import datetime
+import datetime as dt
 import itertools
 import typing as tp
 from functools import partial
@@ -15,8 +15,8 @@ from blueprints.factory import Factory
 from blueprints.recipes.general import FromFunction
 from blueprints.recipes.general import Object
 from blueprints.recipes.static_frame import FrameFromDelimited
-from blueprints.recipes.static_frame import FrameFromRecipes
 from blueprints.recipes.static_frame import SeriesFromDelimited
+from blueprints.recipes import static_frame
 
 
 @pytest.fixture(scope="module")
@@ -36,9 +36,7 @@ def row_col_frame() -> sf.Frame:
 @pytest.fixture(scope="module")
 def date_index_frame(row_col_frame) -> sf.Frame:
     return row_col_frame.relabel(
-        index=sf.IndexDate.from_date_range(
-            datetime.date(2023, 1, 1), datetime.date(2023, 1, 3)
-        )
+        index=sf.IndexDate.from_date_range(dt.date(2023, 1, 1), dt.date(2023, 1, 3))
     )
 
 
@@ -124,12 +122,12 @@ def test_allow_missing(missing_configurations, sample_frame):
             )
 
 
-def test_frame_from_recipes(sample_frame):
+def test_frame_from_columns(sample_frame):
     # I'm using FromFunction as an easy way to get a recipe that generates Frame/Series.
     series = FromFunction(function=lambda: sample_frame[sf.ILoc[1]])
     frame = FromFunction(function=lambda: sample_frame[sf.ILoc[2:4]])
 
-    concat = FrameFromRecipes(recipes=(series, frame), axis=1)
+    concat = static_frame.FrameFromColumns(name="test", recipes=(series, frame))
 
     f = Factory()
     result = f.process_recipe(concat)
@@ -144,10 +142,9 @@ class FRFixture(tp.NamedTuple):
     expected_cols: str | list[str]
     extra: tuple[util.MissingPlaceholder] = ()
     labels: list[str] | None = None
-    axis: int = 0
 
     def __str__(self) -> str:
-        return f"{self.name}_axis_{self.axis}"
+        return f"{self.name}"
 
 
 FROM_RECIPES_CONFIGURATIONS = [
@@ -155,15 +152,15 @@ FROM_RECIPES_CONFIGURATIONS = [
         name="simple",
         col_select=[["c0"], "c2"],
         labels=("i1", "i2"),
-        expected_index=["i1", "i2"],
+        expected_index=["i0", "i1", "i2"],
         expected_cols=["c0", "c2"],
     ),
     FRFixture(
         name="missing",
         col_select=[["c0"], "c2"],
         extra=(Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),),
-        labels=("i1", "i2"),
-        expected_index=["i1", "i2"],
+        labels=("i1", "i2", "missing"),
+        expected_index=["i0", "i1", "i2"],
         expected_cols=["c0", "c2", "test"],
     ),
     FRFixture(
@@ -171,20 +168,15 @@ FROM_RECIPES_CONFIGURATIONS = [
         col_select=[["c0"], "c2"],
         extra=(Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),),
         labels=sf.IndexDate.from_date_range("2022-01-01", "2022-01-03"),
-        expected_index=sf.IndexDate.from_date_range("2022-01-01", "2022-01-03"),
+        expected_index=["i0", "i1", "i2"],
         expected_cols=["c0", "c2", "test"],
     ),
 ]
-FROM_RECIPES_CONFIGURATIONS.extend(
-    [f._replace(axis=1) for f in FROM_RECIPES_CONFIGURATIONS]
-)
 
 
 @pytest.mark.parametrize("fixture", FROM_RECIPES_CONFIGURATIONS, ids=str)
-def test_frame_from_recipes_labels(row_col_frame, fixture):
+def test_frame_from_columns_labels(row_col_frame, fixture):
     def selector(select):
-        if fixture.axis == 0:
-            return row_col_frame[select].T
         return row_col_frame[select]
 
     inputs = [
@@ -192,36 +184,33 @@ def test_frame_from_recipes_labels(row_col_frame, fixture):
     ]
     inputs.extend(fixture.extra)
 
-    recipe = FrameFromRecipes(
+    recipe = static_frame.FrameFromColumns(
+        name="test",
         recipes=tuple(inputs),
         labels=FromFunction(function=lambda: fixture.labels),
-        axis=fixture.axis,
+        # axis=fixture.axis,
         allow_missing=True,
     )
     f = Factory()
     result = f.process_recipe(recipe)
 
-    if fixture.axis == 0:
-        assert (result.index == fixture.expected_cols).all()
-        assert (result.columns == fixture.expected_index).all()
-    else:
-        assert (result.columns == fixture.expected_cols).all()
-        assert (result.index == fixture.expected_index).all()
+    assert (result.columns == fixture.labels).all()
+    assert (result.index == fixture.expected_index).all()
 
 
-def test_frame_from_recipe_index_date(date_index_frame) -> None:
-    recipe = FrameFromRecipes(
+def test_frame_from_columns_index_date(date_index_frame) -> None:
+    recipe = static_frame.FrameFromColumns(
+        name="test",
         recipes=(
             FromFunction(function=lambda: date_index_frame),
             FromFunction(
                 function=lambda: date_index_frame.relabel(
-                    index=date_index_frame.index + datetime.timedelta(2),
+                    index=date_index_frame.index + dt.timedelta(2),
                     index_constructor=sf.IndexDate,
                     columns=["c3", "c4", "c5"],
                 )
             ),
         ),
-        axis=1,
     )
     f = Factory()
     result = f.process_recipe(recipe)
@@ -234,26 +223,13 @@ def test_frame_from_recipe_index_date(date_index_frame) -> None:
         "|2023-01-04 |nan |nan |nan |0.0 |0.0 |0.0|\n"
         "|2023-01-05 |nan |nan |nan |0.0 |0.0 |0.0|"
     )
-    labeled = FrameFromRecipes(
-        recipes=(FromFunction(function=lambda: date_index_frame),),
-        axis=1,
-        labels=FromFunction(function=lambda: result.index[:2]),
-    )
-    result = f.process_recipe(labeled)
 
-    assert result.to_markdown() == (
-        "|           |c0 |c1 |c2|\n"
-        "|-----------|---|---|--|\n"
-        "|2023-01-01 |0  |0  |0 |\n"
-        "|2023-01-02 |0  |0  |0 |"
-    )
-
-    different_indexes = FrameFromRecipes(
+    different_indexes = static_frame.FrameFromColumns(
+        name="test",
         recipes=(
             FromFunction(function=lambda: date_index_frame.iloc[:2, 0]),
             FromFunction(function=lambda: date_index_frame.iloc[1:, -1]),
         ),
-        axis=1,
     )
     result = f.process_recipe(different_indexes)
     assert result.to_markdown() == (
@@ -265,11 +241,11 @@ def test_frame_from_recipe_index_date(date_index_frame) -> None:
     )
 
 
-def test_frame_from_recipes_missing_index(sample_frame):
-    recipe = FrameFromRecipes(
+def test_frame_from_columns_missing_index(sample_frame) -> None:
+    recipe = static_frame.FrameFromColumns(
+        name="test",
         recipes=(FromFunction(function=lambda: sample_frame),),
         labels=Object(payload=util.MissingPlaceholder(reason="test", fill_value=-1)),
-        axis=1,
         allow_missing=True,
     )
     f = Factory()
@@ -278,3 +254,147 @@ def test_frame_from_recipes_missing_index(sample_frame):
     # I've decided that it's ok for process_recipe to return missing, at least for now.
     # See https://github.com/ForeverWintr/blueprints/issues/3
     assert isinstance(result, util.MissingPlaceholder)
+
+
+def test_column() -> None:
+    frame = sf.Frame.from_records(
+        (
+            ["o", 1, 2, "x"],
+            ["o", 2, 3, "y"],
+            ["n", 3, 4, "z"],
+            ["n", 4, 5, "a"],
+            ["e", 5, 6, "x"],
+        ),
+        columns=["a", "b", "c", "d"],
+    )
+    fr = static_frame.FrameFromFunction(
+        name="frame", from_function=FromFunction(function=lambda: frame)
+    )
+    a = static_frame.Column(
+        name="a",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
+    )
+    b = static_frame.Column(
+        name="b",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
+    )
+    c = static_frame.Column(
+        name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].mean(),
+    )
+    c2 = static_frame.Column(
+        name="c2",
+        source_name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].iloc[0],
+    )
+
+    r = Factory().process_recipe(
+        static_frame.FrameFromColumns(recipes=(a, b, c, c2), name="result")
+    )
+    assert r.to_markdown() == (
+        "|  |a |b |c   |c2|\n"
+        "|--|--|--|----|--|\n"
+        "|e |e |5 |6.0 |6 |\n"
+        "|n |n |4 |4.5 |4 |\n"
+        "|o |o |2 |2.5 |2 |"
+    )
+    assert r.index.name == "a"
+
+
+def test_column_no_dups() -> None:
+    frame = sf.Frame.from_records(
+        (
+            ["o", 1, 2, "x"],
+            ["n", 4, 5, "a"],
+            ["e", 5, 6, "x"],
+        ),
+        columns=["a", "b", "c", "d"],
+    )
+    fr = static_frame.FrameFromFunction(
+        name="frame", from_function=FromFunction(function=lambda: frame)
+    )
+    a = static_frame.Column(
+        name="a",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
+    )
+    b = static_frame.Column(
+        name="b",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
+    )
+    c = static_frame.Column(
+        name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].mean(),
+    )
+    c2 = static_frame.Column(
+        name="c2",
+        source_name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].iloc[0],
+    )
+
+    r = Factory().process_recipe(
+        static_frame.FrameFromColumns(recipes=(a, b, c, c2), name="result")
+    )
+    assert r.to_markdown() == (
+        "|  |a |b |c |c2|\n"
+        "|--|--|--|--|--|\n"
+        "|o |o |1 |2 |2 |\n"
+        "|n |n |4 |5 |5 |\n"
+        "|e |e |5 |6 |6 |"
+    )
+    assert r.index.name == "a"
+
+
+def test_column_date_index() -> None:
+    frame = sf.Frame.from_records(
+        (
+            [dt.date(2020, 1, 1), 1, 2, "x"],
+            [dt.date(2020, 1, 1), 2, 3, "y"],
+            [dt.date(2025, 1, 1), 3, 4, "z"],
+            [dt.date(2025, 1, 1), 4, 5, "a"],
+            [dt.date(2026, 1, 1), 5, 6, "x"],
+        ),
+        columns=["a", "b", "c", "d"],
+        dtypes={
+            "a": "datetime64[D]",
+        },
+    )
+    fr = static_frame.FrameFromFunction(
+        name="frame", from_function=FromFunction(function=lambda: frame)
+    )
+    b = static_frame.Column(
+        name="b",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].max(),
+    )
+    c = static_frame.Column(
+        name="c",
+        frame=fr,
+        reindex_by="a",
+        reindex_duplicate_handler=lambda r, f: f[r.source_name].mean(),
+    )
+    r = Factory().process_recipes((b, c))
+
+    assert sf.Frame.from_concat(r.values(), axis=1).to_markdown() == (
+        "|           |b |c  |\n"
+        "|-----------|--|---|\n"
+        "|2020-01-01 |2 |2.5|\n"
+        "|2025-01-01 |4 |4.5|\n"
+        "|2026-01-01 |5 |6.0|"
+    )
