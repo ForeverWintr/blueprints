@@ -59,8 +59,8 @@ def make_examples() -> tp.Iterable[Case]:
     yield Case("FrameFromDelimited", (frame,))
 
     yield Case(
-        "FrameFromRecipes",
-        (static_frame.FrameFromRecipes(recipes=(series, frame)),),
+        "FrameFromColumns",
+        (static_frame.FrameFromColumns(name="ffc", recipes=(series, frame)),),
     )
 
 

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import functools
 import typing as tp
+from abc import abstractmethod
 from pathlib import Path
+import dataclasses
 
 import numpy as np
 import static_frame as sf
@@ -13,8 +15,71 @@ from blueprints.constants import MissingDependencyBehavior
 from blueprints.recipes.base import Dependencies
 from blueprints.recipes.base import DependencyRequest
 from blueprints.recipes.base import Recipe
+from blueprints.recipes import FromFunction
 
 
+class SeriesRecipe(Recipe):
+    """Abstract class for recipes that return StaticFrame Series"""
+
+    name: str
+
+    @abstractmethod
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: frozenset[Recipe],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Series:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requested_by: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
+
+
+class FrameRecipe(Recipe):
+    """Abstract class for recipes that return StaticFrame Frames"""
+
+    name: str
+
+    @abstractmethod
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: frozenset[Recipe],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Frame:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requested_by: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
+
+
+class FrameFromFunction(FrameRecipe):
+    name: str
+    from_function: FromFunction
+
+    def get_dependency_request(self) -> DependencyRequest:
+        """Return a DependencyRequest specifiying recipes that this recipe depends on."""
+        return DependencyRequest(self.from_function)
+
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: frozenset[Recipe],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Frame:
+        return dependencies.args[0].rename(self.name)
+
+
+# TODO frame recipe
 class _FromDelimited(Recipe):
     """Base class for common file arguments"""
 
@@ -51,7 +116,20 @@ class SeriesFromDelimited(_FromDelimited):
         )
         return DependencyRequest(frame_recipe)
 
-    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: frozenset[Recipe],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Series:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requested_by: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
         frame = dependencies.args[0]
 
         try:
@@ -74,31 +152,39 @@ class FrameFromDelimited(_FromDelimited):
 
     missing_data_exceptions: tp.Type[BaseException] = FileNotFoundError
 
-    def extract_from_dependencies(self, _: Dependencies) -> tp.Any:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: frozenset[Recipe],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Frame:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requested_by: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
         f = self.frame_extract_function(self.file_path, **self.frame_extract_kwargs)
         if self.index_column:
             f = f.set_index(self.index_column, drop=True)
         return f
 
 
-class FrameFromRecipes(Recipe):
-    """Create a frame by concatenating the result of other recipes (all of which should
-    return frames or series).
+class FrameFromColumns(FrameRecipe):
+    """Return a frame by horizontal concat of all the provided recipes
 
     Args:
-        recipes: a tuple of recipes, each of which should return a frame or series. By
-        default, the indexes will be unioned.
+        recipes: Recipes that return Frames/Series, which will be concatenated horizontally (as columns).
 
-        labels: A recipe, the result of which is used for the index labels in horizontal
-        concatenation or column labels in vertical concatenation.
-
-        axis: Argument to Frame.from_concat. 0 for vertical concatenation, 1 for
-        horizontal.
+        labels: Column labels that will override column labels in the resulting frame,
+        or a recipe that returns same. If specified, length must match the number of
+        columns.
     """
 
-    recipes: tuple[Recipe, ...]
-    labels: Recipe | None = None
-    axis: int = 0
+    recipes: tuple[SeriesRecipe | FrameRecipe, ...]
+    labels: tuple[tp.Hashable, ...] | sf.Index | Recipe = ()
 
     ## Class level configuration
     on_missing_dependency: tp.ClassVar[MissingDependencyBehavior] = (
@@ -107,46 +193,167 @@ class FrameFromRecipes(Recipe):
 
     def get_dependency_request(self) -> DependencyRequest:
         r = DependencyRequest(*self.recipes)
-        if self.labels is not None:
+        if isinstance(self.labels, Recipe):
             r.kwargs["labels"] = self.labels
         return r
 
     def extract_from_dependencies(
-        self, dependencies: Dependencies
+        self,
+        dependencies: Dependencies,
+        requested_by: frozenset[Recipe],
+        config: frozendict[str, tp.Any],
     ) -> sf.Frame | util.MissingPlaceholder:
-        """Missing dependencies become series using the final index. Missing index
-        propogates."""
+        """Extract the data this recipe describes.
 
-        direction = "columns"
-        if self.axis:
-            direction = "index"
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requested_by: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
 
         not_missing = [
             x for x in dependencies.args if not isinstance(x, util.MissingPlaceholder)
         ]
-        labels = dependencies.kwargs.get("labels")
-        if labels is None:
-            labels = functools.reduce(
-                sf.Index.union, (getattr(x, direction) for x in not_missing)
-            )
-        elif isinstance(labels, util.MissingPlaceholder):
-            # The frame can't be built without labels. Propagate missing.
-            return labels
-        elif not isinstance(labels, sf.Index):
-            labels = sf.IndexAutoConstructorFactory(name=None)(labels)
-
+        final_index = not_missing[0].index.union(*(x.index for x in not_missing[1:]))
         to_concat = []
         for r in self.recipes:
             d = dependencies.recipe_to_result[r]
             if isinstance(d, util.MissingPlaceholder):
                 try:
-                    label = r.label
+                    label = r.name
                 except AttributeError:
                     # Not all recipes have labels.
                     label = d.reason
-                d = sf.Series.from_element(d.fill_value, name=label, index=labels)
+                d = sf.Series.from_element(d.fill_value, name=label, index=final_index)
 
             to_concat.append(d)
 
-        label_kwarg = {direction: labels}
-        return sf.Frame.from_concat(to_concat, axis=self.axis, **label_kwarg)
+        result = sf.Frame.from_concat(to_concat, axis=1)
+        if self.labels:
+            colnames = self.labels
+            if "labels" in dependencies.kwargs:
+                colnames = dependencies.kwargs["labels"]
+                if isinstance(colnames, util.MissingPlaceholder):
+                    # The frame can't be built without labels. Propagate missing.
+                    return colnames
+            result = result.relabel(columns=colnames)
+        return result
+
+
+class _Reindexer(FrameRecipe):
+    """Used internally when a recipe requests column(s) from a reindexed frame. Not
+    intended as a standalone recipe"""
+
+    frame: FrameRecipe
+    new_index_label: str
+    name: str = dataclasses.field(init=False, repr=False)
+
+    def __post_init__(self):
+        object.__setattr__(self, "name", self.frame.name)
+
+    def get_dependency_request(self) -> DependencyRequest:
+        return DependencyRequest(self.frame)
+
+    @staticmethod
+    def _make_column_recipe_pairs(
+        frame: sf.Frame,
+        requested_by: frozenset[Column],
+    ) -> list[tuple[str, Column]]:
+        """Return pairs of (column_name, requesting_recipe) for all requesting recipes.
+        Note that two recipes may request the same column with different duplicate
+        handling."""
+        col_to_recipe = {}
+        for r in requested_by:
+            col_to_recipe.setdefault(r.source_name, []).append(r)
+
+        col_recipe_pairs = []
+        for c in frame.columns:
+            if c in col_to_recipe:
+                for r in col_to_recipe[c]:
+                    col_recipe_pairs.append((c, r))
+        return col_recipe_pairs
+
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: frozenset[Column],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Frame:
+        frame: sf.Frame = dependencies.args[0]
+
+        # Determine final columns.
+        col_recipe_pairs = self._make_column_recipe_pairs(
+            frame=frame, requested_by=requested_by
+        )
+
+        # Short circuit if there are no duplicates.
+        if not frame[self.new_index_label].duplicated().any():
+            frame = frame.set_index(self.new_index_label)
+            result = sf.FrameGO(index=frame[self.new_index_label])
+            for c, r in col_recipe_pairs:
+                result[r] = frame[c]
+            return result.to_frame().rename(index=self.new_index_label)
+
+        # There are duplicates. Apply duplicate handlers.
+        index = []
+        rows = []
+        for new_idx, group in frame.iter_group_items(self.new_index_label):
+            index.append(new_idx)
+            if group.size == 1:
+                # No duplicates; do not call handlers.
+                row = [group[c] for c, _ in col_recipe_pairs]
+            else:
+                row = []
+                for colname, recipe in col_recipe_pairs:
+                    row.append(recipe.reindex_duplicate_handler(recipe, group))
+            rows.append(row)
+
+        columns = [r for _, r in col_recipe_pairs]
+        return sf.Frame.from_records(
+            rows,
+            index=index,
+            index_constructor=sf.IndexAutoConstructorFactory,
+            columns=columns,
+        ).rename(index=self.new_index_label)
+
+
+class Column(SeriesRecipe):
+    """A Column from a frame, optionally reindexed.
+
+    Args:
+        name: The name of the resulting series.
+
+        source_name: the name of the source column in `frame`. Defaults to `name`.
+
+        reindex_by: A source column to reindex by.
+
+        reindex_duplicate_handler: If `reindex_by` is set to a column with duplicates,
+        this function is called once per each group of duplicate rows. Receives this
+        recipe and all columns for each duplicate value.
+    """
+
+    name: str
+    frame: FrameRecipe
+    source_name: str | None = None
+    reindex_by: str | None = None
+    reindex_duplicate_handler: tp.Callable[[tp.Self, sf.Frame], tp.Any] | None = None
+
+    def __post_init__(self):
+        if self.source_name is None:
+            object.__setattr__(self, "source_name", self.name)
+
+    def get_dependency_request(self) -> DependencyRequest:
+        return DependencyRequest(
+            frame=_Reindexer(frame=self.frame, new_index_label=self.reindex_by)
+        )
+
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: tuple[Column, ...],
+        config: frozendict[str, tp.Any],
+    ) -> sf.Series:
+        frame = dependencies.kwargs["frame"]
+        series = frame[self]
+        return series.rename(self.name)

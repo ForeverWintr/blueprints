@@ -6,6 +6,8 @@ from concurrent.futures import Future
 from concurrent.futures import ProcessPoolExecutor
 from concurrent.futures import wait
 
+from frozendict import frozendict
+
 from blueprints import exceptions
 from blueprints import util
 from blueprints.blueprint import Blueprint
@@ -14,15 +16,21 @@ from blueprints.recipes.base import Recipe
 
 
 class Factory:
-    def __init__(self, allow_missing: bool = True):
+    def __init__(
+        self,
+        allow_missing: bool = True,
+        config: dict = frozendict(),
+    ):
         """A factory controls the construction of recipes.
 
         Args:
-            allow_missing: If False, individual recipes' allow_missing settings are ignored,
-        and any missing data errors are raised. If both the factory and recipe have
-        allow_missing set to true, missing data sentinels are returned instead.
+
+            allow_missing: If False, individual recipes' allow_missing settings are ignored, and any missing data errors are raised. If both the factory and recipe have allow_missing set to true, missing data sentinels are returned instead.
+            config: A dictionary that you can use for arbitrary configuration values.
+            Recipes receive this in Recipe.extract_from_dependencies
         """
         self.allow_missing = allow_missing
+        self.config = frozendict(config)
 
     @staticmethod
     def recipes_to_build(
@@ -49,7 +57,12 @@ class Factory:
                 dependencies = blueprint.prepare_to_build(
                     recipe, instantiated, metadata=metadata
                 )
-                result = util.process_recipe(recipe, dependencies=dependencies)
+                result = util.process_recipe(
+                    recipe,
+                    dependencies=dependencies,
+                    config=self.config,
+                    requested_by=blueprint.what_depends_on(recipe),
+                )
 
                 unbuildable = blueprint.update_result(result, instantiated)
                 if unbuildable:
@@ -108,6 +121,8 @@ class FactoryMP(Factory):
                         util.process_recipe,
                         recipe=recipe,
                         dependencies=dependencies,
+                        config=self.config,
+                        requested_by=blueprint.what_depends_on(recipe),
                     )
                     running_futures.add(future)
                     building.add(recipe)

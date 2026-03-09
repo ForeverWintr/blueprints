@@ -1,14 +1,17 @@
-import dataclasses
+from __future__ import annotations
 
+import dataclasses
+import typing as tp
+from unittest.mock import patch
+
+import frozendict
 import pytest
 
 from blueprints.factory import Factory
-from blueprints.factory import util
 from blueprints.recipes import base
 from blueprints.recipes import general
-from blueprints.recipes import static_frame
 from blueprints.tests.conftest import TABLES
-from blueprints.tests.conftest import Node
+from blueprints.tests.conftest import MultiColumn
 from blueprints.tests.conftest import TestColumn
 from blueprints.tests.conftest import TestData
 
@@ -39,7 +42,7 @@ def test_hash_eq():
 
 def test_extract_from_dependencies():
     recipe = TestData(table_name="A")
-    assert recipe.extract_from_dependencies(None) == TABLES["A"]
+    assert recipe.extract_from_dependencies(None, None, None) == TABLES["A"]
 
 
 def test_from_function():
@@ -77,22 +80,6 @@ def test_object():
     assert Factory().process_recipe(r) == 5
 
 
-RECIPE_EXAMPLES = (
-    static_frame.FrameFromDelimited,
-    static_frame.SeriesFromDelimited,
-    static_frame.FrameFromRecipes,
-)
-
-
-@pytest.mark.skip
-def test_recipe_registry():
-    d = Node(name="dep")
-    r = Node(name="r", dependencies=(d,))
-    e = Node(name="e", dependencies=(d,))
-    reg = util.recipe_registry([r, e])
-    assert reg == {id(x): x for x in (d, e, r)}
-
-
 def test_recipe_type_registry():
     class FakeRecipe:
         pass
@@ -112,9 +99,38 @@ def test_recipe_type_registry():
     assert reg.get(key) is FakeRecipe
 
 
-@pytest.mark.skip
-def test_to_do():
-    # Caching
-    # Don't use args and kwargs in dependencyrequest. Make it more like a dict
+def test_requested_by() -> None:
+    "Test that a recipe receives its requesting recipes."
 
-    assert 0
+    columns = (
+        TestColumn(table_name="A", key=1),
+        TestColumn(table_name="A", key=2),
+    )
+    r = MultiColumn(columns=columns)
+
+    unmocked = TestData.extract_from_dependencies
+
+    def assert_successors(
+        self,
+        dependencies: base.Dependencies,
+        requested_by: tuple[base.Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ):
+        assert requested_by == frozenset(columns)
+        return unmocked(
+            self,
+            dependencies,
+            requested_by,
+            config,
+        )
+
+    with patch.object(
+        TestData,
+        "extract_from_dependencies",
+        side_effect=assert_successors,
+        autospec=True,
+    ) as ed:
+        result = Factory().process_recipe(r)
+
+    ed.assert_called()
+    assert result == (1, 2)
