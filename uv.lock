@@ -873,16 +873,16 @@ wheels = [
 
 [[package]]
 name = "static-frame"
-version = "3.7.0"
+version = "3.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "arraykit" },
     { name = "numpy" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/7d/86/dafc9145f8f1ebc78659baa374c0abd0b5d61b90987354e01a556ebfca7f/static_frame-3.7.0.tar.gz", hash = "sha256:fe706122882320d465e5da6fb4b671e28fae518cd5ca4205237ded995744255d", size = 757395, upload-time = "2026-02-04T23:43:30.052Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3a/ab/a6c888e6cd0421fe24b25f358c516e4a6b003ee742575aa7079a834db662/static_frame-3.10.0.tar.gz", hash = "sha256:f2fd4b1929ec382c25291372ea6dbfd75d2a9b6892fa5cd56e65ac6d749c6041", size = 776175, upload-time = "2026-03-23T23:10:10.099Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9c/0c/c3f8fc07e23a2c5181191dfe8602b01755911b2159512bfa23cea5c5662b/static_frame-3.7.0-py3-none-any.whl", hash = "sha256:42108eb9ff595ffc21c868176d7c0cea7c2ce7cc28141400de3ae02ed24e4b8e", size = 816357, upload-time = "2026-02-04T23:43:28.256Z" },
+    { url = "https://files.pythonhosted.org/packages/92/f1/382c6db51c44448ef1639f1d4fd047c54cf9f5668973449ad50c1f4793db/static_frame-3.10.0-py3-none-any.whl", hash = "sha256:898ab69a5b03bbf9317993874ed1ba5f89c91ff9ef745c38bb058c83fa869cb4", size = 837230, upload-time = "2026-03-23T23:10:08.622Z" },
 ]
 
 [[package]]
