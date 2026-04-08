@@ -203,7 +203,7 @@ class Recipe(ABC):
     ### Below this line, methods are internal and not intended to be overriden.
 
     def __init_subclass__(cls, *, autodataclass: bool = True, **kwargs) -> None:
-        """Automatically make subclasses the expected dataclasses if `autodataclass` is True
+        """Automatically make subclasses conform to the expected dataclass structure if `autodataclass` is True
         """
         if autodataclass:
             # Automatically make other recipes dataclasses.
