@@ -92,7 +92,10 @@ class _RecipeTypeRegistry:
 
 RECIPE_TYPE_REGISTRY = _RecipeTypeRegistry()
 
-
+@tp.dataclass_transform(
+    frozen_default=True,
+    kw_only_default=True,
+)
 @dataclasses.dataclass(frozen=True, repr=False, kw_only=True)
 class Recipe(ABC):
     """Base class for recipes"""
@@ -199,15 +202,34 @@ class Recipe(ABC):
 
     ### Below this line, methods are internal and not intended to be overriden.
 
-    def __init_subclass__(cls, **kwargs) -> None:
-        # Automatically make other recipes dataclasses.
-        r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)  # type: ignore
+    def __init_subclass__(cls, *, autodataclass: bool = True, **kwargs) -> None:
+        """Automatically make subclasses the expected dataclasses if `autodataclass` is True
+        """
+        if autodataclass:
+            # Automatically make other recipes dataclasses.
+            r = dataclasses.dataclass(cls, frozen=True, repr=False, kw_only=True)  # type: ignore
 
-        # Assert that this only added attributes, rather than creating a new class.
-        assert r is cls
+            # Assert that this only added attributes, rather than creating a new class.
+            assert r is cls
+        else:
+            # Validate user defined `cls` properly
+            prefix = f"Recipe subclasses must be frozen, kw-only dataclasses. {cls!r}"
+            suggestion = f"(Consider passing ``autodataclass=True`` to the class definition to automatically define it properly)"
+
+            if not dataclasses.is_dataclass(cls):
+                raise TypeError(f"{prefix} is not a dataclass. {suggestion}")
+
+            if not cls.__dataclass_params__.frozen:
+                raise TypeError(f"{prefix} is a dataclass but not frozen. {suggestion}")
+
+            for field in dataclasses.fields(cls):
+                if not field.kw_only:
+                    raise TypeError(
+                        f"{prefix} has a non-keyword-only field {field.name!r}. {suggestion}"
+                    )
 
         # Add to the global registry of recipe classes.
-        RECIPE_TYPE_REGISTRY.add(r)
+        RECIPE_TYPE_REGISTRY.add(cls)
 
     def _is_not_default(
         self, attribute: str, fields: tp.Dict[str, dataclasses.Field]
