@@ -92,6 +92,7 @@ class _RecipeTypeRegistry:
 
 RECIPE_TYPE_REGISTRY = _RecipeTypeRegistry()
 
+
 @tp.dataclass_transform(
     frozen_default=True,
     kw_only_default=True,
