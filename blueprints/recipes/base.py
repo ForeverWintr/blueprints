@@ -93,6 +93,10 @@ class _RecipeTypeRegistry:
 RECIPE_TYPE_REGISTRY = _RecipeTypeRegistry()
 
 
+@tp.dataclass_transform(
+    frozen_default=True,
+    kw_only_default=True,
+)
 @dataclasses.dataclass(frozen=True, repr=False, kw_only=True)
 class Recipe(ABC):
     """Base class for recipes"""
