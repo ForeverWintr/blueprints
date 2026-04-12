@@ -30,7 +30,7 @@ dev = [
 [project]
 name = "blueprints"
 version = "0.1.0"
-description = "A package for aggregating data from disparate sources"
+description = "A package for declarative data composition"
 authors = [{ name = 'Tom Rutherford', email = 'foreverwintr@gmail.com' }]
 license = "MIT"
 readme = "README.md"
