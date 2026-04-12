@@ -28,7 +28,7 @@ dev = [
 ]
 
 [project]
-name = "assembler"
+name = "blueprints"
 version = "0.1.0"
 description = "A package for declarative data composition"
 authors = [{ name = 'Tom Rutherford', email = 'foreverwintr@gmail.com' }]
