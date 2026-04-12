@@ -15,7 +15,7 @@ This repository uses [uv](https://docs.astral.sh/uv/) for environment and depend
 
 ### Setup
 ```bash
-uv sync --extra dev
+uv sync --group dev # Use --extra instead of --group in older uv versions
 ```
 This creates/updates `.venv` and installs runtime + development dependencies.
 
