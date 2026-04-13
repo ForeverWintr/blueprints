@@ -16,9 +16,9 @@ ignore_missing_imports = true
 
 [dependency-groups]
 dev = [
-    "mypy>=1.17.1,<2.0.0",
-    "pytest>=8.4.1,<10.0.0",
-    "ruff>=0.12.11,<1.0.0",
+    "mypy>=1.20.1,<2.0.0",
+    "pytest>=9.0.3,<10.0.0",
+    "ruff>=0.15.10,<1.0.0",
     "frame-fixtures>=1.1.0,<2.0.0",
     "pytest-cov>=7.0.0,<8.0.0",
 ]
@@ -34,7 +34,7 @@ requires-python = ">=3.11,<4.0"
 dependencies=[
     "networkx (>=3.5,<4.0)",
     "frozendict (>=2.4.6,<3.0.0)",
-    "types-networkx (>=3.5.0.20250830,<4.0.0.0)",
+    "types-networkx>=3.6.1.20260408,<4.0.0.0",
     "static-frame (>=3.2.0,<4.0.0)",
     "dash>=3.2.0,<5.0.0",
     "flask (>=3.1.2,<4.0.0)",
