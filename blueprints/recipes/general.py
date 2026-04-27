@@ -14,7 +14,20 @@ class Object(Recipe):
 
     payload: tp.Hashable
 
-    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Hashable:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> tp.Hashable:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requested_by: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
         return self.payload
 
 
@@ -29,5 +42,18 @@ class FromFunction(Recipe):
         # Make kwargs immutable.
         object.__setattr__(self, "kwargs", frozendict(self.kwargs))
 
-    def extract_from_dependencies(self, dependencies: Dependencies) -> tp.Any:
+    def extract_from_dependencies(
+        self,
+        dependencies: Dependencies,
+        requested_by: tuple[Recipe, ...],
+        config: frozendict[str, tp.Any],
+    ) -> tp.Any:
+        """Extract the data this recipe describes.
+
+        Args:
+            dependencies: a Dependencies object corresponding to the DependencyRequest
+            returned by `get_dependency_request` above. Dependent recipes have been
+            requested_by: The recipes that requested this recipe.
+            config: A dictionary containing user defined configuration.
+        """
         return self.function(*self.args, **self.kwargs)
